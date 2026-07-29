@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Currency, ConverterSetting
+from .models import Currency
 
 
 class CurrencySerializer(serializers.ModelSerializer):
@@ -10,9 +10,3 @@ class CurrencySerializer(serializers.ModelSerializer):
             'buy_rate', 'sell_rate', 'change_pct',
             'is_popular', 'display_order', 'updated_at',
         ]
-
-
-class ConverterSettingSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ConverterSetting
-        fields = ['service_fee_percent', 'updated_at']

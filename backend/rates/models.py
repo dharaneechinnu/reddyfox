@@ -27,31 +27,3 @@ class Currency(models.Model):
 
     def __str__(self):
         return f'{self.code} — {self.name}'
-
-
-class ConverterSetting(models.Model):
-    """Singleton row holding values the converter needs beyond the raw buy/sell rates."""
-    service_fee_percent = models.DecimalField(
-        max_digits=5, decimal_places=2, default=0.4,
-        help_text='Fee charged on top of the exchange rate, as a percent (e.g. 0.4 = 0.4%)',
-    )
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = 'converter setting'
-        verbose_name_plural = 'converter settings'
-
-    def __str__(self):
-        return f'Service fee: {self.service_fee_percent}%'
-
-    def save(self, *args, **kwargs):
-        self.pk = 1
-        super().save(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        pass
-
-    @classmethod
-    def load(cls):
-        obj, _ = cls.objects.get_or_create(pk=1)
-        return obj

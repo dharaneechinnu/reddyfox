@@ -14,7 +14,7 @@ export default function Converter() {
             <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / Converter
           </div>
           <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: 'clamp(34px,4vw,56px)', lineHeight: 1.05, color: '#fff', margin: '0 0 14px' }}>Currency converter</h1>
-          <p style={{ fontSize: 16.5, lineHeight: 1.6, color: c.onNavyText, margin: 0, maxWidth: 560 }}>Work out exactly what lands in hand, fees included, before you reach the counter.</p>
+          <p style={{ fontSize: 16.5, lineHeight: 1.6, color: c.onNavyText, margin: 0, maxWidth: 560 }}>Work out what your currency converts to at today’s counter rate, before you reach the shop.</p>
         </div>
       </section>
 
@@ -54,9 +54,6 @@ export default function Converter() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16, fontSize: 14.5 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}><span style={{ color: c.onNavyText }}>You exchange</span><span style={{ fontFamily: fonts.mono }}>{fx.calc.amountLabel}</span></div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}><span style={{ color: c.onNavyText }}>Rate applied</span><span style={{ fontFamily: fonts.mono }}>{fx.calc.rateLine}</span></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}><span style={{ color: c.onNavyText }}>Gross amount</span><span style={{ fontFamily: fonts.mono }}>{fx.calc.grossLine}</span></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}><span style={{ color: c.onNavyText }}>Service fee</span><span style={{ fontFamily: fonts.mono }}>{fx.calc.feeLine}</span></div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}><span style={{ color: c.onNavyText }}>Branch handling</span><span style={{ color: c.greenLight }}>Included</span></div>
               </div>
               <div style={{ borderTop: '1px solid rgba(255,255,255,.14)', marginTop: 24, paddingTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16 }}>
                 <span style={{ fontSize: 15, color: c.onNavyText }}>You receive</span>

@@ -84,7 +84,7 @@ export default function Home() {
           <div style={{ background: '#fff', borderRadius: 18, padding: 30, boxShadow: '0 40px 70px -30px rgba(0,0,0,.55)', animation: 'fx-up .7s .12s ease both' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
               <span style={{ fontSize: 17, fontWeight: 600, color: c.navy }}>Currency converter</span>
-              <span style={{ font: `500 10.5px/1.4 ${fonts.mono}`, letterSpacing: '.12em', color: c.green, background: c.greenBg, padding: '6px 10px', borderRadius: 5, whiteSpace: 'nowrap' }}>MID-MARKET +{fx.feePercent}%</span>
+              <span style={{ font: `500 10.5px/1.4 ${fonts.mono}`, letterSpacing: '.12em', color: c.green, background: c.greenBg, padding: '6px 10px', borderRadius: 5, whiteSpace: 'nowrap' }}>TODAY'S COUNTER RATE</span>
             </div>
 
             <label style={{ display: 'block', fontSize: 12.5, fontWeight: 500, color: c.textMuted, marginBottom: 8 }}>You send</label>
@@ -116,7 +116,6 @@ export default function Home() {
 
             <div style={{ borderTop: `1px dashed ${c.sandBorder}`, paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 9, fontSize: 13.5, color: c.textMuted }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Exchange rate</span><span style={{ fontFamily: fonts.mono, color: c.navy }}>{fx.calc.rateLine}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Service fee</span><span style={{ fontFamily: fonts.mono, color: c.navy }}>{fx.calc.feeLine}</span></div>
             </div>
 
             <span

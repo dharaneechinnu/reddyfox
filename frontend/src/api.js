@@ -6,12 +6,6 @@ export async function fetchCurrencies() {
   return res.json();
 }
 
-export async function fetchConverterSettings() {
-  const res = await fetch(`${API_BASE}/converter-settings/`);
-  if (!res.ok) throw new Error(`Failed to load converter settings (${res.status})`);
-  return res.json();
-}
-
 /**
  * Submit the contact form. Returns the success payload, or throws an Error
  * whose `.fieldErrors` holds per-field messages from DRF when it rejected the

@@ -12,7 +12,7 @@ React frontend + Django/PostgreSQL backend. All content is edited in the Django 
                          │
                    /admin/  (Django admin)
         • Currency rates        • Testimonials
-        • Converter settings    • FAQs + FAQ categories
+        • Enquiries (inbox)     • FAQs + FAQ categories
                          │
                     PostgreSQL
                          │
@@ -97,7 +97,6 @@ Everything is at **http://localhost:8000/admin/** :
 | Section | What you edit |
 |---|---|
 | Rates → Currencies | Buy/sell rate, 24h change, `is_popular`, `is_visible`, sort order |
-| Rates → Converter settings | The converter's service fee percent |
 | Content → Testimonials | Customer quotes shown on the homepage |
 | Content → FAQs | Questions and answers (plain text; blank line = new paragraph) |
 | Content → FAQ categories | Sidebar groupings on the `/faq` page |
@@ -164,7 +163,6 @@ public API. Staff read enquiries in the admin.
 |---|---|
 | `/api/rates/` | Currency board |
 | `/api/rates/<CODE>/` | One currency, e.g. `/api/rates/USD/` |
-| `/api/converter-settings/` | Converter service fee percent |
 | `/api/testimonials/` | Customer voices |
 | `/api/faqs/` | All FAQs |
 | `/api/faqs/?homepage=true` | Only FAQs flagged for the homepage accordion |

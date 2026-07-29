@@ -1,6 +1,6 @@
-from rest_framework import viewsets, generics
-from .models import Currency, ConverterSetting
-from .serializers import CurrencySerializer, ConverterSettingSerializer
+from rest_framework import viewsets
+from .models import Currency
+from .serializers import CurrencySerializer
 
 
 class CurrencyViewSet(viewsets.ReadOnlyModelViewSet):
@@ -10,11 +10,3 @@ class CurrencyViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Currency.objects.filter(is_visible=True)
     serializer_class = CurrencySerializer
     lookup_field = 'code'
-
-
-class ConverterSettingView(generics.RetrieveAPIView):
-    """Read-only converter config (currently just the service fee %). Edited via the Django admin."""
-    serializer_class = ConverterSettingSerializer
-
-    def get_object(self):
-        return ConverterSetting.load()
