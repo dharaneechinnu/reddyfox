@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     # Project apps
     'rates',
     'content',
+    'team_alerts',
 
     # Third party
     'rest_framework',
@@ -191,3 +192,37 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER or 'no
 
 # Who gets alerted when a website enquiry arrives. Comma-separated.
 ENQUIRY_NOTIFY_EMAILS = config('ENQUIRY_NOTIFY_EMAILS', default='', cast=Csv())
+
+
+# Team push notifications — internal staff only, via Chrome + Firebase Cloud
+# Messaging (FCM). A staff member turns this on for their own browser from
+# the "Enable push alerts" link added to the admin header (see
+# team_alerts/views.EnableAlertsPageView). New enquiries then push an Urgent
+# alert to every subscribed staff browser instantly, bypassing the rate limit
+# below — a fresh lead should never be missed. This is in addition to, not a
+# replacement for, the existing email alert in content/notifications.py.
+#
+# Leave FIREBASE_CREDENTIALS_JSON blank in development: subscribers still
+# register and every send is still recorded (as FAILED, "FCM is not
+# configured"), so the whole flow — admin tracking included — is testable
+# with no credentials. Set it to the absolute path of a Firebase service
+# account key file to send real pushes.
+FIREBASE_CREDENTIALS_JSON = config('FIREBASE_CREDENTIALS_JSON', default='')
+
+# A staff subscriber notified within this many minutes is skipped on the next
+# Normal-priority alert. Urgent alerts (every new-enquiry alert) always
+# ignore this ("urgent is free").
+TEAM_ALERT_RATE_LIMIT_MINUTES = config('TEAM_ALERT_RATE_LIMIT_MINUTES', default=30, cast=int)
+
+# Public Firebase web config — used to render the admin's "Enable push
+# alerts" page and the /firebase-messaging-sw.js service worker. These are
+# public client identifiers, not secrets, but still kept in .env alongside
+# everything else that's environment-specific (dev vs. production Firebase
+# project).
+FIREBASE_WEB_API_KEY = config('FIREBASE_WEB_API_KEY', default='')
+FIREBASE_WEB_AUTH_DOMAIN = config('FIREBASE_WEB_AUTH_DOMAIN', default='')
+FIREBASE_WEB_PROJECT_ID = config('FIREBASE_WEB_PROJECT_ID', default='')
+FIREBASE_WEB_STORAGE_BUCKET = config('FIREBASE_WEB_STORAGE_BUCKET', default='')
+FIREBASE_WEB_MESSAGING_SENDER_ID = config('FIREBASE_WEB_MESSAGING_SENDER_ID', default='')
+FIREBASE_WEB_APP_ID = config('FIREBASE_WEB_APP_ID', default='')
+FIREBASE_WEB_VAPID_KEY = config('FIREBASE_WEB_VAPID_KEY', default='')
