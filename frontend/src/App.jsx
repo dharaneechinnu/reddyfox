@@ -10,7 +10,6 @@ import About from './pages/About';
 import Faq from './pages/Faq';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
-import System from './pages/System';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -28,7 +27,6 @@ function App() {
             <Route path="/faq" element={<Faq />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/system" element={<System />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>

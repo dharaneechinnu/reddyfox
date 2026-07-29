@@ -190,36 +190,6 @@ export const CERTS = [
   { title: 'In partnership with banks', body: 'Money transfer and remittance services are delivered in partnership with banks and established exchange companies.' },
 ];
 
-export const TOKENS = [
-  { name: 'Orange 600', hex: '#E2571F', use: 'Primary action, accents' },
-  { name: 'Orange 800', hex: '#C4460F', use: 'Hover, pressed' },
-  { name: 'Navy 900', hex: '#0B1B33', use: 'Surfaces, headings' },
-  { name: 'Navy 600', hex: '#435066', use: 'Body on light' },
-  { name: 'Gold 500', hex: '#C9A227', use: 'Favourites, premium' },
-  { name: 'Green 600', hex: '#2FA36B', use: 'Positive movement' },
-  { name: 'Red 600', hex: '#B4351F', use: 'Negative, errors' },
-  { name: 'Sand 50', hex: '#F8F7F5', use: 'Section background' },
-  { name: 'Line 200', hex: '#E7E4DF', use: 'Borders, dividers' },
-  { name: 'White', hex: '#FFFFFF', use: 'Cards, base' },
-];
-
-export const TYPE_SCALE = [
-  { token: 'display/xl', family: "'Instrument Serif', serif", size: '52px', weight: '400', spec: 'Serif 52 / 1.05' },
-  { token: 'display/lg', family: "'Instrument Serif', serif", size: '40px', weight: '400', spec: 'Serif 40 / 1.10' },
-  { token: 'heading/md', family: "'Instrument Sans', sans-serif", size: '22px', weight: '600', spec: 'Sans 22 / 1.30' },
-  { token: 'body/lg', family: "'Instrument Sans', sans-serif", size: '17px', weight: '400', spec: 'Sans 17 / 1.65' },
-  { token: 'body/sm', family: "'Instrument Sans', sans-serif", size: '14px', weight: '400', spec: 'Sans 14 / 1.60' },
-  { token: 'numeric', family: "'IBM Plex Mono', monospace", size: '16px', weight: '500', spec: 'Mono 16 / 1.40' },
-  { token: 'eyebrow', family: "'IBM Plex Mono', monospace", size: '11.5px', weight: '500', spec: 'Mono 11.5 · .18em' },
-];
-
-export const SPACING = [
-  { token: 'space-1', px: '4px' }, { token: 'space-2', px: '8px' }, { token: 'space-3', px: '16px' },
-  { token: 'space-4', px: '24px' }, { token: 'space-5', px: '32px' }, { token: 'space-6', px: '56px' }, { token: 'space-7', px: '96px' },
-];
-
-export const RADII = [{ px: '6px' }, { px: '9px' }, { px: '14px' }, { px: '18px' }, { px: '100px' }];
-
 export const FILTERS = ['All', 'Popular', 'Favourites', 'Europe', 'Asia-Pacific', 'Middle East', 'Americas'];
 
 export function fmt(n, dp) {

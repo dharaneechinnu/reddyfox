@@ -185,7 +185,6 @@ function Footer() {
           <div style={{ display: 'flex', gap: 24 }}>
             <Link to="/faq" style={{ cursor: 'pointer', color: c.onNavyText4 }}>FAQ</Link>
             <Link to="/contact" style={{ cursor: 'pointer', color: c.onNavyText4 }}>Contact</Link>
-            <Link to="/system" style={{ cursor: 'pointer', color: c.onNavyText2 }}>Design system</Link>
           </div>
         </div>
       </div>
