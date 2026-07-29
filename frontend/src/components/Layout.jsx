@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { NAV, SERVICES, FOOTER_COLS } from '../data';
 import { COMPANY, CONTACT, PRIMARY_PHONE, SOCIALS } from '../company';
 import { c, fonts, wrap } from '../tokens';
+import NotificationOptIn from './NotificationOptIn';
 import SocialIcon from './SocialIcon';
 
 function TopBar() {
@@ -201,6 +202,7 @@ export default function Layout() {
       <Outlet />
       <Footer />
       <div style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 70, display: 'flex', gap: 10, alignItems: 'center' }}>
+        <NotificationOptIn />
         <span
           onClick={() => navigate('/converter')}
           style={{ background: c.navy, color: '#fff', padding: '14px 22px', borderRadius: 100, fontSize: 14.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 18px 30px -14px rgba(11,27,51,.6)', transition: 'transform .18s' }}

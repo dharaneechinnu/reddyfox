@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     # Project apps
     'rates',
     'content',
+    'notifications',
 
     # Third party
     'rest_framework',
@@ -154,6 +155,9 @@ REST_FRAMEWORK = {
         # Contact form: bots get cut off long before the team's inbox suffers.
         # A genuine customer never needs to submit more than a handful an hour.
         'enquiry': config('ENQUIRY_THROTTLE_RATE', default='5/hour'),
+        # Push notification opt-in/opt-out: a browser only ever (re)subscribes
+        # a handful of times an hour, even across tab reloads.
+        'notification-subscribe': config('NOTIFICATION_SUBSCRIBE_THROTTLE_RATE', default='20/hour'),
     },
 }
 
@@ -189,3 +193,23 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER or 'no
 
 # Who gets alerted when a website enquiry arrives. Comma-separated.
 ENQUIRY_NOTIFY_EMAILS = config('ENQUIRY_NOTIFY_EMAILS', default='', cast=Csv())
+
+
+# Chrome browser push — rate alerts via Firebase Cloud Messaging (FCM)
+# https://firebase.google.com/docs/cloud-messaging
+#
+# Leave FIREBASE_CREDENTIALS_JSON blank in development: subscribers and
+# delivery attempts are still recorded (as FAILED, "FCM is not configured"),
+# so the whole flow — admin tracking included — is testable with no
+# credentials. Set it to the absolute path of a Firebase service account key
+# file to send real pushes.
+FIREBASE_CREDENTIALS_JSON = config('FIREBASE_CREDENTIALS_JSON', default='')
+
+# A subscriber notified within this many minutes is skipped on the next
+# Normal-priority alert, so customers aren't spammed on every minor rate
+# tick. Urgent alerts always ignore this ("urgent is free").
+NOTIFICATION_RATE_LIMIT_MINUTES = config('NOTIFICATION_RATE_LIMIT_MINUTES', default=60, cast=int)
+
+# A currency's buy or sell rate moving by at least this many percent marks
+# the auto-generated alert Urgent instead of Normal.
+RATE_ALERT_URGENT_THRESHOLD_PCT = config('RATE_ALERT_URGENT_THRESHOLD_PCT', default=1.0, cast=float)
