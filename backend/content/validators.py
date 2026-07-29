@@ -49,3 +49,29 @@ def looks_like_spam(message, name=''):
     if longest_run > 60:
         return 'unbroken token longer than 60 characters'
     return None
+
+
+def validate_currency_code(value):
+    """Accept only a currency code that actually exists on the rate board."""
+    from rest_framework import serializers
+    from rates.models import Currency
+
+    code = str(value or '').strip().upper()
+    if code == 'INR':
+        return code  # the base currency, always valid even though it has no row
+    if not Currency.objects.filter(code=code, is_visible=True).exists():
+        raise serializers.ValidationError('We do not deal in that currency. Please pick one from the list.')
+    return code
+
+
+def validate_amount(value):
+    """Reject nonsense amounts before they reach the desk."""
+    from rest_framework import serializers
+
+    if value is None:
+        raise serializers.ValidationError('Please enter an amount.')
+    if value <= 0:
+        raise serializers.ValidationError('Amount must be greater than zero.')
+    if value > 100_000_000:
+        raise serializers.ValidationError('That amount is too large for an online request — please call us.')
+    return value

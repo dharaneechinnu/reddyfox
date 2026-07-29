@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.db import models
 from django.utils import timezone
 
@@ -113,14 +115,33 @@ class Faq(ContentBase):
         return self.question
 
 
-class Enquiry(models.Model):
-    """A customer enquiry submitted from the website contact form.
+class LeadQuerySet(models.QuerySet):
+    def of_kind(self, kind):
+        return self.filter(kind=kind)
 
-    The customer's own words (name/phone/email/service/message) are treated as
-    an immutable record — they are read-only in the admin. Staff only change the
-    workflow fields (status, assignment, internal note), so there is never a
-    question about what the customer actually asked for.
+
+class Lead(models.Model):
+    """A customer request from the website.
+
+    One table backs three request types, discriminated by `kind`:
+
+      enquiry    — the general contact form
+      quote      — "Get a free quote"
+      rate_lock  — "Lock this rate" from the converter
+
+    They share ~80% of their fields (who the customer is, workflow state, audit
+    trail), so a single table keeps validation, spam protection, notification and
+    reply-links written once. The three proxy models below give each type its own
+    admin list, its own columns and its own permissions.
+
+    The customer's own words are treated as an immutable record — read-only in
+    the admin. Staff only change the workflow fields.
     """
+
+    class Kind(models.TextChoices):
+        ENQUIRY = 'enquiry', 'Enquiry'
+        QUOTE = 'quote', 'Quote request'
+        RATE_LOCK = 'rate_lock', 'Rate lock'
 
     class Status(models.TextChoices):
         NEW = 'new', 'New'
@@ -129,18 +150,46 @@ class Enquiry(models.Model):
         CLOSED = 'closed', 'Closed'
         SPAM = 'spam', 'Spam'
 
-    # --- what the customer sent ---
+    kind = models.CharField(
+        max_length=12, choices=Kind.choices, default=Kind.ENQUIRY, db_index=True,
+        help_text='Which website form this came from.',
+    )
+
+    # --- who the customer is (all three types) ---
     name = models.CharField(max_length=120)
     phone = models.CharField(max_length=20, help_text='Normalised to 10 digits on save.')
     email = models.EmailField()
+    message = models.TextField(blank=True)
+
+    # --- quote + enquiry ---
     service = models.CharField(max_length=120, blank=True, help_text='Which service they selected.')
-    message = models.TextField()
+
+    # --- quote + rate lock ---
+    from_currency = models.CharField(max_length=3, blank=True)
+    to_currency = models.CharField(max_length=3, blank=True)
+    amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+
+    # --- quote only ---
+    needed_by = models.DateField(null=True, blank=True, help_text='When the customer needs the currency.')
+
+    # --- rate lock only ---
+    quoted_rate = models.DecimalField(
+        max_digits=12, decimal_places=4, null=True, blank=True,
+        help_text='The rate the customer saw when they locked it.',
+    )
+    converted_amount = models.DecimalField(
+        max_digits=16, decimal_places=2, null=True, blank=True,
+        help_text='What the converter showed they would receive.',
+    )
+    lock_expires_at = models.DateTimeField(
+        null=True, blank=True, help_text='Set automatically from the lock window in Site settings.',
+    )
 
     # --- workflow (the only fields staff edit) ---
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.NEW, db_index=True)
     assigned_to = models.ForeignKey(
         'auth.User', null=True, blank=True, on_delete=models.SET_NULL,
-        related_name='enquiries', help_text='Who is handling this enquiry.',
+        related_name='leads', help_text='Who is handling this.',
     )
     internal_note = models.TextField(blank=True, help_text='Staff notes. Never shown to the customer.')
 
@@ -151,14 +200,19 @@ class Enquiry(models.Model):
     source_ip = models.GenericIPAddressField(null=True, blank=True, help_text='For spam triage.')
     notified_at = models.DateTimeField(null=True, blank=True, help_text='When the team alert was sent.')
 
+    objects = LeadQuerySet.as_manager()
+
     class Meta:
         ordering = ['-created_at']
-        verbose_name = 'enquiry'
-        verbose_name_plural = 'enquiries'
-        indexes = [models.Index(fields=['status', '-created_at'])]
+        verbose_name = 'lead'
+        verbose_name_plural = 'all leads'
+        indexes = [
+            models.Index(fields=['kind', 'status', '-created_at']),
+            models.Index(fields=['status', '-created_at']),
+        ]
 
     def __str__(self):
-        return f'{self.name} — {self.service or "enquiry"} ({self.get_status_display()})'
+        return f'{self.name} — {self.get_kind_display()} ({self.get_status_display()})'
 
     def save(self, *args, **kwargs):
         # Stamp the moment it stopped being an untouched lead.
@@ -166,21 +220,106 @@ class Enquiry(models.Model):
             self.contacted_at = timezone.now()
         super().save(*args, **kwargs)
 
+    # --- reply helpers: one tap for the desk, no WhatsApp API needed ---
+    @property
+    def _digits(self):
+        return ''.join(ch for ch in self.phone if ch.isdigit())[-10:]
+
     @property
     def whatsapp_url(self):
-        """Deep link that opens WhatsApp with a reply drafted to this customer.
-        Avoids needing the WhatsApp Business API at all."""
         from urllib.parse import quote
-        digits = ''.join(ch for ch in self.phone if ch.isdigit())[-10:]
-        if len(digits) != 10:
+        d = self._digits
+        if len(d) != 10:
             return None
-        text = quote(f'Hello {self.name.split()[0]}, thank you for your enquiry to Reddy Forex regarding {self.service or "our services"}.')
-        return f'https://wa.me/91{digits}?text={text}'
+        first = self.name.split()[0] if self.name.split() else 'there'
+        subject = {
+            self.Kind.RATE_LOCK: f'your {self.from_currency}/{self.to_currency} rate lock',
+            self.Kind.QUOTE: f'your quote request for {self.service or "forex"}',
+        }.get(self.kind, f'your enquiry about {self.service or "our services"}')
+        return f'https://wa.me/91{d}?text={quote(f"Hello {first}, thank you for {subject} with Reddy Forex.")}'
 
     @property
     def tel_url(self):
-        digits = ''.join(ch for ch in self.phone if ch.isdigit())[-10:]
-        return f'tel:+91{digits}' if len(digits) == 10 else None
+        d = self._digits
+        return f'tel:+91{d}' if len(d) == 10 else None
+
+    # --- rate lock helpers ---
+    @property
+    def is_expired(self):
+        return bool(self.lock_expires_at and timezone.now() > self.lock_expires_at)
+
+    @property
+    def expires_in(self):
+        """Human countdown, or None when this lead has no lock window."""
+        if not self.lock_expires_at:
+            return None
+        delta = self.lock_expires_at - timezone.now()
+        mins = int(delta.total_seconds() // 60)
+        if mins < 0:
+            return 'expired'
+        if mins < 60:
+            return f'{mins} min left'
+        return f'{mins // 60} hr {mins % 60} min left'
+
+
+class KindManager(models.Manager):
+    """Manager that scopes a proxy model to a single Lead.kind."""
+
+    def __init__(self, kind):
+        super().__init__()
+        self._kind = kind
+
+    def get_queryset(self):
+        return super().get_queryset().filter(kind=self._kind)
+
+
+class Enquiry(Lead):
+    """Proxy: the general contact form. Own admin list and own permissions."""
+
+    objects = KindManager(Lead.Kind.ENQUIRY)
+
+    class Meta:
+        proxy = True
+        verbose_name = 'enquiry'
+        verbose_name_plural = 'enquiries'
+
+    def save(self, *args, **kwargs):
+        self.kind = Lead.Kind.ENQUIRY
+        super().save(*args, **kwargs)
+
+
+class QuoteRequest(Lead):
+    """Proxy: "Get a free quote". Own admin list and own permissions."""
+
+    objects = KindManager(Lead.Kind.QUOTE)
+
+    class Meta:
+        proxy = True
+        verbose_name = 'quote request'
+        verbose_name_plural = 'quote requests'
+
+    def save(self, *args, **kwargs):
+        self.kind = Lead.Kind.QUOTE
+        super().save(*args, **kwargs)
+
+
+class RateLock(Lead):
+    """Proxy: "Lock this rate" from the converter. Own admin list and own
+    permissions, and the only type with an expiry window."""
+
+    objects = KindManager(Lead.Kind.RATE_LOCK)
+
+    class Meta:
+        proxy = True
+        verbose_name = 'rate lock'
+        verbose_name_plural = 'rate locks'
+
+    def save(self, *args, **kwargs):
+        self.kind = Lead.Kind.RATE_LOCK
+        if not self.lock_expires_at:
+            hours = SiteSetting.load().rate_lock_hours
+            self.lock_expires_at = timezone.now() + timedelta(hours=hours)
+        super().save(*args, **kwargs)
 
 
 class SiteSetting(models.Model):
@@ -211,7 +350,40 @@ class SiteSetting(models.Model):
         help_text='Message pre-filled in the customer’s WhatsApp. '
                   'Leave blank to open an empty chat.',
     )
+    # --- rate lock ---
+    rate_lock_hours = models.PositiveSmallIntegerField(
+        default=4,
+        verbose_name='Rate lock validity (hours)',
+        help_text='How long a locked rate stays valid. The customer is told the exact expiry time.',
+    )
+
+    # --- per-type notification recipients ---
+    notify_enquiries = models.CharField(
+        max_length=255, blank=True,
+        help_text='Comma-separated emails for contact-form enquiries. Blank = use the default from settings.',
+    )
+    notify_quotes = models.CharField(
+        max_length=255, blank=True,
+        help_text='Comma-separated emails for quote requests. Blank = use the default.',
+    )
+    notify_rate_locks = models.CharField(
+        max_length=255, blank=True,
+        help_text='Comma-separated emails for rate locks. Blank = use the default.',
+    )
+
     updated_at = models.DateTimeField(auto_now=True)
+
+    def recipients_for(self, kind):
+        """Emails to alert for a given Lead.kind, falling back to the project
+        default so a blank field never means "nobody gets told"."""
+        from django.conf import settings
+        raw = {
+            'enquiry': self.notify_enquiries,
+            'quote': self.notify_quotes,
+            'rate_lock': self.notify_rate_locks,
+        }.get(kind, '')
+        addrs = [a.strip() for a in (raw or '').split(',') if a.strip()]
+        return addrs or list(getattr(settings, 'ENQUIRY_NOTIFY_EMAILS', []) or [])
 
     class Meta:
         verbose_name = 'site setting'

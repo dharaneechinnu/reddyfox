@@ -60,11 +60,11 @@ export default function Converter() {
                 <span style={{ fontFamily: fonts.mono, fontSize: 28 }}>{fx.calc.converted}</span>
               </div>
               <span
-                onClick={() => navigate('/contact')}
+                onClick={() => navigate('/lock-rate')}
                 style={{ marginTop: 26, display: 'block', textAlign: 'center', background: c.orange, color: '#fff', padding: 15, borderRadius: 9, fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'background .18s' }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = c.orangeDark)}
                 onMouseLeave={(e) => (e.currentTarget.style.background = c.orange)}
-              >Reserve this rate for 4 hours</span>
+              >Lock this rate</span>
             </div>
           </div>
         </div>

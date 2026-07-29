@@ -108,7 +108,7 @@ function Header() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 'none' }}>
           <Link to="/rates" style={{ fontSize: 14.5, fontWeight: 500, color: c.navyMid, cursor: 'pointer', whiteSpace: 'nowrap' }}>Today's rates</Link>
           <Link
-            to="/contact"
+            to="/quote"
             style={{ background: c.orange, color: '#fff', padding: '12px 20px', borderRadius: 8, fontSize: 14.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background .18s,transform .18s' }}
             onMouseEnter={(e) => { e.currentTarget.style.background = c.orangeDark; e.currentTarget.style.transform = 'translateY(-1px)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = c.orange; e.currentTarget.style.transform = 'none'; }}
