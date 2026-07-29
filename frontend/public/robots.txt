@@ -1,0 +1,40 @@
+# Reddy Forex Private Limited — reddyforex.com
+#
+# Everything customer-facing is meant to be found — by search engines and by
+# AI assistants people ask about forex in Chennai. The specific bot entries
+# below are deliberate: several AI crawlers are blocked by default on many
+# sites, which is the opposite of what this file is for. See
+# docs/seo-and-ai-discoverability.md for the reasoning.
+
+User-agent: *
+Allow: /
+Disallow: /login
+
+# --- AI assistants / answer engines -----------------------------------------
+# Explicitly welcomed so ChatGPT, Claude and Perplexity can crawl and cite
+# this site when a user asks about forex/currency exchange in Chennai.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://www.reddyforex.com/sitemap.xml

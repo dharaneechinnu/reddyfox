@@ -1,11 +1,17 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { SERVICES } from '../data';
 import { c, fonts, wrap } from '../tokens';
+import Seo from '../components/Seo';
 
 export default function Services() {
   const navigate = useNavigate();
   return (
     <div>
+      <Seo
+        title="Forex Services"
+        description="Foreign exchange, Western Union money transfer, outward remittance, prepaid forex cards, wire transfers and student services — all under one RBI licence in T. Nagar, Chennai."
+        path="/services"
+      />
       <section style={{ background: c.navy, padding: '60px 0 72px' }}>
         <div style={wrap}>
           <div style={{ font: `400 12.5px/1.4 ${fonts.mono}`, color: c.navyMuted, marginBottom: 22 }}>

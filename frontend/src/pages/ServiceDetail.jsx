@@ -5,6 +5,7 @@ import { c, fonts, wrap } from '../tokens';
 import useApi from '../hooks/useApi';
 import { fetchFaqs } from '../api';
 import FaqAccordion from '../components/FaqAccordion';
+import Seo from '../components/Seo';
 
 const loadFaqs = () => fetchFaqs();
 
@@ -18,6 +19,11 @@ export default function ServiceDetail() {
 
   return (
     <div>
+      <Seo
+        title={active.title}
+        description={active.hero || active.short}
+        path={`/services/${active.id}`}
+      />
       <section style={{ background: c.navy, padding: '60px 0 76px' }}>
         <div style={wrap}>
           <div style={{ font: `400 12.5px/1.4 ${fonts.mono}`, color: c.navyMuted, marginBottom: 22 }}>

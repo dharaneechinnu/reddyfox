@@ -1,10 +1,12 @@
 import { c, fonts } from '../tokens';
+import Seo from '../components/Seo';
 
 const fieldInput = { width: '100%', border: `1px solid ${c.softLine}`, borderRadius: 9, padding: 14, fontSize: 15, outline: 'none', marginBottom: 16, color: c.navy };
 
 export default function Login() {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(360px,1fr))', minHeight: 720 }}>
+      <Seo title="Client Portal Sign In" path="/login" noindex />
       <div style={{ background: c.navy, padding: '80px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px)', backgroundSize: '64px 64px' }} />
         <div style={{ position: 'relative' }}>

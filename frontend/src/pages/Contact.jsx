@@ -2,12 +2,18 @@ import { Link } from 'react-router-dom';
 import { COMPANY, CONTACT } from '../company';
 import { c, fonts, wrap } from '../tokens';
 import EnquiryForm from '../components/EnquiryForm';
+import Seo from '../components/Seo';
 
 const MAPS_QUERY = encodeURIComponent(`${COMPANY.legalName}, ${CONTACT.addressOneLine}`);
 
 export default function Contact() {
   return (
     <div>
+      <Seo
+        title="Contact Us"
+        description={`Visit Reddy Forex at ${CONTACT.addressOneLine}, or call ${CONTACT.mobiles[0].display} for today's rate.`}
+        path="/contact"
+      />
       <section style={{ background: c.navy, padding: '60px 0 72px' }}>
         <div style={wrap}>
           <div style={{ font: `400 12.5px/1.4 ${fonts.mono}`, color: c.navyMuted, marginBottom: 22 }}>

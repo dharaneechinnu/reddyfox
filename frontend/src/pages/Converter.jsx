@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useFx } from '../context/FxContext';
 import { fonts, c, wrap } from '../tokens';
+import Seo from '../components/Seo';
 
 export default function Converter() {
   const navigate = useNavigate();
@@ -8,6 +9,11 @@ export default function Converter() {
 
   return (
     <div>
+      <Seo
+        title="Currency Converter"
+        description="Convert USD, EUR, GBP and other currencies to Indian Rupees at Reddy Forex's live counter rates — see exactly what you'll get before you visit our T. Nagar, Chennai shop."
+        path="/converter"
+      />
       <section style={{ background: c.navy, padding: '60px 0 120px' }}>
         <div style={wrap}>
           <div style={{ font: `400 12.5px/1.4 ${fonts.mono}`, color: c.navyMuted, marginBottom: 22 }}>

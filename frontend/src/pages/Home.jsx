@@ -4,6 +4,7 @@ import { HERO_TRUST, STATS, SERVICES, REASONS, fmt } from '../data';
 import { COMPANY, CONTACT } from '../company';
 import { c, fonts, wrap, eyebrow, h2Style } from '../tokens';
 import FaqAccordion from '../components/FaqAccordion';
+import Seo from '../components/Seo';
 import useApi from '../hooks/useApi';
 import { fetchTestimonials, fetchFaqs } from '../api';
 
@@ -11,6 +12,11 @@ import { fetchTestimonials, fetchFaqs } from '../api';
 // Module-scope so useApi doesn't refetch on every render.
 const loadTestimonials = () => fetchTestimonials();
 const loadHomepageFaqs = () => fetchFaqs({ homepageOnly: true });
+
+// The FinancialService/LocalBusiness JSON-LD lives as a static <script> in
+// index.html, not here — this is a single-page app, so that tag stays in the
+// DOM across every client-side route change and never needs to be
+// (re)written per page. Adding another copy here would just duplicate it.
 
 function RateCcBadge({ cc }) {
   return (
@@ -54,6 +60,11 @@ export default function Home() {
 
   return (
     <div>
+      <Seo
+        title="Foreign Currency Exchange in Chennai"
+        description="RBI-authorised money changer in T. Nagar, Chennai since 2000. Buy and sell foreign currency, Western Union money transfer, forex cards and outward remittance at competitive rates."
+        path="/"
+      />
       <section style={{ background: c.navy, position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px)', backgroundSize: '72px 72px' }} />
         <div style={{ position: 'absolute', top: -180, right: -140, width: 620, height: 620, borderRadius: '50%', background: 'radial-gradient(circle,rgba(226,87,31,.28),transparent 62%)' }} />

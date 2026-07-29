@@ -4,6 +4,7 @@ import { c, fonts, wrap } from '../tokens';
 import useApi from '../hooks/useApi';
 import { fetchFaqs, fetchFaqCategories } from '../api';
 import FaqAccordion from '../components/FaqAccordion';
+import Seo from '../components/Seo';
 
 const loadFaqs = () => fetchFaqs();
 const loadCategories = () => fetchFaqCategories();
@@ -22,6 +23,23 @@ export default function Faq() {
 
   const visible = activeCat ? faqs.filter((f) => f.category === activeCat) : faqs;
 
+  // FAQPage structured data — the single highest-value schema for this
+  // feature: both Google's rich results and AI answer engines (ChatGPT,
+  // Claude, Perplexity) parse this exact question/answer shape to quote a
+  // source directly, rather than needing to summarise unstructured prose.
+  const faqJsonLd = useMemo(() => {
+    if (!faqs.length) return null;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqs.map((f) => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: { '@type': 'Answer', text: f.answer },
+      })),
+    };
+  }, [faqs]);
+
   const catStyle = (isActive) => ({
     padding: '11px 15px',
     borderRadius: 9,
@@ -35,6 +53,13 @@ export default function Faq() {
 
   return (
     <div>
+      <Seo
+        title="FAQs"
+        description="Documents, cash limits, timings and buy-back — answered plainly by Reddy Forex, the RBI-authorised money changer in T. Nagar, Chennai."
+        path="/faq"
+        jsonLd={faqJsonLd}
+        jsonLdId="faq"
+      />
       <section style={{ background: c.navy, padding: '60px 0 72px' }}>
         <div style={wrap}>
           <div style={{ font: `400 12.5px/1.4 ${fonts.mono}`, color: c.navyMuted, marginBottom: 22 }}>

@@ -3,6 +3,7 @@ import { CONTACT } from '../company';
 import { useFx } from '../context/FxContext';
 import { c, fonts, wrap } from '../tokens';
 import RateLockForm from '../components/RateLockForm';
+import Seo from '../components/Seo';
 
 export default function LockRate() {
   const fx = useFx();
@@ -13,6 +14,11 @@ export default function LockRate() {
 
   return (
     <div>
+      <Seo
+        title="Lock Today's Exchange Rate"
+        description="Reserve today's exchange rate with Reddy Forex before it changes — lock it in from the converter and collect at our T. Nagar, Chennai counter."
+        path="/lock-rate"
+      />
       <section style={{ background: c.navy, padding: '60px 0 72px' }}>
         <div style={wrap}>
           <div style={{ font: `400 12.5px/1.4 ${fonts.mono}`, color: c.navyMuted, marginBottom: 22 }}>

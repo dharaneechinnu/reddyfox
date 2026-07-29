@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Static sitemap for a client-rendered SPA — there is no build-time route
+  generator, so this list is maintained by hand. Add a new <url> entry here
+  whenever a route is added to frontend/src/App.jsx, and to
+  docs/seo-and-ai-discoverability.md's route table.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://www.reddyforex.com/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://www.reddyforex.com/rates</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://www.reddyforex.com/converter</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.reddyforex.com/quote</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.reddyforex.com/lock-rate</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.reddyforex.com/services</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://www.reddyforex.com/services/exchange</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.reddyforex.com/services/money-transfer</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.reddyforex.com/services/remittance</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.reddyforex.com/services/forex-card</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.reddyforex.com/services/wire-transfer</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.reddyforex.com/services/student-services</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.reddyforex.com/about</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.reddyforex.com/faq</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.reddyforex.com/contact</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+</urlset>
