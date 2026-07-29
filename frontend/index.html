@@ -4,7 +4,55 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!--
+      This is a client-rendered SPA — everything in <head> is what a crawler
+      sees if it does NOT execute JavaScript. src/components/Seo.jsx swaps in
+      a per-page title/description/canonical after mount for crawlers that
+      do, but these defaults are the only guaranteed-seen version, so they're
+      written to stand on their own. See docs/seo-and-ai-discoverability.md.
+    -->
     <title>Reddy Forex Private Limited — Foreign Currency Exchange in Chennai</title>
+    <meta name="description" content="RBI-authorised money changer in T. Nagar, Chennai since 2000. Buy and sell foreign currency, Western Union money transfer, forex cards and outward remittance at competitive rates." />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://www.reddyforex.com/" />
+
+    <meta property="og:site_name" content="Reddy Forex Private Limited" />
+    <meta property="og:title" content="Reddy Forex Private Limited — Foreign Currency Exchange in Chennai" />
+    <meta property="og:description" content="RBI-authorised money changer in T. Nagar, Chennai since 2000. Buy and sell foreign currency, Western Union money transfer, forex cards and outward remittance at competitive rates." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.reddyforex.com/" />
+    <meta property="og:locale" content="en_IN" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Reddy Forex Private Limited — Foreign Currency Exchange in Chennai" />
+    <meta name="twitter:description" content="RBI-authorised money changer in T. Nagar, Chennai since 2000. Buy and sell foreign currency, Western Union money transfer, forex cards and outward remittance at competitive rates." />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": ["FinancialService", "LocalBusiness"],
+        "name": "Reddy Forex Private Limited",
+        "alternateName": "Reddy Forex",
+        "description": "We specialize in providing the Money Exchange Services are Fast",
+        "url": "https://www.reddyforex.com",
+        "telephone": "+919941456261",
+        "email": "reddyforex@gmail.com",
+        "address": {
+          "@type": "PostalAddress",
+          "streetAddress": "Shop No 105, Challa Mall, 17 Thyagaraya Road, T. Nagar",
+          "addressLocality": "Chennai",
+          "addressRegion": "Tamil Nadu",
+          "postalCode": "600017",
+          "addressCountry": "IN"
+        },
+        "areaServed": "Chennai, Tamil Nadu, India",
+        "sameAs": [
+          "https://www.facebook.com/Reddy-Forex-Private-Limited-100909432036543",
+          "https://x.com/ReddyForex",
+          "https://www.youtube.com/channel/UCrFuWjK4Yfma9A6RMbywE5g"
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

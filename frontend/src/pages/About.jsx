@@ -2,10 +2,16 @@ import { Link } from 'react-router-dom';
 import { CERTS, REASONS } from '../data';
 import { COMPANY, CONTACT } from '../company';
 import { c, fonts, wrap } from '../tokens';
+import Seo from '../components/Seo';
 
 export default function About() {
   return (
     <div>
+      <Seo
+        title="About Us"
+        description={`${COMPANY.yearsExperience} years as an RBI-authorised money changer in T. Nagar, Chennai — serving private and corporate clients since ${COMPANY.since}.`}
+        path="/about"
+      />
       <section style={{ background: c.navy, padding: '60px 0 88px' }}>
         <div style={wrap}>
           <div style={{ font: `400 12.5px/1.4 ${fonts.mono}`, color: c.navyMuted, marginBottom: 22 }}>

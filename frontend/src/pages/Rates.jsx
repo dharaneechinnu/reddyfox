@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { useFx } from '../context/FxContext';
 import { FILTERS, fmt } from '../data';
 import { c, fonts, wrap } from '../tokens';
+import Seo from '../components/Seo';
 
 
 function RateCcBadge({ cc }) {
@@ -41,6 +42,11 @@ export default function Rates() {
 
   return (
     <div>
+      <Seo
+        title="Today's Foreign Exchange Rates"
+        description="Live buy and sell rates for USD, EUR, GBP and other major currencies at Reddy Forex, T. Nagar, Chennai — updated daily by our RBI-authorised dealing desk."
+        path="/rates"
+      />
       <section style={{ background: c.navy, padding: '60px 0 44px' }}>
         <div style={wrap}>
           <div style={{ font: `400 12.5px/1.4 ${fonts.mono}`, color: c.navyMuted, marginBottom: 22 }}>

@@ -2,10 +2,16 @@ import { Link } from 'react-router-dom';
 import { CONTACT } from '../company';
 import { c, fonts, wrap } from '../tokens';
 import QuoteForm from '../components/QuoteForm';
+import Seo from '../components/Seo';
 
 export default function Quote() {
   return (
     <div>
+      <Seo
+        title="Get a Free Forex Quote"
+        description="Tell Reddy Forex which currency and amount you need and our T. Nagar, Chennai dealers will come back with a price — no obligation."
+        path="/quote"
+      />
       <section style={{ background: c.navy, padding: '60px 0 72px' }}>
         <div style={wrap}>
           <div style={{ font: `400 12.5px/1.4 ${fonts.mono}`, color: c.navyMuted, marginBottom: 22 }}>
