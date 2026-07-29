@@ -69,7 +69,7 @@ export default function Home() {
             </p>
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 40 }}>
               <Btn onClick={() => navigate('/converter')}>Convert currency</Btn>
-              <Btn variant="outline" onClick={() => navigate('/contact')}>Get a free quote</Btn>
+              <Btn variant="outline" onClick={() => navigate('/quote')}>Get a free quote</Btn>
             </div>
             <div style={{ display: 'flex', gap: 34, flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,.12)', paddingTop: 26 }}>
               {HERO_TRUST.map((t) => (
@@ -119,7 +119,7 @@ export default function Home() {
             </div>
 
             <span
-              onClick={() => navigate('/converter')}
+              onClick={() => navigate('/lock-rate')}
               style={{ marginTop: 20, display: 'block', textAlign: 'center', background: c.navy, color: '#fff', padding: 15, borderRadius: 9, fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'background .18s' }}
               onMouseEnter={(e) => (e.currentTarget.style.background = c.navyLight)}
               onMouseLeave={(e) => (e.currentTarget.style.background = c.navy)}

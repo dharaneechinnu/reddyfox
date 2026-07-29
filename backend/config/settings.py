@@ -151,9 +151,11 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        # Contact form: bots get cut off long before the team's inbox suffers.
-        # A genuine customer never needs to submit more than a handful an hour.
-        'enquiry': config('ENQUIRY_THROTTLE_RATE', default='5/hour'),
+        # Shared by all three website forms (enquiry, quote, rate lock) so a
+        # bot cannot triple its allowance by rotating between them. Set high
+        # enough that a genuine customer who asks for a quote, locks a rate and
+        # then sends an enquiry is never blocked.
+        'enquiry': config('ENQUIRY_THROTTLE_RATE', default='10/hour'),
     },
 }
 

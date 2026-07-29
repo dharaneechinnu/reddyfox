@@ -18,12 +18,12 @@ export async function fetchSiteSettings() {
 }
 
 /**
- * Submit the contact form. Returns the success payload, or throws an Error
- * whose `.fieldErrors` holds per-field messages from DRF when it rejected the
- * data, so the form can show them next to the right inputs.
+ * POST a lead to one of the three create-only endpoints. Returns the success
+ * payload, or throws an Error whose `.fieldErrors` holds per-field messages
+ * from DRF, so the form can show them next to the right inputs.
  */
-export async function submitEnquiry(payload) {
-  const res = await fetch(`${API_BASE}/enquiries/`, {
+async function postLead(path, payload) {
+  const res = await fetch(`${API_BASE}/${path}/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -50,8 +50,12 @@ export async function submitEnquiry(payload) {
     if (Object.keys(fieldErrors).length) err.fieldErrors = fieldErrors;
     throw err;
   }
-  throw new Error(`Could not send your enquiry (${res.status}). Please call us instead.`);
+  throw new Error(`Could not send your request (${res.status}). Please call us instead.`);
 }
+
+export const submitEnquiry = (payload) => postLead('enquiries', payload);
+export const submitQuoteRequest = (payload) => postLead('quotes', payload);
+export const submitRateLock = (payload) => postLead('rate-locks', payload);
 
 export async function fetchTestimonials() {
   const res = await fetch(`${API_BASE}/testimonials/`);
