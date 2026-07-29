@@ -2,7 +2,7 @@ from django.contrib import admin, messages
 from django.utils import timezone
 from django.utils.html import format_html
 
-from .models import Enquiry, Faq, FaqCategory, Testimonial
+from .models import Enquiry, Faq, FaqCategory, SiteSetting, Testimonial
 
 
 @admin.register(Testimonial)
@@ -190,3 +190,47 @@ class EnquiryAdmin(admin.ModelAdmin):
     @admin.action(description='Mark as Spam')
     def mark_spam(self, request, queryset):
         self._bulk_set(request, queryset, Enquiry.Status.SPAM, 'spam')
+
+
+@admin.register(SiteSetting)
+class SiteSettingAdmin(admin.ModelAdmin):
+    """Singleton — one row, auto-created, never deleted."""
+
+    list_display = ('__str__', 'whatsapp_number', 'whatsapp_enabled', 'updated_at')
+    readonly_fields = ('updated_at', 'preview_link')
+    fieldsets = (
+        ('WhatsApp — offered to customers after they send an enquiry', {
+            'fields': (
+                'whatsapp_enabled', 'whatsapp_number',
+                'whatsapp_label', 'whatsapp_greeting', 'preview_link',
+            ),
+            'description': 'Change the number here and the website picks it up on the next page load — no deploy needed.',
+        }),
+        (None, {'fields': ('updated_at',)}),
+    )
+
+    def has_add_permission(self, request):
+        return not SiteSetting.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        # There is only ever one row: make sure it exists so the list is never
+        # empty, and staff land straight on the edit form.
+        SiteSetting.load()
+        return super().changelist_view(request, extra_context)
+
+    @admin.display(description='Test this link')
+    def preview_link(self, obj):
+        if not obj.pk or not obj.whatsapp_number:
+            return 'Save first to get a test link.'
+        from urllib.parse import quote
+        url = f'https://wa.me/91{obj.whatsapp_number}'
+        if obj.whatsapp_greeting:
+            url += f'?text={quote(obj.whatsapp_greeting)}'
+        return format_html(
+            '<a class="button" href="{}" target="_blank" rel="noreferrer">Open this WhatsApp chat</a>'
+            '<div style="margin-top:6px;font-size:12px;color:#666">{}</div>',
+            url, url,
+        )

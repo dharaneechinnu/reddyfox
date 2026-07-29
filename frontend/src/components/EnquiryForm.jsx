@@ -3,7 +3,9 @@ import { SERVICES } from '../data';
 import { CONTACT, PRIMARY_PHONE } from '../company';
 import { c, fonts } from '../tokens';
 import { validateEmail, validatePhone, validateRequired, runValidators } from '../validation';
-import { submitEnquiry } from '../api';
+import { submitEnquiry, fetchSiteSettings } from '../api';
+import useApi from '../hooks/useApi';
+import SocialIcon from './SocialIcon';
 
 const fieldLabel = { display: 'block', fontSize: 12.5, fontWeight: 500, color: c.textMuted, marginBottom: 7 };
 
@@ -40,6 +42,9 @@ const EMPTY = {
 // far worse than letting a spam row through for the team to mark as spam.
 const honeypotStyle = { display: 'none' };
 
+// Module scope so useApi does not refetch on every render.
+const loadSiteSettings = () => fetchSiteSettings();
+
 function FieldError({ id, message }) {
   if (!message) return null;
   return (
@@ -56,6 +61,8 @@ export default function EnquiryForm() {
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [serverError, setServerError] = useState(null);
+  // WhatsApp number/label/greeting are managed in the Django admin.
+  const { data: site } = useApi(loadSiteSettings, null);
 
   const setField = (field, value) => {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -145,6 +152,33 @@ export default function EnquiryForm() {
           <span style={{ fontFamily: fonts.mono, color: c.navy }}>{values.phone}</span> or{' '}
           <span style={{ color: c.navy }}>{values.email}</span>. If it is urgent, please call us.
         </p>
+        {/* WhatsApp is the fastest channel for most customers, so it leads.
+            Number, label and prefilled greeting all come from the Django admin. */}
+        {site?.whatsapp_enabled && site?.whatsapp_url && (
+          <div style={{ border: `1px solid ${c.greenBorder}`, background: c.greenBg2, borderRadius: 12, padding: 20, marginBottom: 16 }}>
+            <div style={{ fontSize: 14.5, fontWeight: 600, color: c.greenText, marginBottom: 4 }}>
+              Want to talk to us personally?
+            </div>
+            <p style={{ fontSize: 13.5, lineHeight: 1.55, color: c.greenText2, margin: '0 0 14px' }}>
+              Message us directly on WhatsApp and one of our team will reply to you.
+            </p>
+            <a
+              href={site.whatsapp_url}
+              target="_blank"
+              rel="noreferrer noopener"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: '#25D366', color: '#fff', padding: 15, borderRadius: 9, fontSize: 15, fontWeight: 600, textDecoration: 'none' }}
+            >
+              <SocialIcon name="whatsapp" size={19} />
+              {site.whatsapp_label || 'Chat with us on WhatsApp'}
+            </a>
+            {site.whatsapp_display && (
+              <div style={{ marginTop: 10, textAlign: 'center', fontFamily: fonts.mono, fontSize: 14, color: c.greenText }}>
+                {site.whatsapp_display}
+              </div>
+            )}
+          </div>
+        )}
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <a
             href={`tel:${PRIMARY_PHONE.tel}`}

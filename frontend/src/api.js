@@ -7,6 +7,17 @@ export async function fetchCurrencies() {
 }
 
 /**
+ * Public contact options (WhatsApp number, label, prefilled greeting), managed
+ * in the Django admin under Content -> Site settings. The wa.me URL is built
+ * server-side, so the number format lives in exactly one place.
+ */
+export async function fetchSiteSettings() {
+  const res = await fetch(`${API_BASE}/site-settings/`);
+  if (!res.ok) throw new Error(`Failed to load site settings (${res.status})`);
+  return res.json();
+}
+
+/**
  * Submit the contact form. Returns the success payload, or throws an Error
  * whose `.fieldErrors` holds per-field messages from DRF when it rejected the
  * data, so the form can show them next to the right inputs.

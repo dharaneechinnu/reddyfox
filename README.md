@@ -101,6 +101,7 @@ Everything is at **http://localhost:8000/admin/** :
 | Content → FAQs | Questions and answers (plain text; blank line = new paragraph) |
 | Content → FAQ categories | Sidebar groupings on the `/faq` page |
 | Content → Enquiries | The team's inbox of website enquiries (see below) |
+| Content → Site settings | The WhatsApp number offered after an enquiry is sent |
 
 ### Enquiries — the team's inbox
 
@@ -124,6 +125,26 @@ lead inbox rather than a plain table:
 Order of operations on submit is deliberate: **save to the database first, then
 notify.** A broken SMTP password logs an error and leaves the lead safely in the
 admin; it never loses it.
+
+#### WhatsApp option for customers
+
+After an enquiry is sent, the customer is offered a **Chat with us on WhatsApp**
+button so they can carry on the conversation personally. Everything about it is
+editable in **Content → Site settings** — no deploy needed:
+
+| Field | What it does |
+|---|---|
+| `whatsapp_enabled` | Untick to hide the option entirely (call/email remain) |
+| `whatsapp_number` | The number that receives chats. Enter it however you like — `+91 99414 56261`, `099414-56261` or `9941456261` all normalise to 10 digits, and an invalid number is rejected by the form |
+| `whatsapp_label` | The button text |
+| `whatsapp_greeting` | Message pre-filled in the customer's WhatsApp. Blank = empty chat |
+
+The admin page includes an **"Open this WhatsApp chat"** test button so you can
+confirm the link works before customers see it.
+
+The `wa.me` URL is built server-side and returned by the API, so number
+formatting and message encoding live in exactly one place. No WhatsApp Business
+API, no Meta verification.
 
 #### Email alerts
 
@@ -168,6 +189,7 @@ public API. Staff read enquiries in the admin.
 | `/api/faqs/?homepage=true` | Only FAQs flagged for the homepage accordion |
 | `/api/faq-categories/` | FAQ sidebar categories |
 | `POST /api/enquiries/` | Contact form submission — **create only** |
+| `/api/site-settings/` | Public contact options (WhatsApp number, label, prefilled greeting) |
 
 ## Frontend setup
 

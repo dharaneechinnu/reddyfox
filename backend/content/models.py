@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 
+from .validators import normalize_phone, validate_indian_phone
+
 
 class VisibleOrderedQuerySet(models.QuerySet):
     """Shared helper so every public API endpoint filters the same way."""
@@ -179,3 +181,54 @@ class Enquiry(models.Model):
     def tel_url(self):
         digits = ''.join(ch for ch in self.phone if ch.isdigit())[-10:]
         return f'tel:+91{digits}' if len(digits) == 10 else None
+
+
+class SiteSetting(models.Model):
+    """Singleton row for contact options the business wants to change without a
+    deploy. Currently the WhatsApp number offered after an enquiry is sent."""
+
+    whatsapp_enabled = models.BooleanField(
+        default=True,
+        verbose_name='Show WhatsApp option',
+        help_text='Untick to hide the "Chat with us on WhatsApp" option from the website.',
+    )
+    whatsapp_number = models.CharField(
+        max_length=20,
+        default='9941456261',
+        validators=[validate_indian_phone],
+        help_text='Indian mobile number that receives customer chats. '
+                  '10 digits; +91, spaces and dashes are fine and get stripped.',
+    )
+    whatsapp_label = models.CharField(
+        max_length=80,
+        default='Chat with us on WhatsApp',
+        help_text='Button text shown to the customer.',
+    )
+    whatsapp_greeting = models.CharField(
+        max_length=200,
+        blank=True,
+        default='Hello, I just sent an enquiry on your website.',
+        help_text='Message pre-filled in the customer’s WhatsApp. '
+                  'Leave blank to open an empty chat.',
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'site setting'
+        verbose_name_plural = 'site settings'
+
+    def __str__(self):
+        return f'WhatsApp: +91 {self.whatsapp_number}' if self.whatsapp_enabled else 'WhatsApp: disabled'
+
+    def save(self, *args, **kwargs):
+        self.pk = 1  # enforce singleton
+        self.whatsapp_number = normalize_phone(self.whatsapp_number) or self.whatsapp_number
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass  # the single row is never deleted
+
+    @classmethod
+    def load(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj

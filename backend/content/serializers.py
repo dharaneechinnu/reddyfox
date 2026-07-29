@@ -1,9 +1,10 @@
 import re
 from html import escape
+from urllib.parse import quote
 
 from rest_framework import serializers
 
-from .models import Enquiry, Faq, FaqCategory, Testimonial
+from .models import Enquiry, Faq, FaqCategory, SiteSetting, Testimonial
 from .validators import looks_like_spam, normalize_phone
 
 
@@ -98,3 +99,28 @@ class EnquiryCreateSerializer(serializers.ModelSerializer):
                 {'message': 'This message looks like spam. Please remove links and try again, or call us instead.'}
             )
         return attrs
+
+
+class SiteSettingSerializer(serializers.ModelSerializer):
+    """Public contact options. The wa.me URL is built here so the frontend never
+    has to reimplement number formatting or message encoding."""
+
+    whatsapp_url = serializers.SerializerMethodField()
+    whatsapp_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SiteSetting
+        fields = ['whatsapp_enabled', 'whatsapp_display', 'whatsapp_label', 'whatsapp_url']
+
+    def get_whatsapp_display(self, obj):
+        n = obj.whatsapp_number or ''
+        # 9941456261 -> +91 99414 56261
+        return f'+91 {n[:5]} {n[5:]}' if len(n) == 10 else n
+
+    def get_whatsapp_url(self, obj):
+        if not (obj.whatsapp_enabled and obj.whatsapp_number):
+            return None
+        url = f'https://wa.me/91{obj.whatsapp_number}'
+        if obj.whatsapp_greeting:
+            url += f'?text={quote(obj.whatsapp_greeting)}'
+        return url

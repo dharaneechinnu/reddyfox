@@ -2,10 +2,11 @@ from rest_framework import generics, status, viewsets
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
-from .models import Faq, FaqCategory, Testimonial
+from .models import Faq, FaqCategory, SiteSetting, Testimonial
 from .notifications import notify_team
 from .serializers import (
-    EnquiryCreateSerializer, FaqCategorySerializer, FaqSerializer, TestimonialSerializer,
+    EnquiryCreateSerializer, FaqCategorySerializer, FaqSerializer,
+    SiteSettingSerializer, TestimonialSerializer,
 )
 
 
@@ -70,3 +71,12 @@ class EnquiryCreateView(generics.CreateAPIView):
             {'detail': 'Thank you — your enquiry has reached our team. We will get back to you shortly.'},
             status=status.HTTP_201_CREATED,
         )
+
+
+class SiteSettingView(generics.RetrieveAPIView):
+    """Public contact options (WhatsApp). Read-only; edited in the Django admin
+    under Content -> Site settings."""
+    serializer_class = SiteSettingSerializer
+
+    def get_object(self):
+        return SiteSetting.load()
