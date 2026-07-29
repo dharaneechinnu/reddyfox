@@ -1,0 +1,228 @@
+/**
+ * Static site content for Reddy Forex Private Limited.
+ *
+ * SOURCE OF TRUTH: everything here is taken from the live reddyforex.com
+ * (index.html, about-us.html, contact.html, faq.html), scraped July 2026.
+ *
+ * Rules for editing this file:
+ *  - Do NOT invent licence numbers, certifications, branch counts, customer
+ *    ratings, transaction volumes or staff names. This is a regulated money
+ *    changer; unverifiable claims are a legal risk.
+ *  - Company name / phones / address / email live in company.js, not here.
+ *  - Currency rates, testimonials and FAQs come from the backend, not here.
+ */
+
+// Descriptions marked "site copy" are verbatim from reddyforex.com.
+export const SERVICES = [
+  {
+    id: 'exchange', tag: '01', title: 'Foreign Exchange',
+    short: 'Buying and selling foreign currency',
+    // site copy
+    body: 'We buy and sell foreign currencies and travelers cheques at competitive rates. It is the right place for both encashing and purchasing of foreign currencies and travelers cheques.',
+    hero: 'Buy and sell foreign currency and travellers cheques at competitive rates.',
+    benefits: [
+      ['Buy and sell', 'We handle both encashing and purchasing of foreign currencies and travellers cheques.'],
+      ['As per RBI guidelines', 'We undertake to buy and sell foreign currencies and en-cash travellers cheques as per RBI guidelines.'],
+      ['Competitive rates', 'Our rates are considered to be among the most competitive in the market.'],
+      ['Cash limit', 'You can buy forex up to ₹49,999 by cash. Above ₹50,000 must be paid by crossed cheque, demand draft or bank transfer (RTGS/NEFT).'],
+    ],
+    process: [
+      ['Call for a quote', 'Ring the shop for the day’s rate on the currency you need.'],
+      ['Bring your documents', 'Passport and travel documents, plus payment as per the RBI cash limit.'],
+      ['Collect at the counter', 'Counted at the counter at our T. Nagar shop.'],
+    ],
+  },
+  {
+    id: 'money-transfer', tag: '02', title: 'Money Transfer',
+    short: 'Western Union, MoneyGram, Xpress Money, RIA',
+    // site copy (Western Union section)
+    body: 'We provide a secure way to send and receive money to and from your loved ones worldwide. We offer a quick, convenient and easy way to transfer your money worldwide.',
+    hero: 'Send and receive money worldwide through Western Union, MoneyGram, Xpress Money and RIA.',
+    benefits: [
+      ['Western Union', 'Receive money from anywhere with the Western Union transfer service.'],
+      ['MoneyGram', 'Send and receive international transfers through MoneyGram.'],
+      ['Xpress Money', 'Xpress Money transfers handled at our counter.'],
+      ['RIA Money Transfer', 'RIA Money Transfer available for inward and outward transfers.'],
+    ],
+    process: [
+      ['Choose your service', 'Tell us which network the sender used, or which you want to send by.'],
+      ['Bring valid ID', 'Government photo ID as required for the transfer.'],
+      ['Collect or send', 'Completed at the counter, in partnership with banks.'],
+    ],
+  },
+  {
+    id: 'remittance', tag: '03', title: 'Money Remittance',
+    short: 'Outward forex remittance from Chennai',
+    // site copy
+    body: 'We specialize in providing the Money Remittance Services are Fast, Easy and Reliable money transfer services to our valuable customers. We offer complete outward forex remittance service in Chennai.',
+    hero: 'Complete outward forex remittance service in Chennai.',
+    benefits: [
+      ['Outward remittance', 'Complete outward forex remittance service handled in Chennai.'],
+      ['Bank partnerships', 'Delivered in partnership with banks and various exchange companies.'],
+      ['Purpose-based', 'Overseas education, family maintenance, immigration, medical treatment, conferences, seminars and trade fairs.'],
+      ['LRS limit', 'Up to USD 2,50,000 or equivalent per person per calendar year under the Liberalised Remittance Scheme.'],
+    ],
+    process: [
+      ['Tell us the purpose', 'Education, family maintenance, medical treatment, immigration or business travel.'],
+      ['Provide documents', 'Supporting documents for the declared purpose.'],
+      ['We remit', 'Released through our banking partners.'],
+    ],
+  },
+  {
+    id: 'forex-card', tag: '04', title: 'Prepaid Foreign Currency Card',
+    short: 'Multi-currency travel card',
+    body: 'A multi-currency travel card is a prepaid card in which you can load multiple currencies on one single card — useful for travel, study and business trips.',
+    hero: 'One prepaid card, up to 15 currencies loaded together.',
+    benefits: [
+      ['15 currencies on one card', 'You can load 15 currencies on your multi-currency travel card.'],
+      ['Three year validity', 'The validity period of the card is 3 years (subject to the card issued).'],
+      ['Where it works', 'The card is not valid in India, Nepal and Bhutan — it is for use abroad.'],
+      ['Encash the balance', 'Unused currency purchased through us can be encashed at the market rate on the day of exchange.'],
+    ],
+    process: [
+      ['Apply at the shop', 'Bring your passport and travel documents.'],
+      ['Load your currencies', 'Choose which of the 15 currencies to load and how much.'],
+      ['Travel', 'Use the card abroad; encash any balance with us on return.'],
+    ],
+  },
+  {
+    id: 'wire-transfer', tag: '05', title: 'Drafts / TT / Swift Transfer',
+    short: 'Wire transfers and demand drafts',
+    // site copy
+    body: 'A wire transfer is an electronic funds transfer made from one individual or entity to another, through your bank online, at your local branch or through a forex dealer nearby.',
+    hero: 'Wire transfers, telegraphic transfers, demand drafts and SWIFT.',
+    benefits: [
+      ['SWIFT transfer', 'Electronic funds transfer to overseas beneficiaries.'],
+      ['Demand drafts', 'Demand drafts and telegraphic transfers arranged.'],
+      ['Handled at the counter', 'Arranged through a forex dealer rather than requiring you to deal with your bank directly.'],
+      ['Payment modes', 'Amounts above ₹50,000 by cheque, demand draft or bank transfer (RTGS/NEFT), per RBI rules.'],
+    ],
+    process: [
+      ['Share beneficiary details', 'Bank name, account and SWIFT code of the receiving bank.'],
+      ['Confirm the rate', 'We quote the rate and charges before you fund.'],
+      ['Release', 'Transfer released through our banking partners.'],
+    ],
+  },
+  {
+    id: 'student-services', tag: '06', title: 'Student Services',
+    short: 'University fees, maintenance and accommodation',
+    body: 'Foreign university tuition fee payments, students maintenance and students accommodation fees — remitted for students going abroad and those already studying overseas.',
+    hero: 'University fees, living costs and accommodation, remitted for students abroad.',
+    benefits: [
+      ['University tuition fees', 'Foreign university tuition fee payments remitted directly.'],
+      ['Students maintenance', 'Recurring maintenance remittances for students studying overseas.'],
+      ['Accommodation fees', 'Students accommodation fees paid to the institution or landlord abroad.'],
+      ['Under LRS', 'Education remittances fall under the Liberalised Remittance Scheme annual limit.'],
+    ],
+    process: [
+      ['Bring the invoice', 'University fee invoice or accommodation demand.'],
+      ['We prepare the remittance', 'Purpose recorded as education under LRS.'],
+      ['Funds released', 'Sent to the university or provider abroad.'],
+    ],
+  },
+];
+
+export const NAV = [
+  ['Home', '/'], ['Exchange rates', '/rates'], ['Converter', '/converter'], ['Services', '/services'],
+  ['About', '/about'], ['Contact', '/contact'],
+];
+
+// FAQs and testimonials come from the backend (Wagtail Snippets -> see
+// src/api.js). Edit them at /cms/, not here.
+
+// Only claims the business actually publishes.
+export const HERO_TRUST = [
+  { value: '25 yrs', label: 'Of experience' },
+  { value: '2000', label: 'Serving Chennai since' },
+  { value: 'RBI', label: 'Authorised money changer' },
+];
+
+export const STATS = [
+  { value: '25 yrs', label: 'Years of experience', note: 'Serving private and corporate clients since 2000.' },
+  { value: 'RBI', label: 'Authorised money changer', note: 'Licensed and regulated by the Reserve Bank of India.' },
+  { value: '15', label: 'Currencies on one card', note: 'Loadable on a single multi-currency travel card, valid 3 years.' },
+  { value: '₹49,999', label: 'Cash payment limit', note: 'Above this, payment by cheque, DD or bank transfer per RBI rules.' },
+];
+
+// Drawn from the "Why Us?", "Our Team" and "Authorised Money Changers"
+// sections of reddyforex.com.
+export const REASONS = [
+  { n: '01', title: 'RBI authorised money changer', body: 'Our company was approved by the RBI to carry out foreign exchange transactions. We undertake to buy and sell foreign currencies and en-cash travellers cheques as per RBI guidelines.' },
+  { n: '02', title: 'Competitive rates', body: 'We offer an array of value added customer service at best competitive rates. In fact our rates are considered to be the most competitive in the market.' },
+  { n: '03', title: 'Trained, multilingual staff', body: 'Our company is represented by committed, qualified, highly trained, experienced and multilingual front office staff to address the specific needs of the customers in a highly professional manner.' },
+  { n: '04', title: 'A full range of products', body: 'We deal in all kinds of foreign exchange products — currencies, travellers cheques, travel money cards, wire transfer (TT) and demand drafts. Our motto is to provide competitive rates and service to all our customers.' },
+];
+
+export const FOOTER_COLS = [
+  {
+    title: 'SERVICES',
+    links: [
+      ['Foreign exchange', '/services/exchange'],
+      ['Money transfer', '/services/money-transfer'],
+      ['Money remittance', '/services/remittance'],
+      ['Prepaid currency card', '/services/forex-card'],
+      ['Drafts / TT / SWIFT', '/services/wire-transfer'],
+    ],
+  },
+  {
+    title: 'COMPANY',
+    links: [
+      ['About us', '/about'],
+      ['Services', '/services'],
+      ['FAQ', '/faq'],
+      ['Contact', '/contact'],
+    ],
+  },
+  {
+    title: 'TOOLS',
+    links: [
+      ['Exchange rates', '/rates'],
+      ['Currency converter', '/converter'],
+      ['Student services', '/services/student-services'],
+    ],
+  },
+];
+
+// The only compliance claim the business publishes.
+export const CERTS = [
+  { title: 'RBI authorised', body: 'Reddy Forex Private Limited is licensed and regulated by the Reserve Bank of India as an authorised money changer, approved to carry out foreign exchange transactions.' },
+  { title: 'As per RBI guidelines', body: 'We buy and sell foreign currencies and en-cash travellers cheques as per RBI guidelines, including the prescribed limits on cash payment and currency carried abroad.' },
+  { title: 'In partnership with banks', body: 'Money transfer and remittance services are delivered in partnership with banks and established exchange companies.' },
+];
+
+export const TOKENS = [
+  { name: 'Orange 600', hex: '#E2571F', use: 'Primary action, accents' },
+  { name: 'Orange 800', hex: '#C4460F', use: 'Hover, pressed' },
+  { name: 'Navy 900', hex: '#0B1B33', use: 'Surfaces, headings' },
+  { name: 'Navy 600', hex: '#435066', use: 'Body on light' },
+  { name: 'Gold 500', hex: '#C9A227', use: 'Favourites, premium' },
+  { name: 'Green 600', hex: '#2FA36B', use: 'Positive movement' },
+  { name: 'Red 600', hex: '#B4351F', use: 'Negative, errors' },
+  { name: 'Sand 50', hex: '#F8F7F5', use: 'Section background' },
+  { name: 'Line 200', hex: '#E7E4DF', use: 'Borders, dividers' },
+  { name: 'White', hex: '#FFFFFF', use: 'Cards, base' },
+];
+
+export const TYPE_SCALE = [
+  { token: 'display/xl', family: "'Instrument Serif', serif", size: '52px', weight: '400', spec: 'Serif 52 / 1.05' },
+  { token: 'display/lg', family: "'Instrument Serif', serif", size: '40px', weight: '400', spec: 'Serif 40 / 1.10' },
+  { token: 'heading/md', family: "'Instrument Sans', sans-serif", size: '22px', weight: '600', spec: 'Sans 22 / 1.30' },
+  { token: 'body/lg', family: "'Instrument Sans', sans-serif", size: '17px', weight: '400', spec: 'Sans 17 / 1.65' },
+  { token: 'body/sm', family: "'Instrument Sans', sans-serif", size: '14px', weight: '400', spec: 'Sans 14 / 1.60' },
+  { token: 'numeric', family: "'IBM Plex Mono', monospace", size: '16px', weight: '500', spec: 'Mono 16 / 1.40' },
+  { token: 'eyebrow', family: "'IBM Plex Mono', monospace", size: '11.5px', weight: '500', spec: 'Mono 11.5 · .18em' },
+];
+
+export const SPACING = [
+  { token: 'space-1', px: '4px' }, { token: 'space-2', px: '8px' }, { token: 'space-3', px: '16px' },
+  { token: 'space-4', px: '24px' }, { token: 'space-5', px: '32px' }, { token: 'space-6', px: '56px' }, { token: 'space-7', px: '96px' },
+];
+
+export const RADII = [{ px: '6px' }, { px: '9px' }, { px: '14px' }, { px: '18px' }, { px: '100px' }];
+
+export const FILTERS = ['All', 'Popular', 'Favourites', 'Europe', 'Asia-Pacific', 'Middle East', 'Americas'];
+
+export function fmt(n, dp) {
+  const d = dp === undefined ? 2 : dp;
+  return Number(n).toLocaleString('en-IN', { minimumFractionDigits: d, maximumFractionDigits: d });
+}

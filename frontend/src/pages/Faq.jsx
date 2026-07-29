@@ -1,0 +1,102 @@
+import { useState, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { c, fonts, wrap } from '../tokens';
+import useApi from '../hooks/useApi';
+import { fetchFaqs, fetchFaqCategories } from '../api';
+import FaqAccordion from '../components/FaqAccordion';
+
+const loadFaqs = () => fetchFaqs();
+const loadCategories = () => fetchFaqCategories();
+
+export default function Faq() {
+  const navigate = useNavigate();
+  const [activeCat, setActiveCat] = useState(null);
+  const { data: faqs, loading, error } = useApi(loadFaqs, []);
+  const { data: categories } = useApi(loadCategories, []);
+
+  // Only offer categories that actually have visible questions behind them.
+  const usedCategories = useMemo(() => {
+    const names = new Set(faqs.map((f) => f.category).filter(Boolean));
+    return categories.filter((cat) => names.has(cat.name));
+  }, [faqs, categories]);
+
+  const visible = activeCat ? faqs.filter((f) => f.category === activeCat) : faqs;
+
+  const catStyle = (isActive) => ({
+    padding: '11px 15px',
+    borderRadius: 9,
+    fontSize: 14.5,
+    fontWeight: 500,
+    color: isActive ? '#fff' : c.text,
+    background: isActive ? c.navy : 'transparent',
+    cursor: 'pointer',
+    transition: 'background .18s',
+  });
+
+  return (
+    <div>
+      <section style={{ background: c.navy, padding: '60px 0 72px' }}>
+        <div style={wrap}>
+          <div style={{ font: `400 12.5px/1.4 ${fonts.mono}`, color: c.navyMuted, marginBottom: 22 }}>
+            <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / FAQ
+          </div>
+          <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: 'clamp(34px,4vw,54px)', lineHeight: 1.05, color: '#fff', margin: '0 0 14px' }}>Frequently asked questions</h1>
+          <p style={{ fontSize: 16.5, lineHeight: 1.6, color: c.onNavyText, margin: 0, maxWidth: 560 }}>Documents, limits, timings and buy-back — answered plainly.</p>
+        </div>
+      </section>
+      <section style={{ background: c.sand, padding: '64px 0 96px' }}>
+        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'minmax(220px,260px) 1fr', gap: 40, alignItems: 'start' }}>
+          <div style={{ position: 'sticky', top: 100, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span
+              onClick={() => setActiveCat(null)}
+              style={catStyle(activeCat === null)}
+              onMouseEnter={(e) => { if (activeCat !== null) e.currentTarget.style.background = c.swatch; }}
+              onMouseLeave={(e) => { if (activeCat !== null) e.currentTarget.style.background = 'transparent'; }}
+            >
+              All questions
+            </span>
+            {usedCategories.map((cat) => (
+              <span
+                key={cat.id}
+                onClick={() => setActiveCat(cat.name)}
+                style={catStyle(activeCat === cat.name)}
+                onMouseEnter={(e) => { if (activeCat !== cat.name) e.currentTarget.style.background = c.swatch; }}
+                onMouseLeave={(e) => { if (activeCat !== cat.name) e.currentTarget.style.background = 'transparent'; }}
+              >
+                {cat.name}
+              </span>
+            ))}
+          </div>
+
+          <div>
+            {loading && (
+              <div style={{ background: '#fff', border: `1px solid ${c.sandLine}`, borderRadius: 14, padding: 40, textAlign: 'center', color: c.textMuted }}>
+                Loading questions…
+              </div>
+            )}
+            {error && (
+              <div style={{ background: '#fff', border: `1px solid ${c.redBorder}`, borderRadius: 14, padding: 40, textAlign: 'center', color: c.redText }}>
+                Couldn't load the questions: {error}
+              </div>
+            )}
+            {!loading && !error && (
+              <>
+                {/* key forces the accordion to reset its open row when the filter changes */}
+                <FaqAccordion
+                  key={activeCat || 'all'}
+                  faqs={visible}
+                  padding="24px 30px"
+                  answerPadding="0 30px 26px"
+                />
+                <div style={{ background: c.cream, border: `1px solid ${c.sandLine}`, borderTop: 'none', borderRadius: '0 0 14px 14px', padding: 30, display: 'flex', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ fontSize: 15, color: c.text }}>Still unanswered? The branch team replies within an hour.</span>
+                  <span onClick={() => navigate('/contact')} style={{ background: c.navy, color: '#fff', padding: '13px 22px', borderRadius: 9, fontSize: 14.5, fontWeight: 600, cursor: 'pointer' }}>Contact us</span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}

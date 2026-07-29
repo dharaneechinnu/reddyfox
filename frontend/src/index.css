@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #FFFFFF;
+  color: #0B1B33;
+  font-family: 'Instrument Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: #E2571F;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #B8410F;
+}
+
+input, select, textarea, button {
+  font-family: inherit;
+}
+
+button {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Rich text authored in Wagtail (FAQ answers). Keeps CMS-authored markup
+   looking like the rest of the page instead of inheriting browser defaults. */
+.fx-richtext > *:first-child { margin-top: 0; }
+.fx-richtext > *:last-child { margin-bottom: 0; }
+.fx-richtext p { margin: 0 0 12px; }
+.fx-richtext ul, .fx-richtext ol { margin: 0 0 12px; padding-left: 22px; }
+.fx-richtext li { margin-bottom: 6px; }
+.fx-richtext b, .fx-richtext strong { font-weight: 600; color: #0B1B33; }
+.fx-richtext a { color: #E2571F; text-decoration: underline; }
+
+@keyframes fx-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes fx-ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes fx-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}
