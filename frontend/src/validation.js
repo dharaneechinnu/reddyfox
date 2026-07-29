@@ -1,0 +1,72 @@
+/**
+ * Form validation helpers.
+ *
+ * Deliberately practical rather than RFC-exhaustive: the goal is to catch real
+ * typos (missing @, 9 digits instead of 10) without rejecting valid input.
+ * Anything genuinely ambiguous is allowed through — a customer blocked by an
+ * over-strict regex is a lost enquiry.
+ */
+
+// Indian mobile numbers: 10 digits starting 6-9, with an optional +91 / 91 / 0
+// prefix. Spaces, dashes, dots and brackets are stripped before checking, so
+// "+91 99414 56261", "099414-56261" and "9941456261" all pass.
+const PHONE_CLEAN = /[\s\-().]/g;
+const PHONE_RE = /^(?:\+?91|0)?([6-9]\d{9})$/;
+
+// Local part, @, domain with at least one dot and a 2+ char TLD.
+const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
+
+export function cleanPhone(value) {
+  return String(value || '').replace(PHONE_CLEAN, '');
+}
+
+/** Returns the bare 10-digit number, or null if the input isn't a valid one. */
+export function normalizePhone(value) {
+  const match = PHONE_RE.exec(cleanPhone(value));
+  return match ? match[1] : null;
+}
+
+export function validatePhone(value, { required = true } = {}) {
+  const raw = String(value || '').trim();
+  if (!raw) return required ? 'Please enter a phone number.' : null;
+
+  const digitsOnly = cleanPhone(raw);
+  if (/[^\d+]/.test(digitsOnly)) return 'Phone number should contain digits only.';
+  if (!normalizePhone(raw)) {
+    const bare = digitsOnly.replace(/^(?:\+?91|0)/, '');
+    if (bare.length < 10) return 'That number is too short — Indian mobile numbers have 10 digits.';
+    if (bare.length > 10) return 'That number is too long — Indian mobile numbers have 10 digits.';
+    return 'Enter a valid Indian mobile number starting with 6, 7, 8 or 9.';
+  }
+  return null;
+}
+
+export function validateEmail(value, { required = true } = {}) {
+  const raw = String(value || '').trim();
+  if (!raw) return required ? 'Please enter an email address.' : null;
+
+  if (/\s/.test(raw)) return 'Email address cannot contain spaces.';
+  if (!raw.includes('@')) return 'Email address must include an “@”.';
+  const parts = raw.split('@');
+  if (parts.length > 2) return 'Email address should contain only one “@”.';
+  if (raw.includes('..')) return 'Email address cannot contain two dots in a row.';
+
+  const [, domain = ''] = parts;
+  if (!domain.includes('.')) return 'Email domain looks incomplete — did you mean .com?';
+  if (!EMAIL_RE.test(raw)) return 'That email address does not look valid.';
+  return null;
+}
+
+export function validateRequired(value, label) {
+  return String(value || '').trim() ? null : `Please enter your ${label}.`;
+}
+
+/** Runs a {field: validatorFn} map over values; returns {field: message} for failures only. */
+export function runValidators(values, validators) {
+  const errors = {};
+  for (const [field, validator] of Object.entries(validators)) {
+    const message = validator(values[field], values);
+    if (message) errors[field] = message;
+  }
+  return errors;
+}

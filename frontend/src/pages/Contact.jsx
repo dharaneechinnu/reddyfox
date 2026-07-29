@@ -1,10 +1,7 @@
 import { Link } from 'react-router-dom';
-import { SERVICES } from '../data';
 import { COMPANY, CONTACT } from '../company';
 import { c, fonts, wrap } from '../tokens';
-
-const fieldLabel = { display: 'block', fontSize: 12.5, fontWeight: 500, color: c.textMuted, marginBottom: 7 };
-const fieldInput = { width: '100%', border: `1px solid ${c.softLine}`, borderRadius: 9, padding: '13px 14px', fontSize: 14.5, outline: 'none', color: c.navy };
+import EnquiryForm from '../components/EnquiryForm';
 
 const MAPS_QUERY = encodeURIComponent(`${COMPANY.legalName}, ${CONTACT.addressOneLine}`);
 
@@ -25,32 +22,7 @@ export default function Contact() {
 
       <section style={{ background: c.sand, padding: '64px 0 96px' }}>
         <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 24, alignItems: 'start' }}>
-          <div style={{ background: '#fff', border: `1px solid ${c.sandLine}`, borderRadius: 16, padding: 34 }}>
-            <h2 style={{ fontSize: 22, fontWeight: 600, color: c.navy, margin: '0 0 24px' }}>Send an enquiry</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 16, marginBottom: 16 }}>
-              <div><label style={fieldLabel}>Full name</label><input placeholder="As per your passport" style={fieldInput} /></div>
-              <div><label style={fieldLabel}>Phone</label><input placeholder="+91" style={fieldInput} /></div>
-              <div><label style={fieldLabel}>Email</label><input placeholder="name@email.com" style={fieldInput} /></div>
-              <div>
-                <label style={fieldLabel}>I need</label>
-                <select style={{ ...fieldInput, background: '#fff', padding: '13px 12px' }}>
-                  {SERVICES.map((s) => <option key={s.id}>{s.title}</option>)}
-                </select>
-              </div>
-            </div>
-            <label style={fieldLabel}>Message</label>
-            <textarea rows={5} placeholder="Currency, amount and the date you need it" style={{ ...fieldInput, resize: 'vertical' }} />
-            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginTop: 16 }}>
-              <input type="checkbox" style={{ marginTop: 3, accentColor: c.orange }} />
-              <span style={{ fontSize: 13, lineHeight: 1.55, color: c.textMuted }}>I consent to being contacted about this enquiry.</span>
-            </div>
-            <span style={{ marginTop: 22, display: 'block', textAlign: 'center', background: c.orange, color: '#fff', padding: 15, borderRadius: 9, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = c.orangeDark)} onMouseLeave={(e) => (e.currentTarget.style.background = c.orange)}
-            >Send now</span>
-            <p style={{ margin: '14px 0 0', fontSize: 11.8, lineHeight: 1.55, color: c.textFainter, textAlign: 'center' }}>
-              This form is not yet connected — please call or email us in the meantime.
-            </p>
-          </div>
+          <EnquiryForm />
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div style={{ background: c.navy, borderRadius: 16, padding: 32, color: '#fff' }}>
