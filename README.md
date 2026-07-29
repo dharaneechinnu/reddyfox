@@ -49,8 +49,9 @@ All site copy is taken from the **live reddyforex.com** (scraped July 2026):
 `index.html`, `about-us.html`, `contact.html`, `faq.html`.
 
 - `frontend/src/company.js` — company name, tagline, address, all phone numbers,
-  email, vision, mission. **Single source of truth**: never hardcode a phone
-  number or address in a component.
+  email, vision, mission and the Facebook / X / YouTube profile URLs (all three
+  scraped from the live site and verified live). **Single source of truth**:
+  never hardcode a phone number, address or social URL in a component.
 - `frontend/src/data.js` — services, why-us points, hero/stat figures, nav and
   footer links, compliance statements.
 - Database (via `/admin/`) — currency rates, converter fee, testimonials, FAQs.
@@ -100,10 +101,64 @@ Everything is at **http://localhost:8000/admin/** :
 | Content → Testimonials | Customer quotes shown on the homepage |
 | Content → FAQs | Questions and answers (plain text; blank line = new paragraph) |
 | Content → FAQ categories | Sidebar groupings on the `/faq` page |
+| Content → Enquiries | The team's inbox of website enquiries (see below) |
+
+### Enquiries — the team's inbox
+
+Website contact-form submissions land in **Content → Enquiries**. It works as a
+lead inbox rather than a plain table:
+
+- **Status workflow**: New → Contacted → Quoted → Closed (plus Spam), shown as a
+  colour badge. A `New` enquiry older than an hour turns its timestamp red —
+  those are the ones losing business.
+- **Reply in one tap**: every row and detail page carries a `wa.me` WhatsApp
+  deep-link (pre-written greeting), a `tel:` link and a `mailto:` link. No
+  WhatsApp Business API, no Meta approval — just links.
+- **Assign** an enquiry to a staff user inline from the list.
+- **Bulk actions** to mark several Contacted / Quoted / Closed / Spam at once.
+- **Filter** by status, service, assignee or date; **search** by name, phone,
+  email or message text.
+- The customer's own words are **read-only**. Staff edit only status, assignee
+  and the internal note, so there is never a dispute about what was asked for.
+- **No "Add enquiry" button** — these only ever arrive from the website form.
+
+Order of operations on submit is deliberate: **save to the database first, then
+notify.** A broken SMTP password logs an error and leaves the lead safely in the
+admin; it never loses it.
+
+#### Email alerts
+
+Set `ENQUIRY_NOTIFY_EMAILS` in `.env` and the team is emailed on every enquiry,
+with the details plus those one-tap reply links.
+
+With `EMAIL_HOST_USER` blank (the default) Django prints the email to the
+console instead of sending it — so you can test the whole flow with no
+credentials. To send for real via Gmail you need an **App Password**
+(Google Account → Security → App passwords), not the normal account password.
+
+#### Spam protection
+
+Three layers, all server-side so `curl` cannot bypass them:
+
+1. **Honeypot** — a `display:none` field named `enquiry_ref`. Filled = bot,
+   rejected with a generic message that never explains the trap. Deliberately
+   *not* named `website`/`url`/`company`: browser autofill recognises those and
+   would populate it, silently blocking a real customer.
+2. **Rate limit** — `ENQUIRY_THROTTLE_RATE` (default `5/hour` per IP) on its own
+   throttle scope, so other API traffic cannot raise it.
+3. **Content heuristics** — two or more links, known spam keywords, or an
+   unbroken 60+ character token.
+
+Everything is tuned to prefer letting a spam row through (the team marks it Spam
+in one click) over rejecting a genuine customer.
 
 ### API
 
-All endpoints are read-only (`GET`) and return only records with `is_visible=True`, ordered by `display_order`.
+All read endpoints are `GET`-only and return just the records with
+`is_visible=True`, ordered by `display_order`. The one write endpoint
+(`/api/enquiries/`) is **create-only on purpose**: `GET` returns 405, so
+customer names, phone numbers and emails can never be read back out over the
+public API. Staff read enquiries in the admin.
 
 | Endpoint | Returns |
 |---|---|
@@ -114,6 +169,7 @@ All endpoints are read-only (`GET`) and return only records with `is_visible=Tru
 | `/api/faqs/` | All FAQs |
 | `/api/faqs/?homepage=true` | Only FAQs flagged for the homepage accordion |
 | `/api/faq-categories/` | FAQ sidebar categories |
+| `POST /api/enquiries/` | Contact form submission — **create only** |
 
 ## Frontend setup
 

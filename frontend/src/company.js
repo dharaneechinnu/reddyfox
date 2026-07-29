@@ -44,8 +44,29 @@ export const CONTACT = {
   ],
   email: 'reddyforex@gmail.com',
   website: 'www.reddyforex.com',
-  socials: ['FB', 'TW', 'YT'], // Facebook, Twitter, YouTube
 };
+
+// Real profile URLs taken from reddyforex.com (all three verified live).
+// `icon` maps to a path in components/SocialIcon.jsx.
+export const SOCIALS = [
+  {
+    icon: 'facebook',
+    label: 'Facebook',
+    url: 'https://www.facebook.com/Reddy-Forex-Private-Limited-100909432036543',
+  },
+  {
+    icon: 'x',
+    label: 'X (formerly Twitter)',
+    // The site links to twitter.com/ReddyForex; x.com is the current domain and
+    // resolves to the same profile.
+    url: 'https://x.com/ReddyForex',
+  },
+  {
+    icon: 'youtube',
+    label: 'YouTube',
+    url: 'https://www.youtube.com/channel/UCrFuWjK4Yfma9A6RMbywE5g',
+  },
+];
 
 // The primary number to surface in the header / CTAs.
 export const PRIMARY_PHONE = CONTACT.mobiles[0];

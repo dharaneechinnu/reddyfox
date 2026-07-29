@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { NAV, SERVICES, FOOTER_COLS } from '../data';
-import { COMPANY, CONTACT, PRIMARY_PHONE } from '../company';
+import { COMPANY, CONTACT, PRIMARY_PHONE, SOCIALS } from '../company';
 import { c, fonts, wrap } from '../tokens';
+import SocialIcon from './SocialIcon';
 
 function TopBar() {
   return (
@@ -135,8 +136,20 @@ function Footer() {
               {COMPANY.regulator}. Foreign currency exchange, money transfer and remittance services in Chennai since {COMPANY.since}.
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
-              {CONTACT.socials.map((s) => (
-                <span key={s} style={{ width: 36, height: 36, border: '1px solid rgba(255,255,255,.16)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', font: `500 11px/1.4 ${fonts.mono}`, color: c.onNavyText3, cursor: 'pointer' }}>{s}</span>
+              {SOCIALS.map((s) => (
+                <a
+                  key={s.icon}
+                  href={s.url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  aria-label={`${COMPANY.shortName} on ${s.label}`}
+                  title={s.label}
+                  style={{ width: 36, height: 36, border: '1px solid rgba(255,255,255,.16)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: c.onNavyText3, transition: 'background .18s,border-color .18s,color .18s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,.08)'; e.currentTarget.style.borderColor = c.orange; e.currentTarget.style.color = '#fff'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.16)'; e.currentTarget.style.color = c.onNavyText3; }}
+                >
+                  <SocialIcon name={s.icon} />
+                </a>
               ))}
             </div>
           </div>

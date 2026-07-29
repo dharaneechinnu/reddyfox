@@ -12,6 +12,42 @@ export async function fetchConverterSettings() {
   return res.json();
 }
 
+/**
+ * Submit the contact form. Returns the success payload, or throws an Error
+ * whose `.fieldErrors` holds per-field messages from DRF when it rejected the
+ * data, so the form can show them next to the right inputs.
+ */
+export async function submitEnquiry(payload) {
+  const res = await fetch(`${API_BASE}/enquiries/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (res.ok) return res.json();
+
+  if (res.status === 429) {
+    const err = new Error('Too many submissions from this connection. Please wait a while, or call us instead.');
+    err.throttled = true;
+    throw err;
+  }
+
+  let data = null;
+  try { data = await res.json(); } catch { /* non-JSON error body */ }
+
+  if (data && typeof data === 'object') {
+    const fieldErrors = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (key === 'detail') continue;
+      fieldErrors[key] = Array.isArray(value) ? value[0] : String(value);
+    }
+    const err = new Error(data.detail || 'Please check the highlighted fields and try again.');
+    if (Object.keys(fieldErrors).length) err.fieldErrors = fieldErrors;
+    throw err;
+  }
+  throw new Error(`Could not send your enquiry (${res.status}). Please call us instead.`);
+}
+
 export async function fetchTestimonials() {
   const res = await fetch(`${API_BASE}/testimonials/`);
   if (!res.ok) throw new Error(`Failed to load testimonials (${res.status})`);

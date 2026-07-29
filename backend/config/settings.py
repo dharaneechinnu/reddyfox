@@ -128,7 +128,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# The business operates from Chennai. Timestamps are stored in UTC (USE_TZ) but
+# rendered in IST everywhere — the admin list and enquiry alert emails — so the
+# team reads the actual local time a lead came in.
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
@@ -147,7 +150,42 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    'DEFAULT_THROTTLE_RATES': {
+        # Contact form: bots get cut off long before the team's inbox suffers.
+        # A genuine customer never needs to submit more than a handful an hour.
+        'enquiry': config('ENQUIRY_THROTTLE_RATE', default='5/hour'),
+    },
 }
 
 # Branding for the Django admin, which is the single place staff edit content.
 ADMIN_SITE_HEADER = 'Reddy Forex Private Limited'
+
+# Absolute base URL used to build "open in admin" links inside alert emails.
+ADMIN_BASE_URL = config('ADMIN_BASE_URL', default='http://localhost:8000')
+
+
+# Email — team alerts for new website enquiries
+# https://docs.djangoproject.com/en/6.0/topics/email/
+#
+# Leave EMAIL_HOST_USER blank in development: Django then prints emails to the
+# console instead of sending them, so you can test the whole flow with no
+# credentials. Set the Gmail values in .env to send for real.
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+# Gmail requires an App Password (16 chars), not your normal account password.
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+
+EMAIL_BACKEND = config(
+    'EMAIL_BACKEND',
+    default=(
+        'django.core.mail.backends.smtp.EmailBackend' if EMAIL_HOST_USER
+        else 'django.core.mail.backends.console.EmailBackend'
+    ),
+)
+
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER or 'no-reply@reddyforex.com')
+
+# Who gets alerted when a website enquiry arrives. Comma-separated.
+ENQUIRY_NOTIFY_EMAILS = config('ENQUIRY_NOTIFY_EMAILS', default='', cast=Csv())

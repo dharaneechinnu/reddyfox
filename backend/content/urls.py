@@ -1,10 +1,14 @@
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from .views import FaqCategoryViewSet, FaqViewSet, TestimonialViewSet
+from .views import EnquiryCreateView, FaqCategoryViewSet, FaqViewSet, TestimonialViewSet
 
 router = DefaultRouter()
 router.register('testimonials', TestimonialViewSet, basename='testimonial')
 router.register('faqs', FaqViewSet, basename='faq')
 router.register('faq-categories', FaqCategoryViewSet, basename='faq-category')
 
-urlpatterns = router.urls
+urlpatterns = router.urls + [
+    # Create-only: there is intentionally no GET /enquiries/ on the public API.
+    path('enquiries/', EnquiryCreateView.as_view(), name='enquiry-create'),
+]

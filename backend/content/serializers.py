@@ -3,7 +3,8 @@ from html import escape
 
 from rest_framework import serializers
 
-from .models import Faq, FaqCategory, Testimonial
+from .models import Enquiry, Faq, FaqCategory, Testimonial
+from .validators import looks_like_spam, normalize_phone
 
 
 def text_to_paragraphs(text):
@@ -46,3 +47,54 @@ class FaqCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = FaqCategory
         fields = ['id', 'name', 'display_order']
+
+
+class EnquiryCreateSerializer(serializers.ModelSerializer):
+    """Write-only serializer for the public contact form.
+
+    Only accepts the customer-supplied fields — status, assignment, notes and
+    all audit fields are set server-side and cannot be injected by the client.
+    """
+
+    # Honeypot: display:none in the form, so a human never sees it and browser
+    # autofill never touches it. Anything that fills it is a bot.
+    # Not named website/url/company — autofill recognises those.
+    enquiry_ref = serializers.CharField(required=False, allow_blank=True, write_only=True)
+
+    class Meta:
+        model = Enquiry
+        fields = ['name', 'phone', 'email', 'service', 'message', 'enquiry_ref']
+
+    def validate_name(self, value):
+        value = value.strip()
+        if len(value) < 2:
+            raise serializers.ValidationError('Please enter your full name.')
+        return value
+
+    def validate_phone(self, value):
+        digits = normalize_phone(value)
+        if not digits:
+            raise serializers.ValidationError(
+                'Enter a valid Indian mobile number — 10 digits starting with 6, 7, 8 or 9.'
+            )
+        return digits  # stored normalised, so search and wa.me links always work
+
+    def validate_message(self, value):
+        value = value.strip()
+        if len(value) < 5:
+            raise serializers.ValidationError('Please tell us a little more about what you need.')
+        if len(value) > 5000:
+            raise serializers.ValidationError('Message is too long — please keep it under 5000 characters.')
+        return value
+
+    def validate(self, attrs):
+        if attrs.pop('enquiry_ref', ''):
+            # Bot filled the hidden field. Generic error: never explain the trap.
+            raise serializers.ValidationError({'detail': 'Unable to submit this form.'})
+
+        reason = looks_like_spam(attrs.get('message', ''), attrs.get('name', ''))
+        if reason:
+            raise serializers.ValidationError(
+                {'message': 'This message looks like spam. Please remove links and try again, or call us instead.'}
+            )
+        return attrs
