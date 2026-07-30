@@ -84,13 +84,11 @@ def _body(lead):
     lines.append(f'Email   : mailto:{lead.email}')
 
     base = getattr(settings, 'ADMIN_BASE_URL', '').rstrip('/')
-    if base:
-        # Link into the proxy admin for this type, so the dealer lands on the
-        # list they actually have permission for.
-        proxy = {
-            'enquiry': 'enquiry', 'quote': 'quoterequest',
-            'rate_lock': 'ratelock', 'callback': 'callbackrequest',
-        }[lead.kind]
+    # Quote requests and Rate locks have no admin page (deliberately
+    # unregistered — see content/admin.py), so there is nowhere to link for
+    # those two kinds. Reply via the WhatsApp/call/email lines above instead.
+    proxy = {'enquiry': 'enquiry', 'callback': 'callbackrequest'}.get(lead.kind)
+    if base and proxy:
         lines += ['', f'Open in admin: {base}/admin/content/{proxy}/{lead.pk}/change/']
     return '\n'.join(lines)
 

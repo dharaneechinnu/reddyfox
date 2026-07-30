@@ -18,7 +18,7 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 
-from content.models import CallbackRequest, Enquiry, Faq, FaqCategory, QuoteRequest, RateLock, SiteSetting, Testimonial
+from content.models import CallbackRequest, Enquiry, Faq, FaqCategory, SiteSetting, Testimonial
 from rates.models import Currency
 
 # What each group may do. 'view'/'change' only — leads are created by the
@@ -26,19 +26,11 @@ from rates.models import Currency
 WORK_ON_LEADS = ('view', 'change')
 MANAGE = ('view', 'add', 'change', 'delete')
 
+# Quote requests and Rate locks are deliberately not registered in admin.py
+# (hidden from every user, including superusers) — so there is nothing to
+# grant a group here for either. If they come back, restore the "Rates desk"
+# / "Quotes desk" team entries that used to live here alongside their models.
 TEAMS = {
-    'Rates desk': {
-        'description': 'Sees only Rate locks.',
-        'models': {
-            RateLock: WORK_ON_LEADS,
-        },
-    },
-    'Quotes desk': {
-        'description': 'Sees only Quote requests.',
-        'models': {
-            QuoteRequest: WORK_ON_LEADS,
-        },
-    },
     'Front office': {
         'description': 'Sees Enquiries and quick Callback requests.',
         'models': {
@@ -47,10 +39,8 @@ TEAMS = {
         },
     },
     'Manager': {
-        'description': 'Sees all four lead lists plus rates and site content.',
+        'description': 'Sees Enquiries and Callback requests, plus rates and site content.',
         'models': {
-            RateLock: WORK_ON_LEADS,
-            QuoteRequest: WORK_ON_LEADS,
             Enquiry: WORK_ON_LEADS,
             CallbackRequest: WORK_ON_LEADS,
             Currency: MANAGE,
