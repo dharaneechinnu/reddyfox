@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useFx } from '../context/FxContext';
 import { useFeatureFlag } from '../context/FeatureFlagsContext';
 import { HERO_TRUST, STATS, SERVICES, REASONS, fmt } from '../data';
-import { COMPANY, CONTACT } from '../company';
+import { COMPANY, CONTACT, PRIMARY_PHONE } from '../company';
 import { c, fonts, wrap, eyebrow, h2Style } from '../tokens';
 import FaqAccordion from '../components/FaqAccordion';
 import Seo from '../components/Seo';
@@ -122,27 +122,27 @@ export default function Home() {
               <div style={{ flex: 1, height: 1, background: c.sandLine2 }} />
             </div>
 
-            <label style={{ display: 'block', fontSize: 12.5, fontWeight: 500, color: c.textMuted, marginBottom: 8 }}>They receive</label>
+            <label style={{ display: 'block', fontSize: 12.5, fontWeight: 500, color: c.textMuted, marginBottom: 8 }}>They receive (approx.)</label>
             <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-              <div style={{ flex: 1, minWidth: 0, border: `1px solid ${c.sandLine2}`, background: c.sand, borderRadius: 10, padding: '15px 16px', fontSize: 20, fontFamily: fonts.mono, color: c.navy, overflow: 'hidden', textOverflow: 'ellipsis' }}>{fx.calc.converted}</div>
+              <div style={{ flex: 1, minWidth: 0, border: `1px solid ${c.sandLine2}`, background: c.sand, borderRadius: 10, padding: '15px 16px', fontSize: 20, fontFamily: fonts.mono, color: c.navy, overflow: 'hidden', textOverflow: 'ellipsis' }}>≈ {fx.calc.converted}</div>
               <select value={fx.to} onChange={(e) => fx.setTo(e.target.value)} style={{ border: `1px solid ${c.softLine}`, borderRadius: 10, padding: '15px 12px', fontSize: 15, fontWeight: 600, color: c.navy, background: c.sand, outline: 'none', cursor: 'pointer' }}>
                 {fx.currencyList.map((cur) => <option key={cur.code} value={cur.code}>{cur.label}</option>)}
               </select>
             </div>
 
             <div style={{ borderTop: `1px dashed ${c.sandBorder}`, paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 9, fontSize: 13.5, color: c.textMuted }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Exchange rate</span><span style={{ fontFamily: fonts.mono, color: c.navy }}>{fx.calc.rateLine}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Exchange rate (approx.)</span><span style={{ fontFamily: fonts.mono, color: c.navy }}>{fx.calc.rateLine}</span></div>
             </div>
 
-            <span
-              onClick={() => navigate('/lock-rate')}
-              style={{ marginTop: 20, display: 'block', textAlign: 'center', background: c.navy, color: '#fff', padding: 15, borderRadius: 9, fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'background .18s' }}
+            <a
+              href={`tel:${PRIMARY_PHONE.tel}`}
+              style={{ marginTop: 20, display: 'block', textAlign: 'center', background: c.navy, color: '#fff', padding: 15, borderRadius: 9, fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'background .18s', textDecoration: 'none', fontFamily: fonts.mono }}
               onMouseEnter={(e) => (e.currentTarget.style.background = c.navyLight)}
               onMouseLeave={(e) => (e.currentTarget.style.background = c.navy)}
             >
-              Lock this rate
-            </span>
-            <p style={{ margin: '14px 0 0', fontSize: 11.5, lineHeight: 1.5, color: c.textFainter, textAlign: 'center' }}>Indicative rates. Final rate confirmed at the counter against valid ID and travel documents.</p>
+              Contact us for best price · {PRIMARY_PHONE.display}
+            </a>
+            <p style={{ margin: '14px 0 0', fontSize: 11.5, lineHeight: 1.5, color: c.textFainter, textAlign: 'center' }}>All figures above are approximate, not the exact rate — call us for the real, best price on your amount.</p>
           </div>
         </div>
 
