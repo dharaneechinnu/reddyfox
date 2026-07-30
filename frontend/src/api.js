@@ -1,7 +1,10 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
-export async function fetchCurrencies() {
-  const res = await fetch(`${API_BASE}/rates/`);
+// rateType defaults to 'cash' — the rate used everywhere except the Forex
+// Card toggle on the rates table, so every existing caller keeps working
+// unchanged now that a currency code alone no longer identifies one row.
+export async function fetchCurrencies(rateType = 'cash') {
+  const res = await fetch(`${API_BASE}/rates/?rate_type=${rateType}`);
   if (!res.ok) throw new Error(`Failed to load rates (${res.status})`);
   return res.json();
 }
