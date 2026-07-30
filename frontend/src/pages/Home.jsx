@@ -2,9 +2,10 @@ import { useNavigate } from 'react-router-dom';
 import { useFx } from '../context/FxContext';
 import { useFeatureFlag } from '../context/FeatureFlagsContext';
 import { HERO_TRUST, STATS, SERVICES, REASONS, fmt } from '../data';
-import { COMPANY, CONTACT, PRIMARY_PHONE } from '../company';
+import { COMPANY, CONTACT } from '../company';
 import { c, fonts, wrap, eyebrow, h2Style } from '../tokens';
 import FaqAccordion from '../components/FaqAccordion';
+import CallbackForm from '../components/CallbackForm';
 import Seo from '../components/Seo';
 import useApi from '../hooks/useApi';
 import { fetchTestimonials, fetchFaqs, fetchCurrencies, toRatesMap } from '../api';
@@ -134,15 +135,9 @@ export default function Home() {
               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Exchange rate (approx.)</span><span style={{ fontFamily: fonts.mono, color: c.navy }}>{fx.calc.rateLine}</span></div>
             </div>
 
-            <a
-              href={`tel:${PRIMARY_PHONE.tel}`}
-              style={{ marginTop: 20, display: 'block', textAlign: 'center', background: c.navy, color: '#fff', padding: 15, borderRadius: 9, fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'background .18s', textDecoration: 'none', fontFamily: fonts.mono }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = c.navyLight)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = c.navy)}
-            >
-              Contact us for best price · {PRIMARY_PHONE.display}
-            </a>
-            <p style={{ margin: '14px 0 0', fontSize: 11.5, lineHeight: 1.5, color: c.textFainter, textAlign: 'center' }}>All figures above are approximate, not the exact rate — call us for the real, best price on your amount.</p>
+            <div style={{ marginTop: 20, borderTop: `1px solid ${c.sandLine2}`, paddingTop: 20 }}>
+              <CallbackForm />
+            </div>
           </div>
         </div>
 

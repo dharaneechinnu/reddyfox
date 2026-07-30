@@ -6,7 +6,7 @@ from rest_framework.throttling import AnonRateThrottle
 from .models import Faq, FaqCategory, SiteSetting, Testimonial
 from .notifications import notify_team
 from .serializers import (
-    EnquiryCreateSerializer, FaqCategorySerializer, FaqSerializer,
+    CallbackRequestCreateSerializer, EnquiryCreateSerializer, FaqCategorySerializer, FaqSerializer,
     QuoteRequestCreateSerializer, RateLockCreateSerializer,
     SiteSettingSerializer, TestimonialSerializer,
 )
@@ -87,6 +87,12 @@ class QuoteRequestCreateView(BaseLeadCreateView):
     """"Get a free quote"."""
     serializer_class = QuoteRequestCreateSerializer
     success_message = 'Thank you — your quote request has reached our dealers. We will come back with a price shortly.'
+
+
+class CallbackRequestCreateView(BaseLeadCreateView):
+    """Quick "get your best price" capture from the homepage converter widget."""
+    serializer_class = CallbackRequestCreateSerializer
+    success_message = "Thanks — we've got your details. Our team will call you back shortly with the best price."
 
 
 class RateLockCreateView(BaseLeadCreateView):
