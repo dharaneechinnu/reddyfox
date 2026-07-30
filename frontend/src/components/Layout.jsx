@@ -6,6 +6,7 @@ import { c, fonts, wrap } from '../tokens';
 import { useFeatureFlag } from '../context/FeatureFlagsContext';
 import NotificationOptIn from './NotificationOptIn';
 import SocialIcon from './SocialIcon';
+import WhatsAppButton from './WhatsAppButton';
 
 function TopBar() {
   return (
@@ -199,7 +200,6 @@ function Footer() {
 }
 
 export default function Layout() {
-  const navigate = useNavigate();
   return (
     <div style={{ minHeight: '100vh', background: '#fff' }}>
       <TopBar />
@@ -208,14 +208,7 @@ export default function Layout() {
       <Footer />
       <div style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 70, display: 'flex', gap: 10, alignItems: 'center' }}>
         <NotificationOptIn />
-        <span
-          onClick={() => navigate('/converter')}
-          style={{ background: c.navy, color: '#fff', padding: '14px 22px', borderRadius: 100, fontSize: 14.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 18px 30px -14px rgba(11,27,51,.6)', transition: 'transform .18s' }}
-          onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-2px)')}
-          onMouseLeave={(e) => (e.currentTarget.style.transform = 'none')}
-        >
-          Check today's rate
-        </span>
+        <WhatsAppButton />
       </div>
     </div>
   );
