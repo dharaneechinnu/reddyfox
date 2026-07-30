@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'rates',
     'content',
     'notifications',
+    'team_alerts',
 
     # Third party
     'rest_framework',
@@ -267,3 +268,25 @@ NOTIFICATION_RATE_LIMIT_MINUTES = config('NOTIFICATION_RATE_LIMIT_MINUTES', defa
 # A currency's buy or sell rate moving by at least this many percent marks
 # the auto-generated alert Urgent instead of Normal.
 RATE_ALERT_URGENT_THRESHOLD_PCT = config('RATE_ALERT_URGENT_THRESHOLD_PCT', default=1.0, cast=float)
+
+
+# Team push notifications — internal staff only (the `team_alerts` app).
+# Reuses FIREBASE_CREDENTIALS_JSON above. A staff member turns this on for
+# their own browser from the "Enable push alerts" link in the admin header.
+# New enquiries and new rate locks both push an Urgent alert instantly,
+# bypassing the rate limit below — neither should ever be missed. This is in
+# addition to, not a replacement for, the email alert in
+# content/notifications.py.
+TEAM_ALERT_RATE_LIMIT_MINUTES = config('TEAM_ALERT_RATE_LIMIT_MINUTES', default=30, cast=int)
+
+# Public Firebase web config — used to render the admin's "Enable push
+# alerts" page and the /firebase-messaging-sw.js service worker. These are
+# public client identifiers, not secrets, but still environment-specific
+# (dev vs. production Firebase project).
+FIREBASE_WEB_API_KEY = config('FIREBASE_WEB_API_KEY', default='')
+FIREBASE_WEB_AUTH_DOMAIN = config('FIREBASE_WEB_AUTH_DOMAIN', default='')
+FIREBASE_WEB_PROJECT_ID = config('FIREBASE_WEB_PROJECT_ID', default='')
+FIREBASE_WEB_STORAGE_BUCKET = config('FIREBASE_WEB_STORAGE_BUCKET', default='')
+FIREBASE_WEB_MESSAGING_SENDER_ID = config('FIREBASE_WEB_MESSAGING_SENDER_ID', default='')
+FIREBASE_WEB_APP_ID = config('FIREBASE_WEB_APP_ID', default='')
+FIREBASE_WEB_VAPID_KEY = config('FIREBASE_WEB_VAPID_KEY', default='')

@@ -1,11 +1,18 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useFx } from '../context/FxContext';
 import { fonts, c, wrap } from '../tokens';
+import Modal from '../components/Modal';
+import RateLockForm from '../components/RateLockForm';
 import Seo from '../components/Seo';
 
 export default function Converter() {
-  const navigate = useNavigate();
   const fx = useFx();
+  const [lockOpen, setLockOpen] = useState(false);
+
+  // Nothing to lock until they have entered an amount and picked two
+  // different currencies — the same guard the form itself enforces.
+  const canLock = !!fx.calc.amt && fx.from !== fx.to;
 
   return (
     <div>
@@ -65,16 +72,41 @@ export default function Converter() {
                 <span style={{ fontSize: 15, color: c.onNavyText }}>You receive</span>
                 <span style={{ fontFamily: fonts.mono, fontSize: 28 }}>{fx.calc.converted}</span>
               </div>
-              <span
-                onClick={() => navigate('/lock-rate')}
-                style={{ marginTop: 26, display: 'block', textAlign: 'center', background: c.orange, color: '#fff', padding: 15, borderRadius: 9, fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'background .18s' }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = c.orangeDark)}
-                onMouseLeave={(e) => (e.currentTarget.style.background = c.orange)}
-              >Lock this rate</span>
+              <button
+                type="button"
+                onClick={() => setLockOpen(true)}
+                disabled={!canLock}
+                style={{
+                  marginTop: 26, display: 'block', width: '100%', textAlign: 'center',
+                  background: canLock ? c.orange : 'rgba(255,255,255,.14)',
+                  color: canLock ? '#fff' : c.onNavyText,
+                  padding: 15, borderRadius: 9, fontSize: 15, fontWeight: 600,
+                  cursor: canLock ? 'pointer' : 'default', transition: 'background .18s',
+                }}
+                onMouseEnter={(e) => { if (canLock) e.currentTarget.style.background = c.orangeDark; }}
+                onMouseLeave={(e) => { if (canLock) e.currentTarget.style.background = c.orange; }}
+              >
+                Lock this rate
+              </button>
+              {!canLock && (
+                <p style={{ margin: '10px 0 0', fontSize: 12.5, lineHeight: 1.5, color: c.onNavyText, textAlign: 'center' }}>
+                  {fx.from === fx.to
+                    ? 'Pick two different currencies to lock a rate.'
+                    : 'Enter an amount above to lock a rate.'}
+                </p>
+              )}
             </div>
           </div>
         </div>
       </section>
+
+      {/* The lock form opens right here rather than on its own page: the
+          customer has just chosen these figures, so asking for their details
+          without losing sight of the numbers is the whole point. /lock-rate
+          still exists for anyone landing there directly. */}
+      <Modal open={lockOpen} onClose={() => setLockOpen(false)} labelledBy="lock-modal-heading">
+        <RateLockForm onClose={() => setLockOpen(false)} headingId="lock-modal-heading" />
+      </Modal>
     </div>
   );
 }

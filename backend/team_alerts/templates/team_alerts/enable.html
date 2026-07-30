@@ -1,0 +1,85 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+  &rsaquo; {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:560px">
+  <p>Get an instant Chrome push notification on this browser the moment a new website enquiry comes in — in addition to the usual email alert.</p>
+
+  {% if not is_configured %}
+  <p style="color:#B4351F">
+    Push alerts aren't configured on this server yet. Set the <code>FIREBASE_WEB_*</code> settings
+    (see backend/.env.example) to a real Firebase project's web config, then reload this page.
+  </p>
+  {% else %}
+  <p id="team-alerts-status" style="font-weight:600"></p>
+  <button id="team-alerts-enable-btn" type="button" class="button" style="cursor:pointer">
+    {% translate "Enable push alerts on this browser" %}
+  </button>
+  {% endif %}
+</div>
+
+{% if is_configured %}
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.16.0/firebase-messaging-compat.js"></script>
+<script>
+(function () {
+  const firebaseConfig = {{ firebase_config_json|safe }};
+  const vapidKey = {{ vapid_key_json|safe }};
+  const subscribeUrl = "{{ subscribe_url|escapejs }}";
+
+  const statusEl = document.getElementById('team-alerts-status');
+  const buttonEl = document.getElementById('team-alerts-enable-btn');
+
+  function setStatus(text, isError) {
+    statusEl.textContent = text;
+    statusEl.style.color = isError ? '#B4351F' : '#1C7A50';
+  }
+
+  function csrfToken() {
+    const match = document.cookie.match(/csrftoken=([^;]+)/);
+    return match ? match[1] : '';
+  }
+
+  buttonEl.addEventListener('click', function () {
+    buttonEl.disabled = true;
+    setStatus('Requesting permission…', false);
+
+    Notification.requestPermission()
+      .then(function (permission) {
+        if (permission !== 'granted') throw new Error('Notification permission was not granted.');
+        return navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      })
+      .then(function (registration) {
+        firebase.initializeApp(firebaseConfig);
+        const messaging = firebase.messaging();
+        return messaging.getToken({ vapidKey: vapidKey, serviceWorkerRegistration: registration });
+      })
+      .then(function (token) {
+        if (!token) throw new Error('Could not get a push token from the browser.');
+        return fetch(subscribeUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+          credentials: 'same-origin',
+          body: JSON.stringify({ fcm_token: token, user_agent: navigator.userAgent }),
+        });
+      })
+      .then(function (res) {
+        if (!res.ok) throw new Error('Server rejected the subscription (' + res.status + ').');
+        setStatus('Push alerts are enabled on this browser.', false);
+      })
+      .catch(function (err) {
+        setStatus(err.message || 'Could not enable push alerts.', true);
+        buttonEl.disabled = false;
+      });
+  });
+})();
+</script>
+{% endif %}
+{% endblock %}

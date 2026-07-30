@@ -21,8 +21,13 @@ const VALIDATORS = {
  * "Lock this rate". The currency pair, amount and rate are NOT editable here —
  * they are carried over from the converter, because the whole point is to record
  * exactly the figures the customer was looking at when they decided.
+ *
+ * Used in two places, hence `onClose`: the standalone /lock-rate page (which
+ * omits it, so "change the amount" links back to the converter) and the modal
+ * opened from the converter itself (which passes it, so the same action just
+ * dismisses the dialog — the converter is already right behind it).
  */
-export default function RateLockForm() {
+export default function RateLockForm({ onClose, headingId }) {
   const fx = useFx();
 
   const f = useLeadForm({
@@ -69,7 +74,7 @@ export default function RateLockForm() {
 
   return (
     <form noValidate onSubmit={f.handleSubmit} style={formCard}>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: c.navy, margin: '0 0 6px' }}>Lock this rate</h2>
+      <h2 id={headingId} style={{ fontSize: 22, fontWeight: 600, color: c.navy, margin: '0 0 6px' }}>Lock this rate</h2>
       <p style={{ fontSize: 14, lineHeight: 1.6, color: c.textMuted, margin: '0 0 22px' }}>
         We will hold the rate below and a dealer will confirm it with you.
       </p>
@@ -96,9 +101,19 @@ export default function RateLockForm() {
             </span>
           </div>
         </div>
-        <a href="/converter" style={{ display: 'inline-block', marginTop: 14, fontSize: 13, fontWeight: 600, color: c.orange }}>
-          ← Change the amount or currency
-        </a>
+        {onClose ? (
+          <button
+            type="button"
+            onClick={onClose}
+            style={{ display: 'inline-block', marginTop: 14, fontSize: 13, fontWeight: 600, color: c.orange, cursor: 'pointer' }}
+          >
+            ← Change the amount or currency
+          </button>
+        ) : (
+          <a href="/converter" style={{ display: 'inline-block', marginTop: 14, fontSize: 13, fontWeight: 600, color: c.orange }}>
+            ← Change the amount or currency
+          </a>
+        )}
       </div>
 
       {(sameCurrency || noAmount) && (
