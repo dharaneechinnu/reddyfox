@@ -58,6 +58,25 @@ export const submitQuoteRequest = (payload) => postLead('quotes', payload);
 export const submitRateLock = (payload) => postLead('rate-locks', payload);
 
 /**
+ * Look up the status of a previously submitted enquiry/quote/rate-lock.
+ * Requires both the phone number and reference code used at submission —
+ * returns null (not found) rather than throwing, so the page can show a
+ * plain "couldn't find that" message instead of an error state.
+ */
+export async function trackLead(phone, reference) {
+  const params = new URLSearchParams({ phone, reference });
+  const res = await fetch(`${API_BASE}/track/?${params}`);
+  if (res.status === 404) return null;
+  if (res.status === 429) {
+    const err = new Error('Too many lookups from this connection. Please wait a while, or call us instead.');
+    err.throttled = true;
+    throw err;
+  }
+  if (!res.ok) throw new Error(`Could not look up that request (${res.status}).`);
+  return res.json();
+}
+
+/**
  * Registers this browser's FCM token for rate-alert push notifications.
  * Safe to call repeatedly with the same token — the backend upserts it.
  */

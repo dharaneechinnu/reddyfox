@@ -45,6 +45,7 @@ export default function EnquiryForm() {
         heading={`Thank you, ${f.values.name.trim().split(' ')[0]} — we have your enquiry`}
         onReset={f.reset}
         resetLabel="Send another enquiry"
+        reference={f.result.reference}
       >
         It has reached our team and someone will get back to you. If it is urgent, please call us.
       </LeadSuccess>

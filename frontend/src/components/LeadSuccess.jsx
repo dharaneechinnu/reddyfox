@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { CONTACT, PRIMARY_PHONE } from '../company';
 import { c, fonts } from '../tokens';
 import useApi from '../hooks/useApi';
@@ -11,13 +12,28 @@ const loadSiteSettings = () => fetchSiteSettings();
  * Shown after any of the three forms succeeds.
  * WhatsApp number, label and greeting come from the Django admin.
  */
-export default function LeadSuccess({ heading, children, onReset, resetLabel = 'Send another request' }) {
+export default function LeadSuccess({ heading, children, onReset, resetLabel = 'Send another request', reference }) {
   const { data: site } = useApi(loadSiteSettings, null);
 
   return (
     <div role="status" style={{ background: '#fff', border: `1px solid ${c.greenBorder}`, borderRadius: 16, padding: 34 }}>
       <div style={{ fontSize: 20, fontWeight: 600, color: c.greenText, margin: '0 0 10px' }}>{heading}</div>
       <div style={{ fontSize: 15, lineHeight: 1.65, color: c.text, margin: '0 0 22px' }}>{children}</div>
+
+      {reference && (
+        <div style={{ border: `1px solid ${c.sandBorder}`, background: c.sand, borderRadius: 12, padding: '16px 20px', marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: 11.5, color: c.textMuted, marginBottom: 4 }}>Your reference — save this</div>
+            <div style={{ fontFamily: fonts.mono, fontSize: 19, fontWeight: 600, color: c.navy, letterSpacing: '.03em' }}>{reference}</div>
+          </div>
+          <Link
+            to={`/track?reference=${encodeURIComponent(reference)}`}
+            style={{ fontSize: 13.5, fontWeight: 600, color: c.orange, whiteSpace: 'nowrap' }}
+          >
+            Track this request →
+          </Link>
+        </div>
+      )}
 
       {/* WhatsApp leads: it is the fastest channel for most customers. */}
       {site?.whatsapp_enabled && site?.whatsapp_url && (

@@ -12,6 +12,7 @@ import About from './pages/About';
 import Faq from './pages/Faq';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
+import TrackRequest from './pages/TrackRequest';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -30,6 +31,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/faq" element={<Faq />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/track" element={<TrackRequest />} />
             <Route path="/login" element={<Login />} />
             <Route path="*" element={<NotFound />} />
           </Route>

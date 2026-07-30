@@ -181,6 +181,44 @@ class RateLockCreateSerializer(BaseLeadSerializer):
         return attrs
 
 
+class LeadTrackSerializer(serializers.ModelSerializer):
+    """What a customer sees on /track — their own words back, current
+    workflow status, and the kind-specific figures relevant to their request.
+    Deliberately excludes `internal_note`, `assigned_to`, `email` and
+    `source_ip`: the same "staff notes are never shown to the customer"
+    boundary the admin already draws, just enforced here by omission.
+
+    `Spam` is also never shown as such: whether it was flagged in error or
+    correctly, a customer has no reason to see that internal categorisation.
+    It's presented identically to `Closed`.
+    """
+
+    kind_display = serializers.CharField(source='get_kind_display', read_only=True)
+    status = serializers.SerializerMethodField()
+    status_display = serializers.SerializerMethodField()
+    is_expired = serializers.BooleanField(read_only=True)
+    expires_in = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Lead
+        fields = [
+            'reference_display', 'kind', 'kind_display', 'status', 'status_display',
+            'name', 'message', 'service',
+            'from_currency', 'to_currency', 'amount', 'needed_by',
+            'quoted_rate', 'converted_amount', 'lock_expires_at', 'is_expired', 'expires_in',
+            'created_at',
+        ]
+
+    def _customer_facing_status(self, obj):
+        return Lead.Status.CLOSED if obj.status == Lead.Status.SPAM else obj.status
+
+    def get_status(self, obj):
+        return self._customer_facing_status(obj)
+
+    def get_status_display(self, obj):
+        return Lead.Status(self._customer_facing_status(obj)).label
+
+
 class SiteSettingSerializer(serializers.ModelSerializer):
     """Public contact options. The wa.me URL is built here so the frontend never
     has to reimplement number formatting or message encoding."""

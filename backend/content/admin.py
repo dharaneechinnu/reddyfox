@@ -73,10 +73,10 @@ class BaseLeadAdmin(admin.ModelAdmin):
     list_per_page = 50
     ordering = ('-created_at',)
     actions = ('mark_contacted', 'mark_quoted', 'mark_closed', 'mark_spam')
-    search_fields = ('name', 'phone', 'email', 'message')
+    search_fields = ('name', 'phone', 'email', 'message', 'reference')
 
     customer_fields = ('name', 'phone', 'email', 'message')
-    audit_fields = ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')
+    audit_fields = ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip', 'reference_display')
 
     def has_add_permission(self, request):
         # Leads only ever arrive via the website forms.
@@ -84,6 +84,12 @@ class BaseLeadAdmin(admin.ModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         return tuple(self.customer_fields) + tuple(self.audit_fields) + ('reply_links',)
+
+    @admin.display(description='Reference')
+    def reference_display(self, obj):
+        # A customer may quote this back over the phone — worth a monospace
+        # rendering so staff can eyeball it against what the customer read out.
+        return format_html('<span style="font-family:monospace">{}</span>', obj.reference_display)
 
     # --- shared columns ---
     @admin.display(description='Status', ordering='status')
@@ -185,7 +191,7 @@ class EnquiryAdmin(BaseLeadAdmin):
         ('Customer enquiry', {'fields': ('name', 'phone', 'email', 'service', 'message', 'reply_links')}),
         ('Handling', {'fields': ('status', 'assigned_to', 'internal_note')}),
         ('Audit', {'classes': ('collapse',),
-                   'fields': ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
+                   'fields': ('reference_display', 'created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
     )
 
 
@@ -201,7 +207,7 @@ class QuoteRequestAdmin(BaseLeadAdmin):
         ('What to price', {'fields': ('service', 'from_currency', 'amount', 'needed_by', 'message')}),
         ('Handling', {'fields': ('status', 'assigned_to', 'internal_note')}),
         ('Audit', {'classes': ('collapse',),
-                   'fields': ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
+                   'fields': ('reference_display', 'created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
     )
 
     @admin.display(description='Wants')
@@ -238,7 +244,7 @@ class RateLockAdmin(BaseLeadAdmin):
         }),
         ('Handling', {'fields': ('status', 'assigned_to', 'internal_note')}),
         ('Audit', {'classes': ('collapse',),
-                   'fields': ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
+                   'fields': ('reference_display', 'created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
     )
 
     @admin.display(description='Lock', ordering='lock_expires_at')

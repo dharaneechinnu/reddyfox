@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     EnquiryCreateView, FaqCategoryViewSet, FaqViewSet, QuoteRequestCreateView,
-    RateLockCreateView, SiteSettingView, TestimonialViewSet,
+    RateLockCreateView, SiteSettingView, TestimonialViewSet, TrackLeadView,
 )
 
 router = DefaultRouter()
@@ -16,6 +16,9 @@ urlpatterns = router.urls + [
     path('enquiries/', EnquiryCreateView.as_view(), name='enquiry-create'),
     path('quotes/', QuoteRequestCreateView.as_view(), name='quote-create'),
     path('rate-locks/', RateLockCreateView.as_view(), name='rate-lock-create'),
+
+    # Public status lookup: ?phone=...&reference=... — a customer's own request only.
+    path('track/', TrackLeadView.as_view(), name='lead-track'),
 
     path('site-settings/', SiteSettingView.as_view(), name='site-settings'),
 ]

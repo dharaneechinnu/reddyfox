@@ -49,6 +49,7 @@ export default function RateLockForm() {
         heading={`Rate reserved, ${f.values.name.trim().split(' ')[0]}`}
         onReset={f.reset}
         resetLabel="Lock another rate"
+        reference={f.result.reference}
       >
         We have recorded <strong>{fx.calc.amountLabel}</strong> at{' '}
         <strong>{fx.calc.rateLine}</strong>.

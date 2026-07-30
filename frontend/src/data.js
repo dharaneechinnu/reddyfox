@@ -179,6 +179,7 @@ export const FOOTER_COLS = [
       ['Exchange rates', '/rates'],
       ['Currency converter', '/converter'],
       ['Student services', '/services/student-services'],
+      ['Track my request', '/track'],
     ],
   },
 ];

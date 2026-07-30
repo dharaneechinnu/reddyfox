@@ -2,14 +2,16 @@ from django.utils import timezone
 from rest_framework import generics, status, viewsets
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
+from rest_framework.views import APIView
 
-from .models import Faq, FaqCategory, SiteSetting, Testimonial
+from .models import Faq, FaqCategory, Lead, SiteSetting, Testimonial
 from .notifications import notify_team
 from .serializers import (
     EnquiryCreateSerializer, FaqCategorySerializer, FaqSerializer,
-    QuoteRequestCreateSerializer, RateLockCreateSerializer,
+    LeadTrackSerializer, QuoteRequestCreateSerializer, RateLockCreateSerializer,
     SiteSettingSerializer, TestimonialSerializer,
 )
+from .validators import normalize_phone
 
 
 class TestimonialViewSet(viewsets.ReadOnlyModelViewSet):
@@ -69,7 +71,7 @@ class BaseLeadCreateView(generics.CreateAPIView):
         notify_team(self.lead)
 
     def response_payload(self):
-        return {'detail': self.success_message}
+        return {'detail': self.success_message, 'reference': self.lead.reference_display}
 
     def create(self, request, *args, **kwargs):
         super().create(request, *args, **kwargs)
@@ -99,11 +101,48 @@ class RateLockCreateView(BaseLeadCreateView):
         expires = self.lead.lock_expires_at
         return {
             'detail': 'Your rate is reserved. Our dealer will confirm it shortly.',
+            'reference': self.lead.reference_display,
             'expires_at': expires.isoformat() if expires else None,
             'expires_at_display': (
                 timezone.localtime(expires).strftime('%d %b %Y, %H:%M') + ' IST' if expires else None
             ),
         }
+
+
+class TrackLeadThrottle(AnonRateThrottle):
+    """Own scope: this endpoint is a lookup, not a submission, but it still
+    needs its own budget so brute-forcing reference codes can't hide inside
+    the traffic allowance the three submit forms share."""
+    scope = 'lead-track'
+
+
+class TrackLeadView(APIView):
+    """Public, read-only status lookup for a customer's own request.
+
+    Requires BOTH the phone number used on the request AND its reference
+    code — the reference alone is already high-entropy (~1e12 possibilities),
+    but requiring the phone too means a brute-force attempt also has to guess
+    a real customer's number, not just enumerate codes.
+    """
+
+    throttle_classes = [TrackLeadThrottle]
+
+    def get(self, request, *args, **kwargs):
+        reference = (request.query_params.get('reference') or '').strip().upper()
+        reference = reference.replace('-', '').replace(' ', '')
+        phone = normalize_phone(request.query_params.get('phone') or '')
+
+        not_found = Response(
+            {'detail': 'We could not find a request matching those details. Check your phone number and reference code, or call us.'},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+        if not reference or not phone:
+            return not_found
+
+        lead = Lead.objects.filter(reference=reference, phone=phone).first()
+        if lead is None:
+            return not_found
+        return Response(LeadTrackSerializer(lead).data)
 
 
 class SiteSettingView(generics.RetrieveAPIView):

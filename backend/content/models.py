@@ -1,9 +1,21 @@
+import secrets
 from datetime import timedelta
 
 from django.db import models
 from django.utils import timezone
 
 from .validators import normalize_phone, validate_indian_phone
+
+# Excludes 0/O and 1/I/L — read aloud over the phone or typed on a cracked
+# screen, those are the pairs customers actually mistype.
+REFERENCE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+
+
+def generate_lead_reference():
+    """An 8-character code a customer can quote back to us to track their
+    request — see Lead.reference. Not a security token by itself; the track
+    endpoint always requires it together with the phone number on the lead."""
+    return ''.join(secrets.choice(REFERENCE_ALPHABET) for _ in range(8))
 
 
 class VisibleOrderedQuerySet(models.QuerySet):
@@ -200,6 +212,14 @@ class Lead(models.Model):
     source_ip = models.GenericIPAddressField(null=True, blank=True, help_text='For spam triage.')
     notified_at = models.DateTimeField(null=True, blank=True, help_text='When the team alert was sent.')
 
+    # Given back to the customer on submit so they can check status themselves
+    # at /track — see content.views.TrackLeadView. Looked up together with
+    # phone, never on its own.
+    reference = models.CharField(
+        max_length=8, unique=True, null=True, blank=True, editable=False,
+        help_text='Customer-facing tracking code. Generated automatically.',
+    )
+
     objects = LeadQuerySet.as_manager()
 
     class Meta:
@@ -218,7 +238,25 @@ class Lead(models.Model):
         # Stamp the moment it stopped being an untouched lead.
         if self.status != self.Status.NEW and self.contacted_at is None:
             self.contacted_at = timezone.now()
+        if not self.reference:
+            self.reference = self._new_unique_reference()
         super().save(*args, **kwargs)
+
+    @classmethod
+    def _new_unique_reference(cls):
+        # 8 chars from a 32-symbol alphabet is ~1e12 possibilities — a
+        # collision on the first try is already vanishingly unlikely, this
+        # loop just makes the guarantee exact rather than probabilistic.
+        for _ in range(5):
+            candidate = generate_lead_reference()
+            if not cls.objects.filter(reference=candidate).exists():
+                return candidate
+        raise RuntimeError('Could not generate a unique lead reference after 5 attempts.')
+
+    @property
+    def reference_display(self):
+        """Formatted for humans to read/type back, e.g. 'AB3D-7F2K'."""
+        return f'{self.reference[:4]}-{self.reference[4:]}' if self.reference else ''
 
     # --- reply helpers: one tap for the desk, no WhatsApp API needed ---
     @property

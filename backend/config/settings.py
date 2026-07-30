@@ -212,6 +212,10 @@ REST_FRAMEWORK = {
         # Push notification opt-in/opt-out: a browser only ever (re)subscribes
         # a handful of times an hour, even across tab reloads.
         'notification-subscribe': config('NOTIFICATION_SUBSCRIBE_THROTTLE_RATE', default='20/hour'),
+        # Lead status lookup: generous enough for a customer re-checking their
+        # own request a few times, tight enough that guessing reference codes
+        # isn't practical.
+        'lead-track': config('LEAD_TRACK_THROTTLE_RATE', default='20/hour'),
     },
 }
 

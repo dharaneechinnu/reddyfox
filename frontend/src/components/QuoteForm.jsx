@@ -62,6 +62,7 @@ export default function QuoteForm() {
         heading={`Thank you, ${f.values.name.trim().split(' ')[0]} — your quote request is in`}
         onReset={f.reset}
         resetLabel="Request another quote"
+        reference={f.result.reference}
       >
         Our dealers will come back to you with a price for{' '}
         <strong>{f.values.amount} {f.values.from_currency}</strong>. If it is urgent, please call us.
