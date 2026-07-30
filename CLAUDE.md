@@ -81,6 +81,12 @@ There is no frontend test runner configured (no Jest/Vitest) — `npm run lint` 
 - **`content`** — testimonials, FAQs, and the lead-capture system (see below). Also `SiteSetting`, a singleton row (`pk=1` enforced in `save()`) holding the customer-facing WhatsApp option and per-lead-type notification email overrides.
 - **`notifications`** — Chrome push alerts to *customers* about currency rate changes, via Firebase Cloud Messaging. Independent of `content`'s email alerts.
 
+### Who leads are *for* — the thing to keep in mind
+
+Every lead form on the site (enquiry, quote, rate lock) exists to put a customer's **phone number in front of a dealer**, so a person at the T. Nagar counter can ring them back. Nothing is sold online. The customer-facing confirmation is a courtesy; the product is the alert to the desk.
+
+That reframes what "done" means for anything in this area: the measure is **how few minutes pass between submission and callback**, not how good the success screen looks. Rate locks are the sharpest case — `SiteSetting.rate_lock_hours` is a promise with a deadline, so a lock the desk sees late is worse than useless. See `docs/team-notifications.md` for the reasoning, what's built, and the costed options for getting louder.
+
 ### The `Lead` model: one table, three admin-facing identities
 
 `content.models.Lead` backs the contact form, "get a quote", and "lock this rate" — three different customer requests that share ~80% of their fields (who the customer is, workflow state, audit trail). Rather than duplicating that, there's one concrete table and three **proxy models** (`Enquiry`, `QuoteRequest`, `RateLock`), each:
@@ -125,13 +131,18 @@ Triggered automatically by a `post_save` signal on `rates.Currency` (see `notifi
 
 With `FIREBASE_CREDENTIALS_JSON` unset (the default), subscribers still register and every send is recorded as a logged `FAILED` delivery rather than raising — the same "never let a missing credential break a request" pattern `content/notifications.py`'s email alert already uses. Don't add a `try/except` around calls into this app; the graceful-failure handling is already inside it.
 
+**A note on anything hooked to a `post_save` signal:** an exception raised in a signal receiver rolls back the save that triggered it. So a bug in alert-building code doesn't just lose the alert — it destroys the customer's lead. Keep the "never raises" guarantee at the boundary of the notification code itself (not at each call site), so callers can fire-and-forget. Two real crashes of exactly this kind were fixed in the `team_alerts` work: a customer name long enough to overflow a title column, and a value that was still a `str` rather than a `Decimal` when the signal fired.
+
 ### SEO / AI-assistant discoverability
 
 `frontend/src/components/Seo.jsx` sets per-route title/description/canonical/OG tags via `useEffect` (no `react-helmet` dependency). **Important caveat, documented in `docs/seo-and-ai-discoverability.md`:** this is a client-rendered SPA, so those tags only reach crawlers that execute JavaScript — a crawler that doesn't only ever sees the static defaults in `frontend/index.html`. `robots.txt`, `sitemap.xml` and `llms.txt` (in `frontend/public/`) are hand-maintained and must be updated whenever a route is added in `App.jsx`.
 
 ### `docs/`
 
-Project documentation beyond this file lives in `docs/` at the repo root (not scattered into `frontend/`/`backend/` READMEs) — see `docs/README.md` for the index.
+Project documentation beyond this file lives in `docs/` at the repo root (not scattered into `frontend/`/`backend/` READMEs) — see `docs/README.md` for the index. Two are worth reading before starting related work:
+
+- **`team-notifications.md`** — how the desk hears about a lead, why response time is the metric that matters commercially, and a costed comparison of the channels not yet built. Read before adding any notification channel.
+- **`product-reference.md`** — dated research on comparable businesses (competitors, industry findings, messaging costs) and a record of ideas consciously parked with the reason. Read before proposing a feature; it may already have been considered and deferred. It is **research only** — never a source of claims to publish, which still must trace to `company.js`/`data.js`.
 
 ### Config and deployment
 
