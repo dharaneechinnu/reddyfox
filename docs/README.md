@@ -6,6 +6,11 @@ Add new docs to this folder and link them below.
 
 ## Contents
 
+- [Currency rate APIs](./currency-rate-apis.md) — researched options for
+  fetching world exchange rates (Frankfurter, fawazahmed0, ECB), why FBIL is
+  the authoritative Indian source, and **why an API rate must never be
+  published as our counter rate**. Read before wiring up any external rate
+  feed. Verify with `backend/scripts/check_rate_apis.py`.
 - [SEO & AI discoverability](./seo-and-ai-discoverability.md) — what's
   implemented so the site ranks well in search and gets cited correctly by
   AI assistants (ChatGPT, Claude, Perplexity) when someone asks about forex
