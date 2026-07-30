@@ -6,7 +6,7 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 
 from rates.models import Currency
-from .models import Enquiry, Lead, QuoteRequest, RateLock
+from .models import CallbackRequest, Enquiry, Lead, QuoteRequest, RateLock
 
 # Rendering an admin page needs a staticfiles manifest, which only exists
 # after `collectstatic`. Production builds one; the test runner shouldn't
@@ -188,3 +188,52 @@ class LeadSubmissionStillWorksTests(TestCase):
             'message': 'Need USD', 'priority': 1,
         })
         self.assertEqual(Enquiry.objects.get().priority, Lead.Priority.NORMAL)
+
+
+class CallbackRequestTests(TestCase):
+    """The homepage converter's quick "get your best price" capture — name
+    and phone are the only things a customer must provide."""
+
+    def setUp(self):
+        self.client = APIClient()
+        _make_usd()
+
+    def test_name_and_phone_alone_is_enough(self):
+        res = self.client.post(reverse('callback-create'), {
+            'name': 'Deborah Beck', 'phone': '9876543210',
+        })
+        self.assertEqual(res.status_code, 201, res.data)
+        lead = CallbackRequest.objects.get()
+        self.assertEqual(lead.phone, '9876543210')
+        self.assertEqual(lead.email, '')
+        self.assertEqual(lead.kind, Lead.Kind.CALLBACK)
+
+    def test_amount_and_currency_are_carried_along_when_present(self):
+        res = self.client.post(reverse('callback-create'), {
+            'name': 'Deborah Beck', 'phone': '9876543210',
+            'from_currency': 'USD', 'to_currency': 'INR', 'amount': '500',
+        })
+        self.assertEqual(res.status_code, 201, res.data)
+        lead = CallbackRequest.objects.get()
+        self.assertEqual(lead.from_currency, 'USD')
+        self.assertEqual(str(lead.amount), '500.00')
+
+    def test_missing_phone_is_rejected(self):
+        res = self.client.post(reverse('callback-create'), {'name': 'Deborah Beck'})
+        self.assertEqual(res.status_code, 400)
+        self.assertFalse(CallbackRequest.objects.exists())
+
+    def test_invalid_phone_is_rejected(self):
+        res = self.client.post(reverse('callback-create'), {'name': 'Deborah Beck', 'phone': '12345'})
+        self.assertEqual(res.status_code, 400)
+        self.assertFalse(CallbackRequest.objects.exists())
+
+    def test_arrives_at_normal_priority(self):
+        self.client.post(reverse('callback-create'), {'name': 'Deborah Beck', 'phone': '9876543210'})
+        self.assertEqual(CallbackRequest.objects.get().priority, Lead.Priority.NORMAL)
+
+    def test_does_not_appear_in_other_lead_lists(self):
+        self.client.post(reverse('callback-create'), {'name': 'Deborah Beck', 'phone': '9876543210'})
+        self.assertFalse(Enquiry.objects.exists())
+        self.assertFalse(QuoteRequest.objects.exists())
+        self.assertFalse(RateLock.objects.exists())

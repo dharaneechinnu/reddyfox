@@ -71,6 +71,7 @@ async function postLead(path, payload) {
 export const submitEnquiry = (payload) => postLead('enquiries', payload);
 export const submitQuoteRequest = (payload) => postLead('quotes', payload);
 export const submitRateLock = (payload) => postLead('rate-locks', payload);
+export const submitCallbackRequest = (payload) => postLead('callbacks', payload);
 
 /**
  * Registers this browser's FCM token for rate-alert push notifications.

@@ -18,7 +18,7 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 
-from content.models import Enquiry, Faq, FaqCategory, QuoteRequest, RateLock, SiteSetting, Testimonial
+from content.models import CallbackRequest, Enquiry, Faq, FaqCategory, QuoteRequest, RateLock, SiteSetting, Testimonial
 from rates.models import Currency
 
 # What each group may do. 'view'/'change' only — leads are created by the
@@ -40,17 +40,19 @@ TEAMS = {
         },
     },
     'Front office': {
-        'description': 'Sees only Enquiries.',
+        'description': 'Sees Enquiries and quick Callback requests.',
         'models': {
             Enquiry: WORK_ON_LEADS,
+            CallbackRequest: WORK_ON_LEADS,
         },
     },
     'Manager': {
-        'description': 'Sees all three lead lists plus rates and site content.',
+        'description': 'Sees all four lead lists plus rates and site content.',
         'models': {
             RateLock: WORK_ON_LEADS,
             QuoteRequest: WORK_ON_LEADS,
             Enquiry: WORK_ON_LEADS,
+            CallbackRequest: WORK_ON_LEADS,
             Currency: MANAGE,
             Testimonial: MANAGE,
             Faq: MANAGE,

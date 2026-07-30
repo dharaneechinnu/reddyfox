@@ -2,7 +2,7 @@ from django.contrib import admin, messages
 from django.utils import timezone
 from django.utils.html import format_html
 
-from .models import Enquiry, Faq, FaqCategory, Lead, QuoteRequest, RateLock, SiteSetting, Testimonial
+from .models import CallbackRequest, Enquiry, Faq, FaqCategory, Lead, QuoteRequest, RateLock, SiteSetting, Testimonial
 
 
 @admin.register(Testimonial)
@@ -261,6 +261,33 @@ class QuoteRequestAdmin(BaseLeadAdmin):
             '<span style="font-family:monospace">{} {}</span>'
             '<br><span style="font-size:11px;color:#666">{}</span>',
             amount, obj.from_currency or '', obj.service or '',
+        )
+
+
+@admin.register(CallbackRequest)
+class CallbackRequestAdmin(BaseLeadAdmin):
+    """Quick "get your best price" requests from the homepage converter widget.
+    Email is genuinely optional here — the point of this form is minimum
+    friction, so don't be surprised to see it blank."""
+
+    list_display = ('priority_badge', 'status_badge', 'received', 'name', 'phone_links', 'wants', 'priority', 'assigned_to')
+    list_filter = ('priority', 'status', 'from_currency', 'assigned_to', 'created_at')
+    customer_fields = ('name', 'phone', 'email', 'from_currency', 'to_currency', 'amount', 'message')
+    fieldsets = (
+        ('Customer', {'fields': ('name', 'phone', 'email', 'reply_links')}),
+        ('What they were converting', {'fields': ('from_currency', 'to_currency', 'amount')}),
+        ('Handling', {'fields': ('priority', 'status', 'assigned_to', 'internal_note')}),
+        ('Audit', {'classes': ('collapse',),
+                   'fields': ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
+    )
+
+    @admin.display(description='Was converting')
+    def wants(self, obj):
+        if obj.amount is None or not obj.from_currency:
+            return '—'
+        return format_html(
+            '<span style="font-family:monospace">{} {} → {}</span>',
+            f'{obj.amount:,.2f}', obj.from_currency, obj.to_currency or '?',
         )
 
 
