@@ -42,7 +42,6 @@ Keep this in sync with `frontend/src/App.jsx` and `frontend/public/sitemap.xml` 
 |---|---|---|
 | `/` | Foreign Currency Exchange in Chennai | Yes |
 | `/rates` | Today's Foreign Exchange Rates | Yes |
-| `/converter` | Currency Converter | Yes |
 | `/quote` | Get a Free Forex Quote | Yes |
 | `/lock-rate` | Lock Today's Exchange Rate | Yes |
 | `/services` | Forex Services | Yes |

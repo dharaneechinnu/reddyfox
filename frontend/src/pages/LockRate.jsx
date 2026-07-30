@@ -16,14 +16,13 @@ export default function LockRate() {
     <div>
       <Seo
         title="Lock Today's Exchange Rate"
-        description="Reserve today's exchange rate with Reddy Forex before it changes — lock it in from the converter and collect at our T. Nagar, Chennai counter."
+        description="Reserve today's exchange rate with Reddy Forex before it changes — lock it in and collect at our T. Nagar, Chennai counter."
         path="/lock-rate"
       />
       <section style={{ background: c.navy, padding: '60px 0 72px' }}>
         <div style={wrap}>
           <div style={{ font: `400 12.5px/1.4 ${fonts.mono}`, color: c.navyMuted, marginBottom: 22 }}>
-            <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link>{' / '}
-            <Link to="/converter" style={{ cursor: 'pointer', color: c.onNavyText }}>Converter</Link>
+            <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link>
             {' / Lock this rate'}
           </div>
           <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: 'clamp(34px,4vw,54px)', lineHeight: 1.05, color: '#fff', margin: '0 0 14px' }}>
@@ -44,7 +43,7 @@ export default function LockRate() {
               HOW A RATE LOCK WORKS
             </p>
             <ol style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 14, fontSize: 14.5, lineHeight: 1.6, color: c.onNavyText2 }}>
-              <li>We record the exact rate and amount shown in the converter.</li>
+              <li>We record the exact rate and amount you worked out on the homepage.</li>
               <li>Our rates desk sees it immediately and confirms it with you.</li>
               <li>Bring your passport and travel documents to collect at our T. Nagar shop.</li>
             </ol>

@@ -4,7 +4,6 @@ import { FeatureFlagsProvider } from './context/FeatureFlagsContext';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Rates from './pages/Rates';
-import Converter from './pages/Converter';
 import Quote from './pages/Quote';
 import LockRate from './pages/LockRate';
 import Services from './pages/Services';
@@ -24,7 +23,6 @@ function App() {
             <Route element={<Layout />}>
               <Route path="/" element={<Home />} />
               <Route path="/rates" element={<Rates />} />
-              <Route path="/converter" element={<Converter />} />
               <Route path="/quote" element={<Quote />} />
               <Route path="/lock-rate" element={<LockRate />} />
               <Route path="/services" element={<Services />} />

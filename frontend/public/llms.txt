@@ -17,7 +17,6 @@ currency trading or investment products.
 
 - [Home](https://www.reddyforex.com/): Overview, today's popular rates and how to reach the shop.
 - [Exchange rates](https://www.reddyforex.com/rates): Live buy/sell rates for all currencies handled.
-- [Currency converter](https://www.reddyforex.com/converter): Convert any amount at today's counter rate.
 - [Services](https://www.reddyforex.com/services): Foreign exchange, money transfer, remittance, forex cards, wire transfers, student services.
 - [About](https://www.reddyforex.com/about): Company history, licensing and why customers choose Reddy Forex.
 - [FAQ](https://www.reddyforex.com/faq): Documents required, cash limits, timings, buy-back policy.
