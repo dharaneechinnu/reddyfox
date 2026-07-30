@@ -12,6 +12,7 @@ import logging
 from django.conf import settings
 from django.utils import timezone
 
+from .firebase import REASONS, CredentialState, get_messaging
 from .models import Notification, NotificationDelivery, PushSubscriber
 
 logger = logging.getLogger(__name__)
@@ -43,32 +44,6 @@ def _eligible_subscribers(notification):
     return eligible, skipped
 
 
-def _get_messaging():
-    """Lazily configured firebase_admin.messaging module, or None.
-
-    Returns None (after logging why) when firebase-admin isn't installed or
-    no service account is configured, so the caller can record every send as
-    a logged failure instead of raising.
-    """
-    try:
-        import firebase_admin
-        from firebase_admin import credentials, messaging
-    except ImportError:
-        logger.error('firebase-admin is not installed; cannot send push notifications.')
-        return None
-
-    cred_path = getattr(settings, 'FIREBASE_CREDENTIALS_JSON', '')
-    if not cred_path:
-        logger.info('FIREBASE_CREDENTIALS_JSON not configured; skipping push notification send.')
-        return None
-
-    if not firebase_admin._apps:
-        try:
-            firebase_admin.initialize_app(credentials.Certificate(cred_path))
-        except Exception:
-            logger.exception('Failed to initialise firebase-admin with FIREBASE_CREDENTIALS_JSON.')
-            return None
-    return messaging
 
 
 def _record(notification, subscriber, status, **fields):
@@ -112,11 +87,14 @@ def send_notification(notification):
         return _finish(notification, target_count=0, skipped_count=len(skipped),
                         success_count=0, fail_count=0, status=status)
 
-    messaging = _get_messaging()
+    messaging, state = get_messaging()
     if messaging is None:
+        # Record *why*, not just that it failed: "not configured" and
+        # "configured wrongly" need very different responses from whoever
+        # reads this row in the admin.
         for subscriber in eligible:
             _record(notification, subscriber, NotificationDelivery.Status.FAILED,
-                    error_message='FCM is not configured on this server.')
+                    error_message=REASONS.get(state, 'Push unavailable.'))
         return _finish(notification, target_count=len(eligible), skipped_count=len(skipped),
                         success_count=0, fail_count=len(eligible), status=Notification.Status.FAILED)
 

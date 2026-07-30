@@ -1,0 +1,65 @@
+# Render deployment, defined in the repo rather than a dashboard.
+#
+# Until now the build and start commands existed only in Render's UI, which
+# meant they could not be reviewed, could not be diffed, and were invisible
+# while diagnosing an outage. The `collectstatic` step below is the reason
+# this file matters most: settings.py uses whitenoise's
+# CompressedManifestStaticFilesStorage, which raises
+# "Missing staticfiles manifest entry" on *every* admin page if the manifest
+# was never built — so a deploy that skips it leaves the API healthy and the
+# team's admin completely broken.
+#
+# Adopting this file: Render Dashboard -> Blueprints -> New Blueprint
+# Instance, pointed at this repo. Secrets are still set in the dashboard
+# (sync: false below) — nothing sensitive belongs in here.
+
+databases:
+  - name: reddyforex-db
+    databaseName: foxexchange
+    plan: free
+
+services:
+  - type: web
+    name: reddyforex-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    # Python version is also pinned by backend/runtime.txt and
+    # backend/.python-version — Django 6 requires >= 3.12.
+    buildCommand: >-
+      pip install -r requirements.txt &&
+      python manage.py collectstatic --noinput &&
+      python manage.py migrate --noinput
+    startCommand: gunicorn config.wsgi:application
+    healthCheckPath: /api/rates/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: DATABASE_URL
+        fromDatabase:
+          name: reddyforex-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      # --- set these in the dashboard; never commit their values ---
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: ADMIN_BASE_URL
+        sync: false
+      - key: ENQUIRY_NOTIFY_EMAILS
+        sync: false
+      - key: EMAIL_HOST_USER
+        sync: false
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
+      # Accepts either the service-account JSON itself or a path to a file
+      # holding it — see backend/notifications/firebase.py. Leave unset and
+      # push is skipped cleanly rather than failing loudly.
+      - key: FIREBASE_CREDENTIALS_JSON
+        sync: false

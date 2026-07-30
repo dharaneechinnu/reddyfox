@@ -1,3 +1,6 @@
+import json
+import os
+import tempfile
 from unittest.mock import patch
 
 from django.test import TestCase, override_settings
@@ -7,6 +10,7 @@ from rest_framework.test import APIClient
 
 from rates.models import Currency
 from .models import Notification, NotificationDelivery, PushSubscriber
+from .firebase import CredentialState, get_messaging
 from .services import notify_rate_change, send_notification
 
 
@@ -152,3 +156,92 @@ class SubscribeViewTests(TestCase):
         res = self.client.post(reverse('notification-unsubscribe'), {'fcm_token': 'z' * 40})
         self.assertEqual(res.status_code, 200)
         self.assertFalse(PushSubscriber.objects.get(fcm_token='z' * 40).is_active)
+
+
+class FirebaseCredentialTests(TestCase):
+    """The setting is named FIREBASE_CREDENTIALS_JSON, so someone will paste
+    the JSON content into it — and on a managed host an env var is the only
+    thing they *can* paste. It used to be read as a file path, producing a
+    FileNotFoundError that the caller swallowed: push looked configured and
+    delivered nothing. Both forms must work, and the three failure states
+    must be tellable apart from the delivery row alone.
+    """
+
+    @staticmethod
+    def _service_account():
+        """A throwaway but structurally real service account.
+
+        The key is generated here rather than hard-coded: Certificate() parses
+        it for real, so a dummy string would make the OK cases fail for the
+        wrong reason — and a checked-in private key, even a fake one, is a
+        thing to avoid.
+        """
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import rsa
+
+        key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        pem = key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption(),
+        ).decode()
+        return {
+            'type': 'service_account', 'project_id': 'demo', 'private_key_id': 'k1',
+            'private_key': pem,
+            'client_email': 'demo@demo.iam.gserviceaccount.com', 'client_id': '1',
+            'token_uri': 'https://oauth2.googleapis.com/token',
+        }
+
+    def setUp(self):
+        self.SERVICE_ACCOUNT = self._service_account()
+        import firebase_admin
+        firebase_admin._apps.clear()   # each case initialises from scratch
+        self.addCleanup(firebase_admin._apps.clear)
+
+    @override_settings(FIREBASE_CREDENTIALS_JSON='')
+    def test_empty_setting_reports_not_configured(self):
+        messaging, state = get_messaging()
+        self.assertIsNone(messaging)
+        self.assertEqual(state, CredentialState.NOT_CONFIGURED)
+
+    @override_settings(FIREBASE_CREDENTIALS_JSON='   ')
+    def test_whitespace_only_is_also_not_configured(self):
+        self.assertEqual(get_messaging()[1], CredentialState.NOT_CONFIGURED)
+
+    def test_json_content_is_accepted(self):
+        # The case that used to fail outright.
+        with override_settings(FIREBASE_CREDENTIALS_JSON=json.dumps(self.SERVICE_ACCOUNT)):
+            self.assertEqual(get_messaging()[1], CredentialState.OK)
+
+    def test_file_path_is_still_accepted(self):
+        with tempfile.NamedTemporaryFile('w', suffix='.json', delete=False) as fh:
+            json.dump(self.SERVICE_ACCOUNT, fh)
+            path = fh.name
+        self.addCleanup(os.unlink, path)
+        with override_settings(FIREBASE_CREDENTIALS_JSON=path):
+            self.assertEqual(get_messaging()[1], CredentialState.OK)
+
+    @override_settings(FIREBASE_CREDENTIALS_JSON='/no/such/service-account.json')
+    def test_missing_file_reports_bad_credential_not_missing_config(self):
+        messaging, state = get_messaging()
+        self.assertIsNone(messaging)
+        self.assertEqual(state, CredentialState.BAD_CREDENTIAL)
+
+    @override_settings(FIREBASE_CREDENTIALS_JSON='{"type": "service_account", oops')
+    def test_malformed_json_reports_bad_credential(self):
+        self.assertEqual(get_messaging()[1], CredentialState.BAD_CREDENTIAL)
+
+    @override_settings(FIREBASE_CREDENTIALS_JSON='/no/such/service-account.json')
+    def test_delivery_row_says_misconfigured_not_unconfigured(self):
+        # What the desk actually reads in /admin/ — the whole point of
+        # distinguishing the states.
+        PushSubscriber.objects.create(fcm_token='t' * 40)
+        notification = Notification.objects.create(
+            title='x', body='y', priority=Notification.Priority.URGENT)
+
+        send_notification(notification)
+
+        delivery = NotificationDelivery.objects.get(notification=notification)
+        self.assertEqual(delivery.status, NotificationDelivery.Status.FAILED)
+        self.assertIn('invalid', delivery.error_message.lower())
+        self.assertNotIn('not configured', delivery.error_message.lower())
