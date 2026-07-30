@@ -18,6 +18,18 @@ export async function fetchSiteSettings() {
 }
 
 /**
+ * {key: boolean} map of every feature flag, managed in Django admin under
+ * Feature flags. A key absent from the response (flag deleted, or the
+ * request failed) should be treated as enabled by the caller — see
+ * useFeatureFlag in context/FeatureFlagsContext.jsx, which fails open.
+ */
+export async function fetchFeatureFlags() {
+  const res = await fetch(`${API_BASE}/flags/`);
+  if (!res.ok) throw new Error(`Failed to load feature flags (${res.status})`);
+  return res.json();
+}
+
+/**
  * POST a lead to one of the three create-only endpoints. Returns the success
  * payload, or throws an Error whose `.fieldErrors` holds per-field messages
  * from DRF, so the form can show them next to the right inputs.

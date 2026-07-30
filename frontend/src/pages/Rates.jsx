@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useMemo } from 'react';
 import { useFx } from '../context/FxContext';
+import { useFeatureFlag } from '../context/FeatureFlagsContext';
 import { FILTERS, fmt } from '../data';
 import { c, fonts, wrap } from '../tokens';
 import Seo from '../components/Seo';
@@ -23,6 +24,7 @@ function StarButton({ active, onClick }) {
 export default function Rates() {
   const navigate = useNavigate();
   const fx = useFx();
+  const ratesPageOn = useFeatureFlag('exchange_rates_page');
 
   const allCodes = Object.keys(fx.rates).filter((code) => code !== 'INR');
   const q = fx.q.trim().toLowerCase();
@@ -35,6 +37,16 @@ export default function Rates() {
     if (fx.filter !== 'All') return r.r === fx.filter;
     return true;
   }), [q, fx.filter, fx.favs, fx.rates, fx.popular]);
+
+  if (!ratesPageOn) {
+    return (
+      <div style={{ padding: '120px 32px', textAlign: 'center' }}>
+        <Seo title="Exchange Rates" description="Live buy and sell rates." path="/rates" />
+        <p style={{ fontSize: 17, color: c.textMuted, marginBottom: 20 }}>The exchange rates page isn't available right now.</p>
+        <Link to="/" style={{ fontSize: 14.5, fontWeight: 600, color: c.orange }}>Back to home</Link>
+      </div>
+    );
+  }
 
   if (fx.ratesLoading) {
     return <div style={{ padding: '120px 32px', textAlign: 'center', color: c.textMuted }}>Loading live rates…</div>;

@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { NAV, SERVICES, FOOTER_COLS } from '../data';
 import { COMPANY, CONTACT, PRIMARY_PHONE, SOCIALS } from '../company';
 import { c, fonts, wrap } from '../tokens';
+import { useFeatureFlag } from '../context/FeatureFlagsContext';
 import NotificationOptIn from './NotificationOptIn';
 import SocialIcon from './SocialIcon';
 
@@ -88,6 +89,8 @@ function MegaMenu({ open, onClose }) {
 
 function Header() {
   const [mega, setMega] = useState(false);
+  const ratesPageOn = useFeatureFlag('exchange_rates_page');
+  const nav = ratesPageOn ? NAV : NAV.filter(([, to]) => to !== '/rates');
   return (
     <div style={{ position: 'sticky', top: 0, zIndex: 60, background: 'rgba(255,255,255,.94)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${c.sandLine}` }}>
       <div style={{ ...wrap, padding: '16px 32px', display: 'flex', alignItems: 'center', gap: 36 }}>
@@ -100,13 +103,15 @@ function Header() {
         </Link>
 
         <nav style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1, flexWrap: 'wrap' }}>
-          {NAV.map(([label, to]) => (
+          {nav.map(([label, to]) => (
             <NavItem key={to} label={label} to={to} onEnter={() => setMega(to === '/services')} />
           ))}
         </nav>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 'none' }}>
-          <Link to="/rates" style={{ fontSize: 14.5, fontWeight: 500, color: c.navyMid, cursor: 'pointer', whiteSpace: 'nowrap' }}>Today's rates</Link>
+          {ratesPageOn && (
+            <Link to="/rates" style={{ fontSize: 14.5, fontWeight: 500, color: c.navyMid, cursor: 'pointer', whiteSpace: 'nowrap' }}>Today's rates</Link>
+          )}
           <Link
             to="/quote"
             style={{ background: c.orange, color: '#fff', padding: '12px 20px', borderRadius: 8, fontSize: 14.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background .18s,transform .18s' }}
