@@ -131,7 +131,7 @@ With `FIREBASE_CREDENTIALS_JSON` unset (the default), subscribers still register
 
 ### `docs/`
 
-Project documentation beyond this file lives in `docs/` at the repo root (not scattered into `frontend/`/`backend/` READMEs) — see `docs/README.md` for the index.
+Project documentation beyond this file lives in `docs/` at the repo root (not scattered into `frontend/`/`backend/` READMEs) — see `docs/README.md` for the index. This includes `docs/blog-content-strategy.md`, a content-planning reference for a future blog/free-resources section (educational forex/RBI-regulation topics, glossary, traveller guides) — read its guardrails section before drafting any blog copy from it, since the same "never invent a fact" rule applies there too.
 
 ### Config and deployment
 

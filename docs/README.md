@@ -12,3 +12,7 @@ Add new docs to this folder and link them below.
   in Chennai, what its limits are, and what to do next.
 - [Keyword & query targets](./keyword-targets.md) — the real searches and
   AI-assistant questions this site's content is written to answer.
+- [Blog & free-resource content strategy](./blog-content-strategy.md) —
+  educational content pillars (regulatory guides, glossary, traveller
+  guides), free-resource formats worth building, and the guardrails for
+  writing any of it without drifting into unverifiable claims.
