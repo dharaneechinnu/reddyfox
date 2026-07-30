@@ -185,7 +185,7 @@ export default function Rates() {
                     <RateCell value={r.s} />
                     <span style={{ textAlign: 'right', fontFamily: fonts.mono, fontSize: 13.5, color: r.d >= 0 ? c.green : c.red }}>{(r.d >= 0 ? '+' : '') + r.d.toFixed(2) + '%'}</span>
                     <span
-                      onClick={() => { fx.setFrom(code); fx.setTo('INR'); navigate('/converter'); }}
+                      onClick={() => { fx.setFrom(code); fx.setTo('INR'); navigate('/'); }}
                       style={{ textAlign: 'right', fontSize: 13.5, fontWeight: 600, color: c.orange, cursor: 'pointer' }}
                     >Convert →</span>
                   </div>

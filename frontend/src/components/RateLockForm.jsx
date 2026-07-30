@@ -96,7 +96,7 @@ export default function RateLockForm() {
             </span>
           </div>
         </div>
-        <a href="/converter" style={{ display: 'inline-block', marginTop: 14, fontSize: 13, fontWeight: 600, color: c.orange }}>
+        <a href="/" style={{ display: 'inline-block', marginTop: 14, fontSize: 13, fontWeight: 600, color: c.orange }}>
           ← Change the amount or currency
         </a>
       </div>
@@ -104,8 +104,8 @@ export default function RateLockForm() {
       {(sameCurrency || noAmount) && (
         <div role="alert" style={{ border: `1px solid ${c.redBorder}`, background: c.redBg2, borderRadius: 11, padding: '12px 16px', marginBottom: 20, fontSize: 13.5, lineHeight: 1.5, color: c.redText }}>
           {noAmount
-            ? 'Enter an amount in the converter first, then come back to lock the rate.'
-            : 'Pick two different currencies in the converter before locking a rate.'}
+            ? 'Enter an amount on the homepage converter first, then come back to lock the rate.'
+            : 'Pick two different currencies on the homepage converter before locking a rate.'}
         </div>
       )}
 
