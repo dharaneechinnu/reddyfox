@@ -1,10 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useFx } from '../context/FxContext';
+import { fetchCurrencies, toRatesMap } from '../api';
 import { FILTERS, fmt } from '../data';
 import { c, fonts, wrap } from '../tokens';
 import Seo from '../components/Seo';
 
+const GRID = '44px 2fr 1fr 1fr 1fr 1fr 0.8fr 110px';
 
 function RateCcBadge({ cc }) {
   return (
@@ -20,9 +22,27 @@ function StarButton({ active, onClick }) {
   );
 }
 
+// "—" for a currency with no Forex Card row published in the admin yet.
+function RateCell({ value }) {
+  return (
+    <span style={{ textAlign: 'right', fontFamily: fonts.mono, fontSize: 15, color: value == null ? c.textFainter : c.navy }}>
+      {value == null ? '—' : fmt(value, value < 5 ? 3 : 2)}
+    </span>
+  );
+}
+
 export default function Rates() {
   const navigate = useNavigate();
   const fx = useFx();
+
+  const [forexCardRates, setForexCardRates] = useState(null);
+  const [forexCardError, setForexCardError] = useState(null);
+
+  useEffect(() => {
+    fetchCurrencies('forex_card')
+      .then((list) => setForexCardRates(toRatesMap(list)))
+      .catch((err) => setForexCardError(err.message));
+  }, []);
 
   const allCodes = Object.keys(fx.rates).filter((code) => code !== 'INR');
   const q = fx.q.trim().toLowerCase();
@@ -55,7 +75,7 @@ export default function Rates() {
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap' }}>
             <div>
               <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: 'clamp(34px,4vw,56px)', lineHeight: 1.05, color: '#fff', margin: '0 0 14px' }}>Live exchange rates</h1>
-              <p style={{ fontSize: 16.5, lineHeight: 1.6, color: c.onNavyText, margin: 0, maxWidth: 560 }}>Counter rates at our T. Nagar shop, quoted in INR per unit of foreign currency.</p>
+              <p style={{ fontSize: 16.5, lineHeight: 1.6, color: c.onNavyText, margin: 0, maxWidth: 560 }}>Counter rates at our T. Nagar shop, quoted in INR per unit of foreign currency. Forex Card rates shown alongside where published.</p>
             </div>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', border: '1px solid rgba(255,255,255,.16)', borderRadius: 9, padding: '11px 16px' }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.green, display: 'block', animation: 'fx-pulse 2.4s ease-in-out infinite' }} />
@@ -91,6 +111,10 @@ export default function Rates() {
             </div>
           )}
 
+          {forexCardError && (
+            <div style={{ marginBottom: 20, fontSize: 13, color: c.redText }}>Couldn't load Forex Card rates: {forexCardError} — showing Currency rates only.</div>
+          )}
+
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {FILTERS.map((t) => (
@@ -112,39 +136,53 @@ export default function Rates() {
             />
           </div>
 
-          <div style={{ background: '#fff', border: `1px solid ${c.sandLine}`, borderRadius: 16, overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '44px 2fr 1fr 1fr 1fr 120px', gap: 14, padding: '15px 26px', background: c.navy, font: `500 11px/1.4 ${fonts.mono}`, letterSpacing: '.14em', color: c.navyMuted2, alignItems: 'center' }}>
-              <span /><span>CURRENCY</span><span style={{ textAlign: 'right' }}>WE BUY</span><span style={{ textAlign: 'right' }}>WE SELL</span><span style={{ textAlign: 'right' }}>24H</span><span style={{ textAlign: 'right' }}>ACTION</span>
-            </div>
-            {rows.map((code) => {
-              const r = fx.rates[code];
-              const fav = fx.favs.indexOf(code) >= 0;
-              return (
-                <div key={code} style={{ display: 'grid', gridTemplateColumns: '44px 2fr 1fr 1fr 1fr 120px', gap: 14, padding: '17px 26px', borderBottom: `1px solid ${c.sandLine3}`, alignItems: 'center' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = c.cream)}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-                >
-                  <StarButton active={fav} onClick={() => fx.toggleFav(code)} />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                    <RateCcBadge cc={r.cc} />
-                    <div>
-                      <span style={{ fontSize: 15, fontWeight: 600, color: c.navy }}>{code}</span>
-                      <span style={{ fontSize: 13, color: c.textFaint, marginLeft: 9 }}>{r.n}</span>
+          <div style={{ background: '#fff', border: `1px solid ${c.sandLine}`, borderRadius: 16, overflow: 'auto' }}>
+            <div style={{ minWidth: 760 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: 14, padding: '10px 26px 0', background: c.navy, font: `500 10.5px/1.4 ${fonts.mono}`, letterSpacing: '.1em', color: c.navyMuted2 }}>
+                <span /><span />
+                <span style={{ gridColumn: 'span 2', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,.16)', paddingBottom: 6 }}>WE BUY</span>
+                <span style={{ gridColumn: 'span 2', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,.16)', paddingBottom: 6 }}>WE SELL</span>
+                <span /><span />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: 14, padding: '8px 26px 15px', background: c.navy, font: `500 11px/1.4 ${fonts.mono}`, letterSpacing: '.14em', color: c.navyMuted2, alignItems: 'center' }}>
+                <span /><span>CURRENCY</span>
+                <span style={{ textAlign: 'right' }}>FOREX CARD</span><span style={{ textAlign: 'right' }}>CURRENCY</span>
+                <span style={{ textAlign: 'right' }}>FOREX CARD</span><span style={{ textAlign: 'right' }}>CURRENCY</span>
+                <span style={{ textAlign: 'right' }}>24H</span><span style={{ textAlign: 'right' }}>ACTION</span>
+              </div>
+              {rows.map((code) => {
+                const r = fx.rates[code];
+                const fc = forexCardRates ? forexCardRates[code] : undefined;
+                const fav = fx.favs.indexOf(code) >= 0;
+                return (
+                  <div key={code} style={{ display: 'grid', gridTemplateColumns: GRID, gap: 14, padding: '17px 26px', borderBottom: `1px solid ${c.sandLine3}`, alignItems: 'center' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = c.cream)}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <StarButton active={fav} onClick={() => fx.toggleFav(code)} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                      <RateCcBadge cc={r.cc} />
+                      <div>
+                        <span style={{ fontSize: 15, fontWeight: 600, color: c.navy }}>{code}</span>
+                        <span style={{ fontSize: 13, color: c.textFaint, marginLeft: 9 }}>{r.n}</span>
+                      </div>
                     </div>
+                    <RateCell value={fc ? fc.b : null} />
+                    <RateCell value={r.b} />
+                    <RateCell value={fc ? fc.s : null} />
+                    <RateCell value={r.s} />
+                    <span style={{ textAlign: 'right', fontFamily: fonts.mono, fontSize: 13.5, color: r.d >= 0 ? c.green : c.red }}>{(r.d >= 0 ? '+' : '') + r.d.toFixed(2) + '%'}</span>
+                    <span
+                      onClick={() => { fx.setFrom(code); fx.setTo('INR'); navigate('/converter'); }}
+                      style={{ textAlign: 'right', fontSize: 13.5, fontWeight: 600, color: c.orange, cursor: 'pointer' }}
+                    >Convert →</span>
                   </div>
-                  <span style={{ textAlign: 'right', fontFamily: fonts.mono, fontSize: 15, color: c.navy }}>{fmt(r.b, r.b < 5 ? 3 : 2)}</span>
-                  <span style={{ textAlign: 'right', fontFamily: fonts.mono, fontSize: 15, color: c.navy }}>{fmt(r.s, r.s < 5 ? 3 : 2)}</span>
-                  <span style={{ textAlign: 'right', fontFamily: fonts.mono, fontSize: 13.5, color: r.d >= 0 ? c.green : c.red }}>{(r.d >= 0 ? '+' : '') + r.d.toFixed(2) + '%'}</span>
-                  <span
-                    onClick={() => { fx.setFrom(code); fx.setTo('INR'); navigate('/converter'); }}
-                    style={{ textAlign: 'right', fontSize: 13.5, fontWeight: 600, color: c.orange, cursor: 'pointer' }}
-                  >Convert →</span>
-                </div>
-              );
-            })}
-            <div style={{ padding: '18px 26px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, fontSize: 12.5, color: c.textFainter }}>
-              <span>Showing {rows.length} currencies · rates indicative, confirmed at the counter</span>
-              <span style={{ fontFamily: fonts.mono }}>Board refreshed every 15 minutes</span>
+                );
+              })}
+              <div style={{ padding: '18px 26px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, fontSize: 12.5, color: c.textFainter }}>
+                <span>Showing {rows.length} currencies · rates indicative, confirmed at the counter</span>
+                <span style={{ fontFamily: fonts.mono }}>Board refreshed every 15 minutes</span>
+              </div>
             </div>
           </div>
         </div>
