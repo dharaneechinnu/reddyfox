@@ -75,11 +75,12 @@ There is no frontend test runner configured (no Jest/Vitest) — `npm run lint` 
               React SPA (fetches on mount, no caching layer)
 ```
 
-### Backend: three Django apps
+### Backend: four Django apps
 
-- **`rates`** — `Currency` model: buy/sell rate, 24h change, region, `is_popular`, `is_visible`, `display_order`. Read-only `CurrencyViewSet` at `/api/rates/`.
+- **`rates`** — `Currency` model: buy/sell rate, 24h change, region, `rate_type` (`cash` or `forex_card` — a currency can have one row of each, unique together), `is_popular`, `is_visible`, `display_order`. Read-only `CurrencyViewSet` at `/api/rates/`, filterable with `?rate_type=cash|forex_card`; a bare `code` lookup (no query param) defaults to the `cash` row so every pre-existing caller keeps working.
 - **`content`** — testimonials, FAQs, and the lead-capture system (see below). Also `SiteSetting`, a singleton row (`pk=1` enforced in `save()`) holding the customer-facing WhatsApp option and per-lead-type notification email overrides.
 - **`notifications`** — Chrome push alerts to *customers* about currency rate changes, via Firebase Cloud Messaging. Independent of `content`'s email alerts.
+- **`feature_flags`** — a standalone on/off switch registry (see below), deliberately not more booleans bolted onto `SiteSetting`.
 
 ### Who leads are *for* — the thing to keep in mind
 
@@ -121,9 +122,13 @@ When something currently hardcoded in `frontend/src/data.js` needs to become sta
 
 Order of operations on every lead submission is deliberate: **save to the database first, then notify** (`content/notifications.py`'s `notify_team`, and separately `notifications.services.send_notification` for the FCM path). A failure in either notification path is caught and logged — it must never lose or block the underlying lead.
 
-### Currency/converter state: one context, one fetch
+### Currency/rate state: one context, one fetch
 
-`frontend/src/context/FxContext.jsx` fetches `/api/rates/` once on mount and derives everything else (converter calculation, favourites, filters, search) from that single `rates` object client-side — there's no per-page refetch. `useFx()` is how every page reads or mutates this state.
+`frontend/src/context/FxContext.jsx` fetches `/api/rates/` (cash rates only) once on mount and derives everything else (conversion calculation, favourites, filters, search) from that single `rates` object client-side — there's no per-page refetch. `useFx()` is how every page reads or mutates this state. **There is no dedicated `/converter` page or route** — the converter widget lives inline in the homepage hero (`Home.jsx`) and feeds straight into `/lock-rate`; don't re-add a standalone converter page, extend the homepage widget or `FxContext` instead. Forex Card rates (`rate_type=forex_card`) are fetched separately per-page where needed (`Home.jsx`, `Rates.jsx`) and merged in by currency code — they're additive display data, not part of the shared conversion state.
+
+### `feature_flags`: the pattern for any new on/off switch
+
+A `FeatureFlag(key, name, description, is_enabled)` registry — not per-feature booleans on `SiteSetting`. `GET /api/flags/` returns a flat `{key: bool}` map, cached and invalidated on save/delete via a signal so an admin toggle takes effect on the next page load. Frontend: one `FeatureFlagsProvider` at the app root (`App.jsx`), `useFeatureFlag(key)` everywhere else. **It fails open** — a key missing from the response (deleted row, or the request failed) is treated as enabled, never disabled — so a flags-API hiccup can't take a working feature offline. Adding a new flag is a migration-seeded admin row (see `feature_flags/migrations/0002_seed_flags.py`) plus one `useFeatureFlag('new_key')` call — no schema change needed unless the flag needs more than on/off.
 
 ### `notifications` app: customer-facing push, not the email alerts
 
