@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'rates',
     'content',
     'notifications',
+    'feature_flags',
 
     # Third party
     'rest_framework',

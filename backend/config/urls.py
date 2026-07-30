@@ -14,4 +14,5 @@ urlpatterns = [
     path('api/', include('rates.urls')),
     path('api/', include('content.urls')),
     path('api/', include('notifications.urls')),
+    path('api/', include('feature_flags.urls')),
 ]

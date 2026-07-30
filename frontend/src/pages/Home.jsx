@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useFx } from '../context/FxContext';
+import { useFeatureFlag } from '../context/FeatureFlagsContext';
 import { HERO_TRUST, STATS, SERVICES, REASONS, fmt } from '../data';
 import { COMPANY, CONTACT } from '../company';
 import { c, fonts, wrap, eyebrow, h2Style } from '../tokens';
@@ -47,6 +48,7 @@ function Btn({ children, onClick, variant = 'primary', style }) {
 export default function Home() {
   const navigate = useNavigate();
   const fx = useFx();
+  const liveBoardOn = useFeatureFlag('live_board');
   const { data: testimonials } = useApi(loadTestimonials, []);
   const { data: faqs } = useApi(loadHomepageFaqs, []);
   const { data: forexCardRates } = useApi(loadForexCardRates, {});
@@ -172,6 +174,7 @@ export default function Home() {
         </div>
       </section>
 
+      {liveBoardOn && (
       <section style={{ background: c.sand, padding: '92px 0' }}>
         <div style={wrap}>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap', marginBottom: 38 }}>
@@ -226,6 +229,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      )}
 
       <section style={{ background: '#fff', padding: '96px 0' }}>
         <div style={wrap}>
