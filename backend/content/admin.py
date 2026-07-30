@@ -58,6 +58,15 @@ STATUS_COLOURS = {
     'spam': ('#EFECE7', '#A9A296'),
 }
 
+# Keyed by Lead.Priority value. Urgent is the only one that gets a solid
+# fill — if everything shouts, nothing does.
+PRIORITY_COLOURS = {
+    1: ('#B4351F', '#FFFFFF'),   # Urgent
+    2: ('#FDF6E3', '#8A6A11'),   # High
+    3: ('#F1EEE9', '#6B7688'),   # Normal
+    4: ('#F7F6F4', '#A9A296'),   # Low
+}
+
 
 class BaseLeadAdmin(admin.ModelAdmin):
     """Shared behaviour for the three lead inboxes.
@@ -68,11 +77,15 @@ class BaseLeadAdmin(admin.ModelAdmin):
     """
 
     list_display_links = ('name',)
-    list_editable = ('assigned_to',)
+    list_editable = ('priority', 'assigned_to')
     date_hierarchy = 'created_at'
     list_per_page = 50
-    ordering = ('-created_at',)
-    actions = ('mark_contacted', 'mark_quoted', 'mark_closed', 'mark_spam')
+    # Matches Lead.Meta.ordering: most urgent first, then newest.
+    ordering = ('priority', '-created_at')
+    actions = (
+        'mark_contacted', 'mark_quoted', 'mark_closed', 'mark_spam',
+        'raise_priority', 'lower_priority',
+    )
     search_fields = ('name', 'phone', 'email', 'message')
 
     customer_fields = ('name', 'phone', 'email', 'message')
@@ -86,6 +99,19 @@ class BaseLeadAdmin(admin.ModelAdmin):
         return tuple(self.customer_fields) + tuple(self.audit_fields) + ('reply_links',)
 
     # --- shared columns ---
+    @admin.display(description='Priority', ordering='priority')
+    def priority_badge(self, obj):
+        bg, fg = PRIORITY_COLOURS.get(obj.priority, ('#EEE', '#333'))
+        label = obj.get_priority_display().upper()
+        # An urgent lead nobody has touched in an hour is the one actually
+        # losing money — say so rather than making staff work it out.
+        suffix = ' · WAITING' if obj.is_overdue else ''
+        return format_html(
+            '<span style="background:{};color:{};padding:3px 9px;border-radius:5px;'
+            'font-size:11px;font-weight:700;white-space:nowrap">{}{}</span>',
+            bg, fg, label, suffix,
+        )
+
     @admin.display(description='Status', ordering='status')
     def status_badge(self, obj):
         bg, fg = STATUS_COLOURS.get(obj.status, ('#EEE', '#333'))
@@ -173,17 +199,41 @@ class BaseLeadAdmin(admin.ModelAdmin):
     def mark_spam(self, request, queryset):
         self._bulk_set(request, queryset, Lead.Status.SPAM, 'spam')
 
+    def _shift_priority(self, request, queryset, step, label):
+        # Clamp rather than wrap: stepping past Urgent should stay Urgent,
+        # not roll around to Low.
+        moved = 0
+        for lead in queryset:
+            new = min(max(lead.priority + step, Lead.Priority.URGENT), Lead.Priority.LOW)
+            if new != lead.priority:
+                lead.priority = new
+                lead.save(update_fields=['priority', 'updated_at'])
+                moved += 1
+        self.message_user(
+            request,
+            f'{moved} record(s) moved {label}.' if moved else f'Nothing to move {label}.',
+            messages.SUCCESS if moved else messages.WARNING,
+        )
+
+    @admin.action(description='Raise priority (more urgent)')
+    def raise_priority(self, request, queryset):
+        self._shift_priority(request, queryset, -1, 'up')
+
+    @admin.action(description='Lower priority (less urgent)')
+    def lower_priority(self, request, queryset):
+        self._shift_priority(request, queryset, +1, 'down')
+
 
 @admin.register(Enquiry)
 class EnquiryAdmin(BaseLeadAdmin):
     """Front office inbox — general contact-form enquiries."""
 
-    list_display = ('status_badge', 'received', 'name', 'phone_links', 'email', 'service', 'assigned_to')
-    list_filter = ('status', 'service', 'assigned_to', 'created_at')
+    list_display = ('priority_badge', 'status_badge', 'received', 'name', 'phone_links', 'email', 'service', 'priority', 'assigned_to')
+    list_filter = ('priority', 'status', 'service', 'assigned_to', 'created_at')
     customer_fields = ('name', 'phone', 'email', 'service', 'message')
     fieldsets = (
         ('Customer enquiry', {'fields': ('name', 'phone', 'email', 'service', 'message', 'reply_links')}),
-        ('Handling', {'fields': ('status', 'assigned_to', 'internal_note')}),
+        ('Handling', {'fields': ('priority', 'status', 'assigned_to', 'internal_note')}),
         ('Audit', {'classes': ('collapse',),
                    'fields': ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
     )
@@ -193,13 +243,13 @@ class EnquiryAdmin(BaseLeadAdmin):
 class QuoteRequestAdmin(BaseLeadAdmin):
     """Quotes desk — customers asking for a price."""
 
-    list_display = ('status_badge', 'received', 'name', 'phone_links', 'wants', 'needed_by', 'assigned_to')
-    list_filter = ('status', 'service', 'from_currency', 'assigned_to', 'created_at')
+    list_display = ('priority_badge', 'status_badge', 'received', 'name', 'phone_links', 'wants', 'needed_by', 'priority', 'assigned_to')
+    list_filter = ('priority', 'status', 'service', 'from_currency', 'assigned_to', 'created_at')
     customer_fields = ('name', 'phone', 'email', 'service', 'from_currency', 'amount', 'needed_by', 'message')
     fieldsets = (
         ('Customer', {'fields': ('name', 'phone', 'email', 'reply_links')}),
         ('What to price', {'fields': ('service', 'from_currency', 'amount', 'needed_by', 'message')}),
-        ('Handling', {'fields': ('status', 'assigned_to', 'internal_note')}),
+        ('Handling', {'fields': ('priority', 'status', 'assigned_to', 'internal_note')}),
         ('Audit', {'classes': ('collapse',),
                    'fields': ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
     )
@@ -222,8 +272,8 @@ class RateLockAdmin(BaseLeadAdmin):
     lock is no longer honourable and shows in red.
     """
 
-    list_display = ('status_badge', 'lock_state', 'received', 'name', 'phone_links', 'pair', 'assigned_to')
-    list_filter = ('status', 'from_currency', 'to_currency', 'assigned_to', 'created_at')
+    list_display = ('priority_badge', 'status_badge', 'lock_state', 'received', 'name', 'phone_links', 'pair', 'priority', 'assigned_to')
+    list_filter = ('priority', 'status', 'from_currency', 'to_currency', 'assigned_to', 'created_at')
     customer_fields = (
         'name', 'phone', 'email', 'from_currency', 'to_currency',
         'amount', 'quoted_rate', 'converted_amount', 'message',
@@ -236,7 +286,7 @@ class RateLockAdmin(BaseLeadAdmin):
                        'converted_amount', 'lock_expires_at', 'message'),
             'description': 'Exactly what the converter showed them. Compare against the current board before confirming.',
         }),
-        ('Handling', {'fields': ('status', 'assigned_to', 'internal_note')}),
+        ('Handling', {'fields': ('priority', 'status', 'assigned_to', 'internal_note')}),
         ('Audit', {'classes': ('collapse',),
                    'fields': ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
     )

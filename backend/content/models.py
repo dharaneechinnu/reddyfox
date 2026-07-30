@@ -150,6 +150,25 @@ class Lead(models.Model):
         CLOSED = 'closed', 'Closed'
         SPAM = 'spam', 'Spam'
 
+    class Priority(models.IntegerChoices):
+        """What the desk should pick up first.
+
+        Deliberately integers, not strings: the admin lists order on this
+        column directly, and text choices would sort alphabetically
+        (high, low, normal, urgent) — which is not the order anyone wants.
+        Ascending is most-urgent-first.
+        """
+
+        URGENT = 1, 'Urgent'
+        HIGH = 2, 'High'
+        NORMAL = 3, 'Normal'
+        LOW = 4, 'Low'
+
+    #: Priority a brand-new lead of this kind gets, unless the caller asked
+    #: for something else. Overridden on the proxies below — a rate lock is
+    #: the one type with a deadline, so it arrives Urgent.
+    default_priority = Priority.NORMAL
+
     kind = models.CharField(
         max_length=12, choices=Kind.choices, default=Kind.ENQUIRY, db_index=True,
         help_text='Which website form this came from.',
@@ -187,6 +206,11 @@ class Lead(models.Model):
 
     # --- workflow (the only fields staff edit) ---
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.NEW, db_index=True)
+    priority = models.PositiveSmallIntegerField(
+        choices=Priority.choices, default=Priority.NORMAL, db_index=True,
+        help_text='Which end of the list this sits at. Set automatically when the lead arrives '
+                  '(rate locks come in Urgent because they expire); change it here any time.',
+    )
     assigned_to = models.ForeignKey(
         'auth.User', null=True, blank=True, on_delete=models.SET_NULL,
         related_name='leads', help_text='Who is handling this.',
@@ -203,12 +227,15 @@ class Lead(models.Model):
     objects = LeadQuerySet.as_manager()
 
     class Meta:
-        ordering = ['-created_at']
+        # Most urgent first, then newest — so the desk works top-down and a
+        # rate lock about to expire never sits below a day-old enquiry.
+        ordering = ['priority', '-created_at']
         verbose_name = 'lead'
         verbose_name_plural = 'all leads'
         indexes = [
             models.Index(fields=['kind', 'status', '-created_at']),
             models.Index(fields=['status', '-created_at']),
+            models.Index(fields=['priority', '-created_at']),
         ]
 
     def __str__(self):
@@ -218,7 +245,25 @@ class Lead(models.Model):
         # Stamp the moment it stopped being an untouched lead.
         if self.status != self.Status.NEW and self.contacted_at is None:
             self.contacted_at = timezone.now()
+        # Apply the kind's default priority on arrival only. Anything the
+        # caller set explicitly is left alone, and staff edits later are
+        # never overwritten — this branch only runs on the first save.
+        if self._state.adding and self.priority == Lead.Priority.NORMAL:
+            self.priority = self.default_priority
         super().save(*args, **kwargs)
+
+    @property
+    def is_overdue(self):
+        """An Urgent or High lead nobody has touched within the hour.
+
+        Used by the admin to make the row shout. Deliberately a property, not
+        a stored flag: it changes with the clock, not with an edit.
+        """
+        if self.status != self.Status.NEW:
+            return False
+        if self.priority > Lead.Priority.HIGH:
+            return False
+        return (timezone.now() - self.created_at).total_seconds() >= 3600
 
     # --- reply helpers: one tap for the desk, no WhatsApp API needed ---
     @property
@@ -308,6 +353,11 @@ class RateLock(Lead):
     permissions, and the only type with an expiry window."""
 
     objects = KindManager(Lead.Kind.RATE_LOCK)
+
+    # The only lead type with a deadline attached: the customer has been
+    # promised a rate that lapses, so these arrive at the top of the desk's
+    # list. Staff can still lower it.
+    default_priority = Lead.Priority.URGENT
 
     class Meta:
         proxy = True
