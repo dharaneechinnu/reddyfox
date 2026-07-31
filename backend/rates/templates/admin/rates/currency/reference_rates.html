@@ -13,62 +13,34 @@
 {% block content %}
 <div id="content-main">
   <p>
-    Set each currency's margin, then <strong>Save &amp; fetch now</strong> to pull the latest
-    market rate and, for any currency with auto-update on, recalculate its buy/sell rate as
-    <code>market rate + margin</code> right away. Leaving auto-update off leaves that currency's
-    rates exactly as hand-entered in the regular Currency admin — this page only ever changes the
-    margin fields below, never the rate fields directly.
+    One margin, applied to every currency alike. Turn auto-update on, set the two margins below,
+    then <strong>Save &amp; fetch now</strong> to pull the latest market rate and recalculate every
+    currency's buy/sell rate as <code>market rate + margin</code> right away. With auto-update off,
+    fetching only refreshes the "Market ref" guidance column on the Currency list — rates stay
+    exactly as hand-entered. Either way, you'll land back on the
+    <a href="{% url 'admin:rates_currency_changelist' %}">Currency list</a> afterwards to see the
+    result.
   </p>
 
   <form method="post">
     {% csrf_token %}
-    {{ formset.management_form }}
-
-    <div class="module" style="overflow-x:auto">
-      <table>
-        <thead>
-          <tr>
-            <th>{% translate "Currency" %}</th>
-            <th>{% translate "Current buy / sell (INR)" %}</th>
-            <th>{% translate "Market reference" %}</th>
-            <th>{% translate "Auto-update" %}</th>
-            <th>{% translate "Buy margin" %}</th>
-            <th>{% translate "Sell margin" %}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for row in rows %}
-          <tr>
-            <td>
-              {{ row.form.id }}
-              <strong>{{ row.currency.code }}</strong> — {{ row.currency.name }}
-              <div style="color:var(--body-quiet-color); font-size: 12px">{{ row.currency.get_rate_type_display }}</div>
-            </td>
-            <td>{{ row.currency.buy_rate }} / {{ row.currency.sell_rate }}</td>
-            <td>
-              {% if row.reference %}
-                {{ row.reference.inr_rate|floatformat:2 }}
-                <div style="color:var(--body-quiet-color); font-size: 12px">
-                  {{ row.reference.source }} · {{ row.reference.fetched_at|timesince }} ago
-                </div>
-              {% else %}
-                <span style="color:var(--body-quiet-color)">{% translate "no reference yet" %}</span>
-              {% endif %}
-            </td>
-            <td>{{ row.form.auto_update_from_reference }}</td>
-            <td>{{ row.form.buy_margin }}</td>
-            <td>{{ row.form.sell_margin }}</td>
-          </tr>
-          {% if row.form.errors %}
-          <tr><td colspan="6">{{ row.form.errors }}</td></tr>
-          {% endif %}
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+    <fieldset class="module aligned">
+      <div class="form-row">
+        <div>{{ form.auto_update_enabled.label_tag }} {{ form.auto_update_enabled }}</div>
+        <div class="help">{{ form.auto_update_enabled.help_text }}</div>
+      </div>
+      <div class="form-row">
+        <div>{{ form.buy_margin.label_tag }} {{ form.buy_margin }}</div>
+        <div class="help">{{ form.buy_margin.help_text }}</div>
+      </div>
+      <div class="form-row">
+        <div>{{ form.sell_margin.label_tag }} {{ form.sell_margin }}</div>
+        <div class="help">{{ form.sell_margin.help_text }}</div>
+      </div>
+    </fieldset>
 
     <div class="submit-row">
-      <input type="submit" value="{% translate 'Save margins & fetch now' %}" class="default">
+      <input type="submit" value="{% translate 'Save & fetch now' %}" class="default">
     </div>
   </form>
 </div>

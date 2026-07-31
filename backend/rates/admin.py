@@ -1,34 +1,31 @@
 from decimal import Decimal
 
+from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
-from django.forms import modelformset_factory
 from django.shortcuts import redirect
 from django.template.response import TemplateResponse
 from django.urls import path
 from django.utils import timezone
 from django.utils.html import format_html
 
-from reference_rates.models import ReferenceRate
+from reference_rates.models import ReferenceRate, ReferenceRateSettings
 from reference_rates.services import refresh_reference_rates
 
 from .models import Currency
 
-# Margin editing lives only on the dedicated "Reference rates & margins" page (see
-# reference_rates_view below) — not on the regular Currency change form — so the one workflow for
-# "fetch, then decide margins" isn't split across two places.
-CurrencyMarginFormSet = modelformset_factory(
-    Currency,
-    fields=('auto_update_from_reference', 'buy_margin', 'sell_margin'),
-    extra=0,
-)
+
+class ReferenceRateSettingsForm(forms.ModelForm):
+    class Meta:
+        model = ReferenceRateSettings
+        fields = ['auto_update_enabled', 'buy_margin', 'sell_margin']
 
 
 @admin.register(Currency)
 class CurrencyAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name', 'rate_type', 'region', 'buy_rate', 'sell_rate', 'change_pct', 'market_reference', 'auto_update_from_reference', 'is_popular', 'is_visible', 'display_order', 'updated_at')
+    list_display = ('code', 'name', 'rate_type', 'region', 'buy_rate', 'sell_rate', 'change_pct', 'market_reference', 'is_popular', 'is_visible', 'display_order', 'updated_at')
     list_editable = ('buy_rate', 'sell_rate', 'change_pct', 'is_popular', 'is_visible', 'display_order')
-    list_filter = ('rate_type', 'region', 'is_popular', 'is_visible', 'auto_update_from_reference')
+    list_filter = ('rate_type', 'region', 'is_popular', 'is_visible')
     search_fields = ('code', 'name')
     ordering = ('display_order', 'code')
     actions = ['fetch_reference_rates_now']
@@ -50,45 +47,41 @@ class CurrencyAdmin(admin.ModelAdmin):
         return custom + super().get_urls()
 
     def reference_rates_view(self, request):
-        """Dedicated page: only the margin inputs, plus a fetch-now button.
+        """A settings-only screen: the one global margin config (same for every currency) and a
+        "Save & fetch now" button — nothing else on it.
 
-        Separate from the regular change form on purpose — this is the one workflow ("set margins,
-        then fetch") the manual button on the changelist sends staff to.
+        The result of a fetch is *not* shown here — it's on the Currency list itself (buy_rate,
+        sell_rate, and the "Market ref" column), which is where saving redirects back to. Keeping
+        this screen to just the inputs is deliberate: configuring margins and reviewing rates are
+        two different jobs, so they get two different screens.
         """
         if not request.user.has_perm('rates.change_currency'):
             self.message_user(request, "You don't have permission to change currencies.", level=messages.ERROR)
             return redirect('admin:index')
 
-        queryset = Currency.objects.order_by('display_order', 'code')
+        settings_obj = ReferenceRateSettings.load()
 
         if request.method == 'POST':
-            formset = CurrencyMarginFormSet(request.POST, queryset=queryset)
-            if formset.is_valid():
-                formset.save()
+            form = ReferenceRateSettingsForm(request.POST, instance=settings_obj)
+            if form.is_valid():
+                form.save()
                 summary = refresh_reference_rates()
                 if summary['ok']:
-                    text = f'Saved margins. Fetched {summary["fetched"]} reference rates, applied to {summary["applied"]} currencies.'
+                    text = f'Saved settings. Fetched {summary["fetched"]} reference rates, applied to {summary["applied"]} currencies.'
                     if summary['missing']:
                         text += f' No reference available for: {", ".join(summary["missing"])}.'
                     self.message_user(request, text, level=messages.SUCCESS if not summary['missing'] else messages.WARNING)
                 else:
-                    self.message_user(request, 'Margins saved, but all reference-rate providers failed — rates were not updated.', level=messages.ERROR)
-                return redirect('admin:rates_currency_reference_rates')
+                    self.message_user(request, 'Settings saved, but all reference-rate providers failed — rates were not updated.', level=messages.ERROR)
+                return redirect('admin:rates_currency_changelist')
         else:
-            formset = CurrencyMarginFormSet(queryset=queryset)
-
-        reference_rates = {rr.code: rr for rr in ReferenceRate.objects.all()}
-        rows = [
-            {'currency': currency, 'form': form, 'reference': reference_rates.get(currency.code)}
-            for currency, form in zip(queryset, formset.forms)
-        ]
+            form = ReferenceRateSettingsForm(instance=settings_obj)
 
         context = {
             **self.admin_site.each_context(request),
-            'title': 'Reference rates & margins',
+            'title': 'Reference rate settings',
             'opts': self.model._meta,
-            'formset': formset,
-            'rows': rows,
+            'form': form,
         }
         return TemplateResponse(request, 'admin/rates/currency/reference_rates.html', context)
 

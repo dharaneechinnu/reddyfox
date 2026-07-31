@@ -56,11 +56,11 @@ collides with the content rule in `CLAUDE.md`: everything published must be some
 can stand behind.
 
 **Update, after building this (see "What got built" below):** by explicit request, the app *does*
-support auto-setting `buy_rate`/`sell_rate` from the fetched market rate — but only per currency,
-only when a staff member opts that currency in (`auto_update_from_reference`, off by default), and
-only using a margin that same staff member sets (`buy_margin`/`sell_margin`). Nothing is ever
-published off a formula the desk didn't configure. If a currency is left opted out — the default —
-its rates stay 100% hand-entered, exactly as before.
+support auto-setting `buy_rate`/`sell_rate` from the fetched market rate — but only when a staff
+member turns it on (`ReferenceRateSettings.auto_update_enabled`, off by default), and only using a
+margin that same staff member sets (`buy_margin`/`sell_margin`), applied identically to every
+currency on the board. Nothing is ever published off a formula the desk didn't configure. Left off
+— the default — every currency's rates stay 100% hand-entered, exactly as before.
 
 The existing architecture already said the underlying shape, in `README.md`:
 
@@ -77,7 +77,7 @@ the manual admin action.
 | **Typo guard on rate entry** | ⭐ **Strongest case** | Staff type rates by hand into `list_editable`. If someone enters `8.30` instead of `83.00`, nothing currently catches it — and a push alert fires to every subscriber announcing it. The admin's "Market ref" column flags a large divergence in red without blocking the save. |
 | **Pre-fill a suggested rate** | Good | Staff open the admin and see "market ref: 83.4 (2h ago)" next to the field they're editing. |
 | **Internal margin visibility** | Good | Show the desk how far our rate sits from market. Purely an internal number. |
-| **Auto-setting buy/sell rate** | ⚠️ **Opt-in, staff-controlled** | Built as `auto_update_from_reference` + staff-set margins, off by default per currency. See below. |
+| **Auto-setting buy/sell rate** | ⚠️ **Opt-in, staff-controlled** | Built as one global `ReferenceRateSettings.auto_update_enabled` + staff-set margins, off by default, applied to every currency alike. See below. |
 | **A "market comparison" shown to customers** | Careful | Technically possible, but invites "why is your rate worse?" and needs a clear explanation of what a money changer's spread covers. A business decision, not a technical one — not built. |
 
 ---
@@ -217,41 +217,43 @@ Implemented in a dedicated `reference_rates` Django app:
 
 1. **`ReferenceRate`**, its own model in its own app — *separate from* `rates.Currency`. Stores
    the fetched market rate per currency code, with its source and fetch time.
-2. **One shared entry point, two triggers.** `reference_rates/services.py::refresh_reference_rates()`
-   does the fetch-store-apply work; both the scheduled command and the manual admin action call it,
-   so a cron tick and a staff click always do exactly the same thing.
+2. **`ReferenceRateSettings`, a singleton** (same `pk=1` pattern as `content.SiteSetting`) holding
+   **one global config, applied to every currency alike**: `auto_update_enabled`, `buy_margin`,
+   `sell_margin`. There's deliberately no per-currency override — one desk-set margin for the whole
+   board, configured in one place.
+3. **One shared entry point, three triggers.** `reference_rates/services.py::refresh_reference_rates()`
+   does the fetch-store-apply work; the scheduled command, the manual admin action, and the settings
+   page all call it, so any of the three always do exactly the same thing.
    - **Scheduled**: `python manage.py fetch_reference_rates`, once every 24h via a Render Cron Job
      (see below). Never runs during a request.
-   - **Manual, two ways**: a "Fetch reference rates now" action in the Currency admin's action
-     dropdown for a quick fetch with whatever margins are already set; or the **"Reference rates &
-     margins" button** on the Currency changelist (`/admin/rates/currency/`), which opens a
-     dedicated page (`/admin/rates/currency/reference-rates/`) listing every currency with *only*
-     its margin inputs — auto-update checkbox, buy margin, sell margin — next to its current
-     rate and latest market reference for context. Submitting that page saves the margins and
-     fetches in one step. Both report what happened (fetched / applied / missing) as an admin
-     message.
-3. **Auto-apply is opt-in and staff-configured, per currency.** `Currency.auto_update_from_reference`
-   defaults to **off** — until a staff member switches it on for a specific currency (on the
-   dedicated margins page), that currency's `buy_rate`/`sell_rate` are exactly as hand-entered as
-   before, unaffected by this app entirely. Once on, every fetch (scheduled or manual) recalculates:
+   - **Manual, quick**: a "Fetch reference rates now" action in the Currency admin's action
+     dropdown — fetches with whatever margin is already saved, no screen change.
+   - **Manual, with margin changes**: the **"Reference rates & margins" button** on the Currency
+     changelist (`/admin/rates/currency/`) opens a dedicated **settings-only** screen
+     (`/admin/rates/currency/reference-rates/`) — just the auto-update toggle and the two margin
+     fields, nothing else. Submitting it saves the settings, fetches, and redirects back to the
+     Currency list to see the result. Configuring margins and reviewing rates are two different
+     screens on purpose.
+4. **Auto-apply is opt-in and staff-configured, globally.** `ReferenceRateSettings.auto_update_enabled`
+   defaults to **off** — until a staff member switches it on, `buy_rate`/`sell_rate` stay exactly as
+   hand-entered, unaffected by this app entirely. Once on, every fetch (any of the three triggers)
+   recalculates, for *every* currency:
    - `sell_rate = market_rate + sell_margin`
    - `buy_rate = market_rate + buy_margin`
 
-   `sell_margin` and `buy_margin` are plain Decimal fields on `Currency`, set only on the dedicated
-   margins page (deliberately kept off the regular Currency change form, so "set margins, then
-   fetch" stays one workflow in one place) — e.g. `sell_margin = 1.00`, `buy_margin = -1.00` sells
-   ₹1 above and buys ₹1 below the fetched market rate. The desk sets both numbers; nothing is
-   hardcoded.
-4. **Currencies left opted out still get the guard, not the automation.** The read-only "Market ref"
-   column on `CurrencyAdmin` shows every currency's latest reference rate, its age, and % divergence
-   from `sell_rate` — colored red past `REFERENCE_RATE_DIVERGENCE_WARN_PCT` (default 5%). This
-   column never blocks a save; it's informational for opted-out currencies and a sanity check for
-   opted-in ones.
-5. **Fails silently and visibly.** If both providers are down, `refresh_reference_rates()` reports
+   e.g. `sell_margin = 1.00`, `buy_margin = -1.00` sells ₹1 above and buys ₹1 below the fetched
+   market rate, for the whole board at once. The desk sets both numbers on the settings screen;
+   nothing is hardcoded.
+5. **Currencies always still get the guard, whether or not auto-apply is on.** The read-only
+   "Market ref" column on `CurrencyAdmin` shows every currency's latest reference rate, its age, and
+   % divergence from `sell_rate` — colored red past `REFERENCE_RATE_DIVERGENCE_WARN_PCT` (default
+   5%). This column never blocks a save; it's informational when auto-apply is off and a sanity
+   check when it's on.
+6. **Fails silently and visibly.** If both providers are down, `refresh_reference_rates()` reports
    `ok: False` and touches nothing — existing `ReferenceRate` rows and every `Currency` row are left
-   as they were. The command exits non-zero (so a cron dashboard can flag it) and the admin action
-   shows a red error message. Same discipline as the notification apps: an external dependency must
-   never be able to take the site, or a save, down.
+   as they were. The command exits non-zero (so a cron dashboard can flag it) and the admin surfaces
+   a red error message. Same discipline as the notification apps: an external dependency must never
+   be able to take the site, or a save, down.
 
 See `backend/reference_rates/` and its app-level notes for the provider/fallback details and the
 production cron setup.

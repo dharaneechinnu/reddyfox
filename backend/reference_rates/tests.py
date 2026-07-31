@@ -10,7 +10,7 @@ from rates.admin import CurrencyAdmin
 from rates.models import Currency, RateType
 
 from .management.commands.fetch_reference_rates import Command
-from .models import ReferenceRate
+from .models import ReferenceRate, ReferenceRateSettings
 from .services import refresh_reference_rates
 
 
@@ -23,6 +23,33 @@ def _currency(code='USD', sell_rate='84.0000', buy_rate='83.0000', **extra):
 
 def _patch_providers(return_value):
     return patch('reference_rates.services.fetch_reference_rates', return_value=return_value)
+
+
+def _enable_auto_update(buy_margin='-1.00', sell_margin='1.00'):
+    settings_obj = ReferenceRateSettings.load()
+    settings_obj.auto_update_enabled = True
+    settings_obj.buy_margin = buy_margin
+    settings_obj.sell_margin = sell_margin
+    settings_obj.save()
+    return settings_obj
+
+
+class ReferenceRateSettingsSingletonTests(TestCase):
+    def test_load_creates_the_one_row_with_defaults(self):
+        settings_obj = ReferenceRateSettings.load()
+        self.assertFalse(settings_obj.auto_update_enabled)
+        self.assertEqual(settings_obj.pk, 1)
+
+    def test_save_always_pins_pk_to_one(self):
+        obj = ReferenceRateSettings(pk=99, auto_update_enabled=True)
+        obj.save()
+        self.assertEqual(obj.pk, 1)
+        self.assertEqual(ReferenceRateSettings.objects.count(), 1)
+
+    def test_delete_is_a_no_op(self):
+        obj = ReferenceRateSettings.load()
+        obj.delete()
+        self.assertEqual(ReferenceRateSettings.objects.count(), 1)
 
 
 class RefreshReferenceRatesServiceTests(TestCase):
@@ -50,28 +77,32 @@ class RefreshReferenceRatesServiceTests(TestCase):
         summary = refresh_reference_rates()
         self.assertEqual(summary, {'ok': True, 'fetched': 0, 'applied': 0, 'missing': []})
 
-    def test_opted_out_currency_is_untouched(self):
-        # auto_update_from_reference defaults to False — this is the default-safe path.
-        currency = _currency('USD', sell_rate='84.0000', buy_rate='83.0000')
-        with _patch_providers({'USD': (90.0, 'fawazahmed0')}):
-            refresh_reference_rates()
-
-        currency.refresh_from_db()
-        self.assertEqual(currency.sell_rate, Decimal('84.0000'))
-        self.assertEqual(currency.buy_rate, Decimal('83.0000'))
-
-    def test_opted_in_currency_recalculates_with_its_own_margins(self):
-        currency = _currency(
-            'USD', sell_rate='1.0000', buy_rate='1.0000',
-            auto_update_from_reference=True, sell_margin='1.50', buy_margin='-2.00',
-        )
+    def test_auto_update_off_leaves_every_currency_untouched(self):
+        # ReferenceRateSettings.auto_update_enabled defaults to False — this is the default-safe path.
+        currency = _currency('USD', sell_rate='84.00', buy_rate='83.00')
         with _patch_providers({'USD': (90.0, 'fawazahmed0')}):
             summary = refresh_reference_rates()
 
         currency.refresh_from_db()
-        self.assertEqual(summary['applied'], 1)
-        self.assertEqual(currency.sell_rate, Decimal('91.50'))
-        self.assertEqual(currency.buy_rate, Decimal('88.00'))
+        self.assertEqual(summary['applied'], 0)
+        self.assertEqual(currency.sell_rate, Decimal('84.00'))
+        self.assertEqual(currency.buy_rate, Decimal('83.00'))
+
+    def test_auto_update_on_applies_the_same_margin_to_every_currency(self):
+        usd = _currency('USD', sell_rate='1.00', buy_rate='1.00')
+        eur = _currency('EUR', sell_rate='1.00', buy_rate='1.00')
+        _enable_auto_update(buy_margin='-2.00', sell_margin='1.50')
+
+        with _patch_providers({'USD': (90.0, 'fawazahmed0'), 'EUR': (97.0, 'fawazahmed0')}):
+            summary = refresh_reference_rates()
+
+        usd.refresh_from_db()
+        eur.refresh_from_db()
+        self.assertEqual(summary['applied'], 2)
+        self.assertEqual(usd.sell_rate, Decimal('91.50'))
+        self.assertEqual(usd.buy_rate, Decimal('88.00'))
+        self.assertEqual(eur.sell_rate, Decimal('98.50'))
+        self.assertEqual(eur.buy_rate, Decimal('95.00'))
 
     def test_missing_currency_not_covered_by_any_provider_is_reported(self):
         _currency('AED')
@@ -133,8 +164,8 @@ class CurrencyAdminMarketReferenceTests(TestCase):
 
 class FetchReferenceRatesNowActionTests(TestCase):
     """The admin's manual-refresh action, exercised the same way Django calls it: as a bound
-    method with a request and a queryset (the queryset itself is ignored — see the action's
-    docstring, it always refreshes the whole board)."""
+    method with a request and a queryset (the queryset itself is ignored — it always refreshes
+    the whole board, driven by the one global ReferenceRateSettings)."""
 
     def setUp(self):
         self.admin = CurrencyAdmin(Currency, AdminSite())
@@ -142,11 +173,10 @@ class FetchReferenceRatesNowActionTests(TestCase):
         self.request.session = {}
         self.request._messages = messages.storage.default_storage(self.request)
 
-    def test_applies_margins_and_reports_success(self):
-        currency = _currency(
-            'USD', sell_rate='1.0000', buy_rate='1.0000',
-            auto_update_from_reference=True, sell_margin='1.00', buy_margin='-1.00',
-        )
+    def test_applies_global_margin_and_reports_success(self):
+        currency = _currency('USD', sell_rate='1.00', buy_rate='1.00')
+        _enable_auto_update(buy_margin='-1.00', sell_margin='1.00')
+
         with _patch_providers({'USD': (84.0, 'fawazahmed0')}):
             self.admin.fetch_reference_rates_now(self.request, Currency.objects.none())
 
@@ -200,47 +230,49 @@ class CurrencyChangelistRendersTests(TestCase):
     'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
 })
 class ReferenceRatesPageTests(TestCase):
-    """The dedicated margin-input page: GET renders it, POST saves margins and fetches, and it's
-    gated behind the same permission as editing a Currency."""
+    """The dedicated settings page: GET renders it, POST saves the one global config and fetches,
+    and it's gated behind the same permission as editing a Currency."""
 
     def setUp(self):
         User = get_user_model()
         self.superuser = User.objects.create_superuser('admin', 'admin@example.com', 'password123')
         self.client = Client()
 
-    def test_get_renders_one_row_per_currency(self):
-        _currency('USD')
-        _currency('EUR')
+    def test_get_renders_settings_form(self):
         self.client.login(username='admin', password='password123')
         response = self.client.get('/admin/rates/currency/reference-rates/')
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'USD')
-        self.assertContains(response, 'EUR')
+        self.assertContains(response, 'auto_update_enabled')
+        self.assertContains(response, 'buy_margin')
+        self.assertContains(response, 'sell_margin')
 
-    def test_post_saves_margins_and_fetches(self):
-        currency = _currency('USD', sell_rate='1.0000', buy_rate='1.0000')
+    def test_post_saves_global_settings_and_fetches(self):
+        usd = _currency('USD', sell_rate='1.00', buy_rate='1.00')
+        eur = _currency('EUR', sell_rate='1.00', buy_rate='1.00')
         self.client.login(username='admin', password='password123')
 
         data = {
-            'form-TOTAL_FORMS': '1',
-            'form-INITIAL_FORMS': '1',
-            'form-MIN_NUM_FORMS': '0',
-            'form-MAX_NUM_FORMS': '1000',
-            'form-0-id': str(currency.pk),
-            'form-0-auto_update_from_reference': 'on',
-            'form-0-buy_margin': '-2.00',
-            'form-0-sell_margin': '2.00',
+            'auto_update_enabled': 'on',
+            'buy_margin': '-2.00',
+            'sell_margin': '2.00',
         }
-        with _patch_providers({'USD': (90.0, 'fawazahmed0')}):
+        with _patch_providers({'USD': (90.0, 'fawazahmed0'), 'EUR': (97.0, 'fawazahmed0')}):
             response = self.client.post('/admin/rates/currency/reference-rates/', data, follow=True)
 
-        self.assertEqual(response.status_code, 200)
-        currency.refresh_from_db()
-        self.assertTrue(currency.auto_update_from_reference)
-        self.assertEqual(currency.buy_margin, Decimal('-2.00'))
-        self.assertEqual(currency.sell_margin, Decimal('2.00'))
-        self.assertEqual(currency.sell_rate, Decimal('92.00'))
-        self.assertEqual(currency.buy_rate, Decimal('88.00'))
+        # Saving sends staff to the Currency list to see the result — settings and results are
+        # deliberately two different screens.
+        self.assertRedirects(response, '/admin/rates/currency/')
+        settings_obj = ReferenceRateSettings.load()
+        self.assertTrue(settings_obj.auto_update_enabled)
+        self.assertEqual(settings_obj.buy_margin, Decimal('-2.00'))
+        self.assertEqual(settings_obj.sell_margin, Decimal('2.00'))
+
+        usd.refresh_from_db()
+        eur.refresh_from_db()
+        self.assertEqual(usd.sell_rate, Decimal('92.00'))
+        self.assertEqual(usd.buy_rate, Decimal('88.00'))
+        self.assertEqual(eur.sell_rate, Decimal('99.00'))
+        self.assertEqual(eur.buy_rate, Decimal('95.00'))
 
     def test_requires_login(self):
         response = self.client.get('/admin/rates/currency/reference-rates/')
