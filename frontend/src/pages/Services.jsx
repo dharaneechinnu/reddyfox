@@ -22,7 +22,7 @@ export default function Services() {
         </div>
       </section>
       <section style={{ background: '#fff', padding: '72px 0 96px' }}>
-        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 20 }}>
+        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 20 }}>
           {SERVICES.map((s) => (
             <div
               key={s.id}

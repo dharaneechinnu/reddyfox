@@ -5,9 +5,9 @@ const fieldInput = { width: '100%', border: `1px solid ${c.softLine}`, borderRad
 
 export default function Login() {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(360px,1fr))', minHeight: 720 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(360px,100%),1fr))', minHeight: 720 }}>
       <Seo title="Client Portal Sign In" path="/login" noindex />
-      <div style={{ background: c.navy, padding: '80px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: c.navy, padding: 'clamp(40px,8vw,80px) clamp(24px,6vw,56px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px)', backgroundSize: '64px 64px' }} />
         <div style={{ position: 'relative' }}>
           <p style={{ font: `500 11px/1.4 ${fonts.mono}`, letterSpacing: '.16em', color: c.accent, margin: '0 0 22px' }}>CLIENT PORTAL</p>
@@ -19,7 +19,7 @@ export default function Login() {
           <div><div style={{ fontFamily: fonts.mono, fontSize: 19, color: '#fff' }}>2FA</div><div style={{ fontSize: 12.5, color: c.navyMuted2, marginTop: 4 }}>On every login</div></div>
         </div>
       </div>
-      <div style={{ background: '#fff', padding: '80px 56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: '#fff', padding: 'clamp(40px,8vw,80px) clamp(24px,6vw,56px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: '100%', maxWidth: 400 }}>
           <h2 style={{ fontSize: 26, fontWeight: 600, color: c.navy, margin: '0 0 8px' }}>Sign in</h2>
           <p style={{ fontSize: 14.5, color: c.textMuted, margin: '0 0 30px' }}>New to Reddy Forex? <span style={{ color: c.orange, fontWeight: 600, cursor: 'pointer' }}>Register a company account</span></p>

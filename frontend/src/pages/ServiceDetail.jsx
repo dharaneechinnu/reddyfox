@@ -29,7 +29,7 @@ export default function ServiceDetail() {
           <div style={{ font: `400 12.5px/1.4 ${fonts.mono}`, color: c.navyMuted, marginBottom: 22 }}>
             <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / <Link to="/services" style={{ cursor: 'pointer', color: c.onNavyText }}>Services</Link> / {active.title}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(340px,1fr))', gap: 56, alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(340px,100%),1fr))', gap: 56, alignItems: 'center' }}>
             <div>
               <span style={{ display: 'inline-block', font: `500 11px/1.4 ${fonts.mono}`, letterSpacing: '.16em', color: c.accent, marginBottom: 18 }}>SERVICE {active.tag}</span>
               <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: 'clamp(34px,4vw,54px)', lineHeight: 1.06, color: '#fff', margin: '0 0 18px' }}>{active.title}</h1>
@@ -65,7 +65,7 @@ export default function ServiceDetail() {
         <div style={wrap}>
           <p style={{ font: `500 11.5px/1.4 ${fonts.mono}`, letterSpacing: '.18em', textTransform: 'uppercase', color: c.orange, margin: '0 0 14px' }}>Benefits</p>
           <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: 'clamp(30px,3.2vw,44px)', lineHeight: 1.1, color: c.navy, margin: '0 0 40px' }}>What you get</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(280px,100%),1fr))', gap: 20 }}>
             {active.benefits.map(([title, body]) => (
               <div key={title} style={{ border: `1px solid ${c.sandLine}`, borderRadius: 14, padding: 28 }}>
                 <h3 style={{ fontSize: 17.5, fontWeight: 600, color: c.navy, margin: '0 0 10px' }}>{title}</h3>
@@ -80,7 +80,7 @@ export default function ServiceDetail() {
         <div style={wrap}>
           <p style={{ font: `500 11.5px/1.4 ${fonts.mono}`, letterSpacing: '.18em', textTransform: 'uppercase', color: c.orange, margin: '0 0 14px' }}>How it works</p>
           <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: 'clamp(30px,3.2vw,44px)', lineHeight: 1.1, color: c.navy, margin: '0 0 44px' }}>Three steps, one visit</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(260px,100%),1fr))', gap: 24 }}>
             {active.process.map(([title, body], i) => (
               <div key={title} style={{ borderTop: `2px solid ${c.navy}`, paddingTop: 22 }}>
                 <span style={{ font: `500 11.5px/1.4 ${fonts.mono}`, letterSpacing: '.14em', color: c.orange }}>{'0' + (i + 1)}</span>
