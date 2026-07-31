@@ -9,10 +9,14 @@ from django.test import Client, RequestFactory, TestCase, override_settings
 from rates.admin import CurrencyAdmin
 from rates.models import Currency, RateType
 
-from . import providers
 from .management.commands.fetch_reference_rates import Command
 from .models import ReferenceRate, ReferenceRateSettings
 from .services import refresh_reference_rates
+
+# Provider-level behavior (exchangerate-api parsing, fallback ordering) has its own coverage in
+# fx_providers/tests.py, now that the fetch functions live there. Everything below mocks
+# fetch_with_fallback as a whole, the same way it always mocked the old reference_rates.providers
+# entry point — refresh_reference_rates() doesn't know or care which provider actually answered.
 
 
 def _currency(code='USD', sell_rate='84.0000', buy_rate='83.0000', **extra):
@@ -23,7 +27,7 @@ def _currency(code='USD', sell_rate='84.0000', buy_rate='83.0000', **extra):
 
 
 def _patch_providers(return_value):
-    return patch('reference_rates.services.fetch_reference_rates', return_value=return_value)
+    return patch('reference_rates.services.fetch_with_fallback', return_value=return_value)
 
 
 def _enable_auto_update(buy_margin='-1.00', sell_margin='1.00'):
@@ -33,75 +37,6 @@ def _enable_auto_update(buy_margin='-1.00', sell_margin='1.00'):
     settings_obj.sell_margin = sell_margin
     settings_obj.save()
     return settings_obj
-
-
-class ExchangeRateApiProviderTests(TestCase):
-    @override_settings(EXCHANGERATE_API_KEY='')
-    def test_missing_key_raises_without_a_network_call(self):
-        with patch('reference_rates.providers._fetch_json') as fetch_json:
-            with self.assertRaises(RuntimeError):
-                providers.fetch_exchangerateapi()
-            fetch_json.assert_not_called()
-
-    @override_settings(EXCHANGERATE_API_KEY='test-key')
-    def test_success_response_is_parsed_and_inverted(self):
-        payload = {
-            'result': 'success',
-            'base_code': 'INR',
-            'conversion_rates': {'USD': 0.0105, 'AED': 0.0384},
-        }
-        with patch('reference_rates.providers._fetch_json', return_value=payload):
-            rates, source = providers.fetch_exchangerateapi()
-
-        self.assertEqual(source, 'exchangerate-api')
-        self.assertAlmostEqual(rates['USD'], 1 / 0.0105)
-        self.assertAlmostEqual(rates['AED'], 1 / 0.0384)
-
-    @override_settings(EXCHANGERATE_API_KEY='test-key')
-    def test_vendor_error_result_raises_with_the_error_type(self):
-        payload = {'result': 'error', 'error-type': 'quota-reached'}
-        with patch('reference_rates.providers._fetch_json', return_value=payload):
-            with self.assertRaisesMessage(RuntimeError, 'quota-reached'):
-                providers.fetch_exchangerateapi()
-
-
-class FetchReferenceRatesProviderOrderTests(TestCase):
-    """providers.fetch_reference_rates() — the ordering the three vendor functions are tried in,
-    not services.refresh_reference_rates() (which is mocked as a whole everywhere else)."""
-
-    @override_settings(EXCHANGERATE_API_KEY='test-key')
-    def test_exchangerateapi_wins_when_it_covers_everything(self):
-        with patch('reference_rates.providers.fetch_exchangerateapi', return_value=({'USD': 90.0}, 'exchangerate-api')) as primary, \
-             patch('reference_rates.providers.fetch_fawazahmed0') as fallback:
-            results = providers.fetch_reference_rates(['USD'])
-
-        self.assertEqual(results, {'USD': (90.0, 'exchangerate-api')})
-        primary.assert_called_once()
-        fallback.assert_not_called()
-
-    @override_settings(EXCHANGERATE_API_KEY='')
-    def test_falls_back_to_fawazahmed0_when_key_is_missing(self):
-        with patch('reference_rates.providers.fetch_fawazahmed0', return_value=({'USD': 91.0}, 'fawazahmed0')) as fallback:
-            results = providers.fetch_reference_rates(['USD'])
-
-        self.assertEqual(results, {'USD': (91.0, 'fawazahmed0')})
-        fallback.assert_called_once()
-
-    @override_settings(EXCHANGERATE_API_KEY='test-key')
-    def test_fawazahmed0_fills_in_whatever_exchangerateapi_missed(self):
-        with patch('reference_rates.providers.fetch_exchangerateapi', return_value=({'USD': 90.0}, 'exchangerate-api')), \
-             patch('reference_rates.providers.fetch_fawazahmed0', return_value=({'USD': 91.0, 'AED': 26.0}, 'fawazahmed0')):
-            results = providers.fetch_reference_rates(['USD', 'AED'])
-
-        self.assertEqual(results, {'USD': (90.0, 'exchangerate-api'), 'AED': (26.0, 'fawazahmed0')})
-
-    @override_settings(EXCHANGERATE_API_KEY='')
-    def test_frankfurter_is_the_last_resort(self):
-        with patch('reference_rates.providers.fetch_fawazahmed0', side_effect=RuntimeError('down')), \
-             patch('reference_rates.providers.fetch_frankfurter', return_value=({'USD': 92.0}, 'frankfurter')):
-            results = providers.fetch_reference_rates(['USD'])
-
-        self.assertEqual(results, {'USD': (92.0, 'frankfurter')})
 
 
 class ReferenceRateSettingsSingletonTests(TestCase):
@@ -123,6 +58,17 @@ class ReferenceRateSettingsSingletonTests(TestCase):
 
 
 class RefreshReferenceRatesServiceTests(TestCase):
+    def test_passes_the_configured_primary_provider_through(self):
+        _currency('USD')
+        settings_obj = ReferenceRateSettings.load()
+        settings_obj.primary_provider = 'frankfurter'
+        settings_obj.save()
+
+        with _patch_providers({'USD': (84.5, 'frankfurter')}) as fetch:
+            refresh_reference_rates()
+
+        fetch.assert_called_once_with(['USD'], primary='frankfurter')
+
     def test_upserts_rates_for_covered_currencies(self):
         _currency('USD')
         _currency('EUR')
@@ -341,6 +287,7 @@ class ReferenceRatesPageTests(TestCase):
         self.client.login(username='admin', password='password123')
 
         data = {
+            'primary_provider': 'fawazahmed0',
             'auto_update_enabled': 'on',
             'buy_margin': '-2.00',
             'sell_margin': '2.00',
@@ -355,6 +302,7 @@ class ReferenceRatesPageTests(TestCase):
         self.assertContains(response, '88.00')  # USD buy: 90 market - 2 margin
         settings_obj = ReferenceRateSettings.load()
         self.assertTrue(settings_obj.auto_update_enabled)
+        self.assertEqual(settings_obj.primary_provider, 'fawazahmed0')
         self.assertEqual(settings_obj.buy_margin, Decimal('-2.00'))
         self.assertEqual(settings_obj.sell_margin, Decimal('2.00'))
 

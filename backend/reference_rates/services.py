@@ -8,10 +8,10 @@ same thing.
 import logging
 from decimal import ROUND_HALF_UP, Decimal
 
+from fx_providers.providers import fetch_with_fallback
 from rates.models import Currency
 
 from .models import ReferenceRate, ReferenceRateSettings
-from .providers import fetch_reference_rates
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,8 @@ def refresh_reference_rates():
     if not codes:
         return {'ok': True, 'fetched': 0, 'applied': 0, 'missing': []}
 
-    results = fetch_reference_rates(codes)
+    settings_obj = ReferenceRateSettings.load()
+    results = fetch_with_fallback(codes, primary=settings_obj.primary_provider)
     missing = sorted(set(codes) - results.keys())
 
     if not results:
@@ -53,7 +54,6 @@ def refresh_reference_rates():
         )
 
     applied = 0
-    settings_obj = ReferenceRateSettings.load()
     if settings_obj.auto_update_enabled:
         for currency in Currency.objects.filter(code__in=results.keys()):
             market_rate = Decimal(str(results[currency.code][0]))

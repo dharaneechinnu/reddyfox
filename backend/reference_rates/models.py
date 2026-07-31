@@ -1,5 +1,7 @@
 from django.db import models
 
+from fx_providers.providers import Provider
+
 
 class ReferenceRate(models.Model):
     """A third-party mid-market rate for one currency, INR-denominated.
@@ -35,6 +37,12 @@ class ReferenceRateSettings(models.Model):
         help_text='When on, every fetch recalculates every currency\'s buy_rate/sell_rate from the '
                    'fetched market rate plus the margins below. When off, a fetch only refreshes the '
                    '"Market ref" guidance column — Currency rows are never touched.',
+    )
+    primary_provider = models.CharField(
+        max_length=20, choices=Provider.choices, default=Provider.EXCHANGERATE_API,
+        help_text='Tried first on every fetch. The other two are tried, in their usual order, for '
+                   'whatever currencies the primary doesn\'t cover — e.g. if exchangerate-api has no '
+                   'key configured, or is down, fawazahmed0 (free, no key) is used automatically.',
     )
     buy_margin = models.DecimalField(
         max_digits=8, decimal_places=2, default=-1,

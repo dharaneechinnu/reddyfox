@@ -12,11 +12,11 @@
 {% block content %}
 <div id="content-main">
   <p>
-    One margin, applied to every currency alike. Turn auto-update on, set the two margins below,
-    then <strong>Save &amp; fetch now</strong> to pull the real market rate from the API and
-    calculate each currency's buy/sell rate as <code>market rate + margin</code> — the result shows
-    in the table below, on this same page. With auto-update off, fetching only refreshes the
-    "Market ref" column on the
+    Pick which provider fetches the rate, and one margin applied to every currency alike. Turn
+    auto-update on, set the two margins below, then <strong>Save &amp; fetch now</strong> to pull
+    the real market rate from the chosen provider and calculate each currency's buy/sell rate as
+    <code>market rate + margin</code> — the result shows in the table below, on this same page.
+    With auto-update off, fetching only refreshes the "Market ref" column on the
     <a href="{% url 'admin:rates_currency_changelist' %}">Currency list</a>; buy/sell stay exactly
     as hand-entered.
   </p>
@@ -24,6 +24,10 @@
   <form method="post">
     {% csrf_token %}
     <fieldset class="module aligned">
+      <div class="form-row">
+        <div>{{ form.primary_provider.label_tag }} {{ form.primary_provider }}</div>
+        <div class="help">{{ form.primary_provider.help_text }}</div>
+      </div>
       <div class="form-row">
         <div>{{ form.auto_update_enabled.label_tag }} {{ form.auto_update_enabled }}</div>
         <div class="help">{{ form.auto_update_enabled.help_text }}</div>
