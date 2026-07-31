@@ -60,3 +60,91 @@ button {
   0%, 100% { opacity: 1; }
   50% { opacity: .35; }
 }
+
+/* ---- Mobile navigation ---------------------------------------------- */
+/* Below this width the desktop header row (logo + horizontal nav links +
+   mega menu) gives way to a fixed bottom tab bar (MobileBottomNav.jsx) —
+   it doesn't fit, and hover-driven menus don't work on touch anyway. */
+.fx-bottomnav {
+  display: none;
+}
+
+@media (max-width: 780px) {
+  .fx-nav-desktop,
+  .fx-header-rates-link {
+    display: none !important;
+  }
+
+  .fx-bottomnav {
+    display: flex;
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    z-index: 80;
+    background: rgba(255,255,255,.96);
+    backdrop-filter: blur(14px);
+    border: 1px solid #E7E4DF;
+    border-radius: 20px;
+    box-shadow: 0 18px 40px -18px rgba(11,27,51,.35);
+    padding: 2px 2px;
+  }
+
+  /* Room for the fixed bottom nav so the footer never sits underneath it. */
+  .fx-page-shell {
+    padding-bottom: 78px;
+  }
+
+  /* Sits just above the bottom nav instead of overlapping it. */
+  .fx-floating-actions {
+    right: 14px !important;
+    bottom: 86px !important;
+    gap: 8px !important;
+  }
+
+  .fx-topbar-inner {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    font-size: 11px !important;
+    gap: 6px 12px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  /* Under ~420px even "years of experience" wraps awkwardly next to the
+     regulator line — drop it rather than let it crowd the phone number. */
+  .fx-topbar-years {
+    display: none;
+  }
+}
+
+/* Two-column FAQ layout (category rail + question list) doesn't have room
+   to stay side-by-side on a phone; the rail becomes a horizontally
+   scrollable filter row above the questions instead. */
+@media (max-width: 720px) {
+  .fx-faq-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .fx-faq-rail {
+    position: static !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    gap: 8px !important;
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+  }
+  .fx-faq-rail > span {
+    white-space: nowrap;
+    flex: none;
+  }
+}
+
+/* Small fixed two-column info blocks (e.g. Mission/Vision on About) read
+   better stacked once a column would drop under ~200px. */
+@media (max-width: 480px) {
+  .fx-stack-480 {
+    grid-template-columns: 1fr !important;
+  }
+}

@@ -54,7 +54,7 @@ export default function About() {
               We undertake to buy and sell foreign currencies and en-cash travellers cheques as per RBI
               guidelines, offering an array of value added customer service at best competitive rates.
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 22, borderTop: `1px solid ${c.sandBorder}`, paddingTop: 26 }}>
+            <div className="fx-stack-480" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 22, borderTop: `1px solid ${c.sandBorder}`, paddingTop: 26 }}>
               <div>
                 <h3 style={{ fontSize: 15.5, fontWeight: 600, color: c.navy, margin: '0 0 8px' }}>Mission</h3>
                 <p style={{ fontSize: 14.5, lineHeight: 1.62, color: c.textMuted, margin: 0 }}>{COMPANY.mission}</p>
