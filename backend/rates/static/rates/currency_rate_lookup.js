@@ -5,6 +5,10 @@
  * the read-only Market ref column in the Currency changelist.
  *
  * Vanilla JS, no build step, loaded only on this admin's add/change page via CurrencyAdmin.Media.
+ *
+ * Deliberately defensive: everything that touches the DOM is wrapped so one unexpected selector
+ * miss (a future Django admin template change, a custom admin theme) logs to the console instead
+ * of silently killing the whole script before the event listeners below it ever get attached.
  */
 (function () {
   'use strict';
@@ -24,11 +28,20 @@
 
   function escapeHtml(value) {
     var div = document.createElement('div');
-    div.textContent = value;
+    div.textContent = value == null ? '' : String(value);
     return div.innerHTML;
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
+  function findInsertionPoint(codeField) {
+    // .closest() can come back null if the admin's markup ever changes (a template update, a
+    // custom admin theme) — chain a few fallbacks so there is always *somewhere* to put the box,
+    // rather than throwing and silently aborting every listener registered after this point.
+    return codeField.closest('.form-row, .field-code')
+      || codeField.parentElement
+      || codeField.parentNode;
+  }
+
+  function init() {
     var codeField = document.getElementById('id_code');
     var buyField = document.getElementById('id_buy_rate');
     var sellField = document.getElementById('id_sell_rate');
@@ -38,13 +51,25 @@
     box.id = 'currency-rate-suggestion';
     box.style.cssText = 'display:none;margin-top:8px;padding:10px 14px;border-radius:6px;' +
       'font-size:13px;background:#000;color:#fff;max-width:520px;';
-    codeField.closest('.form-row, .field-code').appendChild(box);
+
+    var mount = findInsertionPoint(codeField);
+    if (!mount) {
+      console.error('currency_rate_lookup.js: could not find anywhere to attach the suggestion box.');
+      return;
+    }
+    mount.appendChild(box);
 
     var lastRequested = '';
+    var debounceTimer = null;
 
     function runLookup() {
       var code = codeField.value.trim().toUpperCase();
-      if (code.length !== 3 || code === lastRequested) return;
+      if (code.length !== 3) {
+        box.style.display = 'none';
+        lastRequested = '';
+        return;
+      }
+      if (code === lastRequested) return;
       lastRequested = code;
 
       renderBox(box, 'Checking market rate for ' + escapeHtml(code) + '…');
@@ -78,11 +103,33 @@
             });
           }
         })
-        .catch(function () {
-          renderBox(box, '<span style="color:#a4322a">Could not reach the lookup endpoint.</span>');
+        .catch(function (err) {
+          renderBox(box, '<span style="color:#ff8a80">Could not reach the lookup endpoint.</span>');
+          console.error('currency_rate_lookup.js: lookup failed', err);
         });
     }
 
+    // Two triggers, not one: blur alone can be missed if staff type a code and click straight to
+    // Save without ever leaving the field via a normal tab/click (the click that submits the form
+    // also fires blur, but by then the page is already navigating away). Debounced typing catches
+    // that case; blur is kept too so a click into a *different* field also refreshes it, e.g.
+    // after correcting a typo.
+    codeField.addEventListener('input', function () {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(runLookup, 400);
+    });
     codeField.addEventListener('blur', runLookup);
-  });
+  }
+
+  try {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      // DOMContentLoaded already fired by the time this script ran (e.g. loaded with `defer` in
+      // some admin skins) — don't miss the event, just run immediately.
+      init();
+    }
+  } catch (err) {
+    console.error('currency_rate_lookup.js failed to initialise', err);
+  }
 })();
