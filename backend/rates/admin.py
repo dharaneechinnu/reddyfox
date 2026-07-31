@@ -121,12 +121,16 @@ class CurrencyAdmin(admin.ModelAdmin):
         if ref is None:
             return format_html('<span style="color:#999">{}</span>', 'no reference')
 
+        # ReferenceRate stores 6 decimal places for fetch-time precision, but every place this
+        # figure is shown to staff is a rounded, 2-decimal INR amount to match buy_rate/sell_rate.
+        ref_rate = ref.inr_rate.quantize(Decimal('0.01'))
+
         stale_after = timezone.timedelta(hours=settings.REFERENCE_RATE_STALE_AFTER_HOURS)
         age = timezone.now() - ref.fetched_at
         if age > stale_after:
             return format_html(
                 '<span style="color:#999" title="{}">stale ({} ago)</span>',
-                ref.inr_rate, _format_age(age),
+                ref_rate, _format_age(age),
             )
 
         # DecimalField values round-trip as Decimal from the DB, but the field also accepts a
@@ -137,7 +141,7 @@ class CurrencyAdmin(admin.ModelAdmin):
         color = '#c0392b' if divergence_pct >= settings.REFERENCE_RATE_DIVERGENCE_WARN_PCT else '#2e7d32'
         return format_html(
             '<span style="color:{}" title="source: {}">{} ({} ago, {}% off sell)</span>',
-            color, ref.source, ref.inr_rate, _format_age(age), f'{divergence_pct:.1f}',
+            color, ref.source, ref_rate, _format_age(age), f'{divergence_pct:.1f}',
         )
     market_reference.short_description = 'Market ref'
 

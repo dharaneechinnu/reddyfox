@@ -47,7 +47,7 @@
             <td>{{ row.currency.buy_rate }} / {{ row.currency.sell_rate }}</td>
             <td>
               {% if row.reference %}
-                {{ row.reference.inr_rate }}
+                {{ row.reference.inr_rate|floatformat:2 }}
                 <div style="color:var(--body-quiet-color); font-size: 12px">
                   {{ row.reference.source }} · {{ row.reference.fetched_at|timesince }} ago
                 </div>

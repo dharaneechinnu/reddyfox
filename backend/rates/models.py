@@ -19,8 +19,8 @@ class Currency(models.Model):
     country_code = models.CharField(max_length=2, help_text='ISO country code for the badge, e.g. US')
     region = models.CharField(max_length=20, choices=Region.choices, default=Region.ASIA_PACIFIC)
     rate_type = models.CharField(max_length=20, choices=RateType.choices, default=RateType.CASH, help_text='Which counter product this row prices — cash or forex card. Each currency can have one row per type.')
-    buy_rate = models.DecimalField(max_digits=10, decimal_places=4, help_text='We buy at this rate (INR)')
-    sell_rate = models.DecimalField(max_digits=10, decimal_places=4, help_text='We sell at this rate (INR)')
+    buy_rate = models.DecimalField(max_digits=10, decimal_places=2, help_text='We buy at this rate (INR)')
+    sell_rate = models.DecimalField(max_digits=10, decimal_places=2, help_text='We sell at this rate (INR)')
     change_pct = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text='24h change, percent')
     is_popular = models.BooleanField(default=False, help_text='Show on the homepage board and ticker')
     is_visible = models.BooleanField(default=True, help_text='Show this currency anywhere in the UI (rate table, converter, homepage board). Untick to hide it without deleting it.')
@@ -35,11 +35,11 @@ class Currency(models.Model):
         help_text='When on, buy_rate/sell_rate are recalculated automatically from the fetched market rate plus the margins below, on every scheduled or manual reference-rate fetch.',
     )
     sell_margin = models.DecimalField(
-        max_digits=8, decimal_places=4, default=1,
+        max_digits=8, decimal_places=2, default=1,
         help_text='Added to the fetched market rate to set sell_rate automatically, e.g. 1.00 to sell ₹1 above market. Only used when auto-update is on.',
     )
     buy_margin = models.DecimalField(
-        max_digits=8, decimal_places=4, default=-1,
+        max_digits=8, decimal_places=2, default=-1,
         help_text='Added to the fetched market rate to set buy_rate automatically, e.g. -1.00 to buy ₹1 below market. Only used when auto-update is on.',
     )
 
