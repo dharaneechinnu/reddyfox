@@ -46,6 +46,14 @@ class ReferenceRateSettingsAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def get_model_perms(self, request):
+        # Empty dict = this model is left out of the admin index/app-list entirely (no
+        # "Reference rate settings" row under the Reference rates app). The URL below still
+        # works — it's only reachable via the "Reference rates & margins" button on the Currency
+        # changelist, which is the one place this screen is meant to be opened from. The real
+        # permission check happens explicitly in changelist_view, not here.
+        return {}
+
     def changelist_view(self, request, extra_context=None):
         if not request.user.has_perm('reference_rates.change_referenceratesettings'):
             self.message_user(request, "You don't have permission to change reference rate settings.", level=messages.ERROR)
