@@ -224,6 +224,20 @@ class CurrencyChangelistRendersTests(TestCase):
         response = client.get('/admin/rates/currency/')
         self.assertContains(response, '/admin/reference_rates/referenceratesettings/')
 
+    def test_settings_page_hidden_from_admin_index_but_still_reachable(self):
+        # "Reference rate settings" shouldn't appear as its own row/app entry — it's reached only
+        # via the button on the Currency changelist — but the URL itself must keep working.
+        User = get_user_model()
+        User.objects.create_superuser('admin', 'admin@example.com', 'password123')
+        client = Client()
+        client.login(username='admin', password='password123')
+
+        index = client.get('/admin/')
+        self.assertNotContains(index, 'Reference rate settings')
+
+        page = client.get('/admin/reference_rates/referenceratesettings/')
+        self.assertEqual(page.status_code, 200)
+
 
 @override_settings(STORAGES={
     'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
