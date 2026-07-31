@@ -1,0 +1,75 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label='rates' %}">{{ opts.app_config.verbose_name }}</a>
+  &rsaquo; <a href="{% url 'admin:rates_currency_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+  &rsaquo; {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <p>
+    Set each currency's margin, then <strong>Save &amp; fetch now</strong> to pull the latest
+    market rate and, for any currency with auto-update on, recalculate its buy/sell rate as
+    <code>market rate + margin</code> right away. Leaving auto-update off leaves that currency's
+    rates exactly as hand-entered in the regular Currency admin — this page only ever changes the
+    margin fields below, never the rate fields directly.
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+
+    <div class="module" style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>{% translate "Currency" %}</th>
+            <th>{% translate "Current buy / sell (INR)" %}</th>
+            <th>{% translate "Market reference" %}</th>
+            <th>{% translate "Auto-update" %}</th>
+            <th>{% translate "Buy margin" %}</th>
+            <th>{% translate "Sell margin" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+          <tr>
+            <td>
+              {{ row.form.id }}
+              <strong>{{ row.currency.code }}</strong> — {{ row.currency.name }}
+              <div style="color:var(--body-quiet-color); font-size: 12px">{{ row.currency.get_rate_type_display }}</div>
+            </td>
+            <td>{{ row.currency.buy_rate }} / {{ row.currency.sell_rate }}</td>
+            <td>
+              {% if row.reference %}
+                {{ row.reference.inr_rate }}
+                <div style="color:var(--body-quiet-color); font-size: 12px">
+                  {{ row.reference.source }} · {{ row.reference.fetched_at|timesince }} ago
+                </div>
+              {% else %}
+                <span style="color:var(--body-quiet-color)">{% translate "no reference yet" %}</span>
+              {% endif %}
+            </td>
+            <td>{{ row.form.auto_update_from_reference }}</td>
+            <td>{{ row.form.buy_margin }}</td>
+            <td>{{ row.form.sell_margin }}</td>
+          </tr>
+          {% if row.form.errors %}
+          <tr><td colspan="6">{{ row.form.errors }}</td></tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="submit-row">
+      <input type="submit" value="{% translate 'Save margins & fetch now' %}" class="default">
+    </div>
+  </form>
+</div>
+{% endblock %}

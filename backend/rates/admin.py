@@ -2,6 +2,10 @@ from decimal import Decimal
 
 from django.conf import settings
 from django.contrib import admin, messages
+from django.forms import modelformset_factory
+from django.shortcuts import redirect
+from django.template.response import TemplateResponse
+from django.urls import path
 from django.utils import timezone
 from django.utils.html import format_html
 
@@ -10,21 +14,83 @@ from reference_rates.services import refresh_reference_rates
 
 from .models import Currency
 
+# Margin editing lives only on the dedicated "Reference rates & margins" page (see
+# reference_rates_view below) — not on the regular Currency change form — so the one workflow for
+# "fetch, then decide margins" isn't split across two places.
+CurrencyMarginFormSet = modelformset_factory(
+    Currency,
+    fields=('auto_update_from_reference', 'buy_margin', 'sell_margin'),
+    extra=0,
+)
+
 
 @admin.register(Currency)
 class CurrencyAdmin(admin.ModelAdmin):
     list_display = ('code', 'name', 'rate_type', 'region', 'buy_rate', 'sell_rate', 'change_pct', 'market_reference', 'auto_update_from_reference', 'is_popular', 'is_visible', 'display_order', 'updated_at')
-    list_editable = ('buy_rate', 'sell_rate', 'change_pct', 'auto_update_from_reference', 'is_popular', 'is_visible', 'display_order')
+    list_editable = ('buy_rate', 'sell_rate', 'change_pct', 'is_popular', 'is_visible', 'display_order')
     list_filter = ('rate_type', 'region', 'is_popular', 'is_visible', 'auto_update_from_reference')
     search_fields = ('code', 'name')
     ordering = ('display_order', 'code')
     actions = ['fetch_reference_rates_now']
+    change_list_template = 'admin/rates/currency/change_list.html'
     fields = (
         'code', 'name', 'country_code', 'region', 'rate_type',
         'buy_rate', 'sell_rate', 'change_pct',
-        'auto_update_from_reference', 'buy_margin', 'sell_margin',
         'is_popular', 'is_visible', 'display_order',
     )
+
+    def get_urls(self):
+        custom = [
+            path(
+                'reference-rates/',
+                self.admin_site.admin_view(self.reference_rates_view),
+                name='rates_currency_reference_rates',
+            ),
+        ]
+        return custom + super().get_urls()
+
+    def reference_rates_view(self, request):
+        """Dedicated page: only the margin inputs, plus a fetch-now button.
+
+        Separate from the regular change form on purpose — this is the one workflow ("set margins,
+        then fetch") the manual button on the changelist sends staff to.
+        """
+        if not request.user.has_perm('rates.change_currency'):
+            self.message_user(request, "You don't have permission to change currencies.", level=messages.ERROR)
+            return redirect('admin:index')
+
+        queryset = Currency.objects.order_by('display_order', 'code')
+
+        if request.method == 'POST':
+            formset = CurrencyMarginFormSet(request.POST, queryset=queryset)
+            if formset.is_valid():
+                formset.save()
+                summary = refresh_reference_rates()
+                if summary['ok']:
+                    text = f'Saved margins. Fetched {summary["fetched"]} reference rates, applied to {summary["applied"]} currencies.'
+                    if summary['missing']:
+                        text += f' No reference available for: {", ".join(summary["missing"])}.'
+                    self.message_user(request, text, level=messages.SUCCESS if not summary['missing'] else messages.WARNING)
+                else:
+                    self.message_user(request, 'Margins saved, but all reference-rate providers failed — rates were not updated.', level=messages.ERROR)
+                return redirect('admin:rates_currency_reference_rates')
+        else:
+            formset = CurrencyMarginFormSet(queryset=queryset)
+
+        reference_rates = {rr.code: rr for rr in ReferenceRate.objects.all()}
+        rows = [
+            {'currency': currency, 'form': form, 'reference': reference_rates.get(currency.code)}
+            for currency, form in zip(queryset, formset.forms)
+        ]
+
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'Reference rates & margins',
+            'opts': self.model._meta,
+            'formset': formset,
+            'rows': rows,
+        }
+        return TemplateResponse(request, 'admin/rates/currency/reference_rates.html', context)
 
     @admin.action(description='Fetch reference rates now, and apply to auto-update currencies')
     def fetch_reference_rates_now(self, request, queryset):

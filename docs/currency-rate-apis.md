@@ -222,19 +222,26 @@ Implemented in a dedicated `reference_rates` Django app:
    so a cron tick and a staff click always do exactly the same thing.
    - **Scheduled**: `python manage.py fetch_reference_rates`, once every 24h via a Render Cron Job
      (see below). Never runs during a request.
-   - **Manual**: a "Fetch reference rates now" action in the Currency admin's action dropdown —
-     select any row, pick the action, run it on demand. Reports what it did (fetched / applied /
-     missing) as an admin message.
+   - **Manual, two ways**: a "Fetch reference rates now" action in the Currency admin's action
+     dropdown for a quick fetch with whatever margins are already set; or the **"Reference rates &
+     margins" button** on the Currency changelist (`/admin/rates/currency/`), which opens a
+     dedicated page (`/admin/rates/currency/reference-rates/`) listing every currency with *only*
+     its margin inputs — auto-update checkbox, buy margin, sell margin — next to its current
+     rate and latest market reference for context. Submitting that page saves the margins and
+     fetches in one step. Both report what happened (fetched / applied / missing) as an admin
+     message.
 3. **Auto-apply is opt-in and staff-configured, per currency.** `Currency.auto_update_from_reference`
-   defaults to **off** — until a staff member switches it on for a specific currency, that
-   currency's `buy_rate`/`sell_rate` are exactly as hand-entered as before, unaffected by this app
-   entirely. Once on, every fetch (scheduled or manual) recalculates:
+   defaults to **off** — until a staff member switches it on for a specific currency (on the
+   dedicated margins page), that currency's `buy_rate`/`sell_rate` are exactly as hand-entered as
+   before, unaffected by this app entirely. Once on, every fetch (scheduled or manual) recalculates:
    - `sell_rate = market_rate + sell_margin`
    - `buy_rate = market_rate + buy_margin`
 
-   `sell_margin` and `buy_margin` are plain Decimal fields on `Currency`, editable in the same admin
-   form as everything else — e.g. `sell_margin = 1.00`, `buy_margin = -1.00` sells ₹1 above and buys
-   ₹1 below the fetched market rate. The desk sets both numbers; nothing is hardcoded.
+   `sell_margin` and `buy_margin` are plain Decimal fields on `Currency`, set only on the dedicated
+   margins page (deliberately kept off the regular Currency change form, so "set margins, then
+   fetch" stays one workflow in one place) — e.g. `sell_margin = 1.00`, `buy_margin = -1.00` sells
+   ₹1 above and buys ₹1 below the fetched market rate. The desk sets both numbers; nothing is
+   hardcoded.
 4. **Currencies left opted out still get the guard, not the automation.** The read-only "Market ref"
    column on `CurrencyAdmin` shows every currency's latest reference rate, its age, and % divergence
    from `sell_rate` — colored red past `REFERENCE_RATE_DIVERGENCE_WARN_PCT` (default 5%). This

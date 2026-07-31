@@ -185,3 +185,70 @@ class CurrencyChangelistRendersTests(TestCase):
         client.login(username='admin', password='password123')
         response = client.get('/admin/rates/currency/')
         self.assertEqual(response.status_code, 200)
+
+    def test_changelist_links_to_reference_rates_page(self):
+        User = get_user_model()
+        User.objects.create_superuser('admin', 'admin@example.com', 'password123')
+        client = Client()
+        client.login(username='admin', password='password123')
+        response = client.get('/admin/rates/currency/')
+        self.assertContains(response, '/admin/rates/currency/reference-rates/')
+
+
+@override_settings(STORAGES={
+    'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
+    'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+})
+class ReferenceRatesPageTests(TestCase):
+    """The dedicated margin-input page: GET renders it, POST saves margins and fetches, and it's
+    gated behind the same permission as editing a Currency."""
+
+    def setUp(self):
+        User = get_user_model()
+        self.superuser = User.objects.create_superuser('admin', 'admin@example.com', 'password123')
+        self.client = Client()
+
+    def test_get_renders_one_row_per_currency(self):
+        _currency('USD')
+        _currency('EUR')
+        self.client.login(username='admin', password='password123')
+        response = self.client.get('/admin/rates/currency/reference-rates/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'USD')
+        self.assertContains(response, 'EUR')
+
+    def test_post_saves_margins_and_fetches(self):
+        currency = _currency('USD', sell_rate='1.0000', buy_rate='1.0000')
+        self.client.login(username='admin', password='password123')
+
+        data = {
+            'form-TOTAL_FORMS': '1',
+            'form-INITIAL_FORMS': '1',
+            'form-MIN_NUM_FORMS': '0',
+            'form-MAX_NUM_FORMS': '1000',
+            'form-0-id': str(currency.pk),
+            'form-0-auto_update_from_reference': 'on',
+            'form-0-buy_margin': '-2.00',
+            'form-0-sell_margin': '2.00',
+        }
+        with _patch_providers({'USD': (90.0, 'fawazahmed0')}):
+            response = self.client.post('/admin/rates/currency/reference-rates/', data, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        currency.refresh_from_db()
+        self.assertTrue(currency.auto_update_from_reference)
+        self.assertEqual(currency.buy_margin, Decimal('-2.00'))
+        self.assertEqual(currency.sell_margin, Decimal('2.00'))
+        self.assertEqual(currency.sell_rate, Decimal('92.00'))
+        self.assertEqual(currency.buy_rate, Decimal('88.00'))
+
+    def test_requires_login(self):
+        response = self.client.get('/admin/rates/currency/reference-rates/')
+        self.assertNotEqual(response.status_code, 200)
+
+    def test_staff_without_change_permission_is_redirected(self):
+        User = get_user_model()
+        limited = User.objects.create_user('limited', 'limited@example.com', 'password123', is_staff=True)
+        self.client.login(username='limited', password='password123')
+        response = self.client.get('/admin/rates/currency/reference-rates/', follow=True)
+        self.assertRedirects(response, '/admin/')
