@@ -1,14 +1,20 @@
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from django.conf import settings
 from django.contrib import admin, messages
+from django.http import JsonResponse
+from django.urls import path
 from django.utils import timezone
 from django.utils.html import format_html
 
-from reference_rates.models import ReferenceRate
+from fx_providers.providers import fetch_with_fallback
+from reference_rates.models import ReferenceRate, ReferenceRateSettings
 from reference_rates.services import refresh_reference_rates
 
+from .currency_metadata import CURRENCY_METADATA
 from .models import Currency
+
+TWO_PLACES = Decimal('0.01')
 
 
 @admin.register(Currency)
@@ -25,6 +31,68 @@ class CurrencyAdmin(admin.ModelAdmin):
         'buy_rate', 'sell_rate', 'change_pct',
         'is_popular', 'is_visible', 'display_order',
     )
+
+    class Media:
+        # Vanilla JS, no build step — looks up the market rate for whatever code staff just
+        # typed and shows it as a suggestion next to buy_rate/sell_rate. Never fills the fields
+        # itself; staff click "Use suggestion" to accept it, same "guidance, not a price" rule
+        # as the Market ref column (see docs/currency-rate-apis.md).
+        js = ('rates/currency_rate_lookup.js',)
+
+    def get_urls(self):
+        custom = [
+            path(
+                'lookup-rate/',
+                self.admin_site.admin_view(self.lookup_rate_view),
+                name='rates_currency_lookup_rate',
+            ),
+        ]
+        return custom + super().get_urls()
+
+    def lookup_rate_view(self, request):
+        """Called from the add/change form's JS as soon as staff finish typing a currency code.
+        Live-fetches that one code from the configured providers and returns a suggested
+        buy/sell — informational only, never written anywhere until staff explicitly save."""
+        if not request.user.has_perm('rates.add_currency'):
+            return JsonResponse({'ok': False, 'error': 'Permission denied.'}, status=403)
+
+        code = request.GET.get('code', '').strip().upper()
+        if len(code) != 3 or not code.isalpha():
+            return JsonResponse({'ok': False, 'error': 'Enter a 3-letter currency code, e.g. BHD.'})
+
+        settings_obj = ReferenceRateSettings.load()
+        try:
+            results = fetch_with_fallback([code], primary=settings_obj.primary_provider)
+        except Exception:
+            return JsonResponse({'ok': False, 'error': 'Could not reach any reference-rate provider right now.'})
+
+        if code not in results:
+            return JsonResponse({
+                'ok': False,
+                'error': f'No market rate found for {code} from exchangerate-api, fawazahmed0, or Frankfurter.',
+            })
+
+        rate, source = results[code]
+        market_rate = Decimal(str(rate))
+        suggested_buy = (market_rate + settings_obj.buy_margin).quantize(TWO_PLACES, rounding=ROUND_HALF_UP)
+        suggested_sell = (market_rate + settings_obj.sell_margin).quantize(TWO_PLACES, rounding=ROUND_HALF_UP)
+
+        # Name/country/region come from a small static ISO table, not from any rate provider —
+        # none of their basic endpoints return currency metadata. A code missing from that table
+        # just means those three fields aren't suggested; the rate suggestion above is unaffected.
+        name, country_code, region = CURRENCY_METADATA.get(code, (None, None, None))
+
+        return JsonResponse({
+            'ok': True,
+            'code': code,
+            'rate': str(market_rate.quantize(TWO_PLACES, rounding=ROUND_HALF_UP)),
+            'source': source,
+            'suggested_buy': str(suggested_buy),
+            'suggested_sell': str(suggested_sell),
+            'name': name,
+            'country_code': country_code,
+            'region': region,
+        })
 
     @admin.action(description='Fetch reference rates now, and apply if auto-update is on')
     def fetch_reference_rates_now(self, request, queryset):

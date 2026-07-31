@@ -78,7 +78,7 @@ There is no frontend test runner configured (no Jest/Vitest) — `npm run lint` 
 
 ### Backend: Django apps
 
-- **`rates`** — `Currency` model: buy/sell rate, 24h change, region, `is_popular`, `is_visible`, `display_order`. Read-only `CurrencyViewSet` at `/api/rates/`.
+- **`rates`** — `Currency` model: buy/sell rate, 24h change, region, `is_popular`, `is_visible`, `display_order`. Read-only `CurrencyViewSet` at `/api/rates/`. `CurrencyAdmin` also has a live-lookup endpoint (`/admin/rates/currency/lookup-rate/`, JS in `rates/static/rates/currency_rate_lookup.js`) — as staff type a 3-letter code on the add/change form, it calls `fx_providers.fetch_with_fallback()` for that one code and shows the real market rate plus a suggested buy/sell (using `reference_rates.ReferenceRateSettings`' margins) next to the fields. Purely informational, same "guidance, not a price" rule as the Market ref column — nothing is written until staff click "Use suggestion" and save.
 - **`content`** — testimonials, FAQs, and the lead-capture system (see below). Also `SiteSetting`, a singleton row (`pk=1` enforced in `save()`) holding the customer-facing WhatsApp option and per-lead-type notification email overrides.
 - **`notifications`** — Chrome push alerts to *customers* about currency rate changes, via Firebase Cloud Messaging. Independent of `content`'s email alerts.
 - **`feature_flags`** — gates for rolling out site sections (e.g. the rates page/live board) without a deploy.
