@@ -36,7 +36,75 @@ Revoking someone is one click: untick `is_active` on their row. No redeploy, no 
 
 No business verification, no approval queue — the bot is usable within a minute of creation.
 
-## Onboarding a staff member (manual, v1)
+## Production webhook setup (do this once per environment)
+
+Onboarding by QR code (below) needs Telegram to push updates to us the instant someone messages
+the bot — that requires registering a **webhook**, not the manual `getUpdates` polling used by
+the fallback method further down.
+
+1. Pick two real secrets and set them (locally in `backend/.env`, and as Render environment
+   variables in production):
+
+   ```
+   TELEGRAM_WEBHOOK_PATH_SECRET=<random string>
+   TELEGRAM_WEBHOOK_SECRET=<a different random string>
+   ```
+
+   Generate each with `python -c "import secrets; print(secrets.token_urlsafe(32))"`. The
+   defaults in `.env.example` are obvious placeholders (`changeme-...`) on purpose — a deploy
+   that forgot to set them is caught in review, not silently insecure.
+2. Set `TELEGRAM_BOT_USERNAME` (no `@`, no `https://t.me/` — just the username BotFather gave
+   you) — needed to build the deep link a QR code encodes.
+3. Make sure `ADMIN_BASE_URL` is the real `https://` production domain (Telegram refuses to
+   register a non-HTTPS webhook).
+4. Run, once, after every deploy where any of the above changed:
+
+   ```
+   python manage.py set_telegram_webhook
+   ```
+
+5. Verify it's registered and healthy any time (safe to run repeatedly, read-only):
+
+   ```
+   python manage.py check_telegram_webhook
+   ```
+
+**Security model** — two independent checks, not one:
+
+- **The URL path itself** includes `TELEGRAM_WEBHOOK_PATH_SECRET`, an unguessable segment —
+  defense in depth, not the real gate.
+- **The `X-Telegram-Bot-Api-Secret-Token` header**, set via `secret_token` when registering the
+  webhook, echoed back by Telegram on every real call. `telegram_alerts/views.py` rejects any
+  request where this doesn't match `TELEGRAM_WEBHOOK_SECRET` — this is the actual proof a
+  request came from Telegram and not something else that found the URL.
+
+**Local development can't receive real webhooks** — Telegram needs a public HTTPS URL, and
+`localhost` isn't one. `set_telegram_webhook` refuses to run against a non-HTTPS
+`ADMIN_BASE_URL` for exactly this reason. Use the manual onboarding method below for local
+testing; test the QR/webhook path for real once, against a staging or production deploy.
+
+## Onboarding a staff member — QR code (primary method)
+
+1. Django admin → **Telegram alerts → Telegram invites → Add**.
+2. Type a label (e.g. "Ravi — counter") — nothing else to fill in — and save.
+3. The invite's page shows a QR code and a plain link, both encoding the same thing: a
+   Telegram deep link with a one-time, unguessable token, expiring in
+   `TELEGRAM_INVITE_EXPIRY_HOURS` (24 by default).
+4. Staff member scans the QR code with their phone camera (or opens the link directly),
+   Telegram opens a chat with the bot, they tap **Start**.
+5. That's it — no chat_id lookup, no admin action needed. The webhook creates their
+   `TelegramSubscriber` row automatically, marked active, and the bot replies confirming it
+   worked.
+
+The admin still creates the invite in the first place, so this doesn't loosen the two-gate
+model above — it only makes the *identity* step (Gate 1) faster than the manual lookup below.
+An invite that's expired, already claimed, or was revoked (an admin action on the **Telegram
+invites** list, for an unclaimed one) can't be used again — scanning an old QR code just gets a
+"this invite has expired" reply from the bot, nothing is created.
+
+## Onboarding a staff member — manual lookup (fallback)
+
+Still available, and the only option for local development (no public webhook there):
 
 1. The staff member searches for the bot's username in Telegram and sends it any message
    (e.g. "hi"). This is the only thing they need to do.
@@ -55,13 +123,7 @@ No business verification, no approval queue — the bot is usable within a minut
    message arrives.
 
 To remove access later, either untick `is_active` (keeps the record, pauses alerts) or delete
-the row entirely.
-
-**A note for later, not needed now:** if the team grows past a handful of people, a
-self-service flow (admin generates a one-time invite link, staff clicks it, the bot
-auto-captures their `chat_id` via a webhook) is worth building — the manual `getUpdates` lookup
-above doesn't scale past a few onboardings. Not built; the extra webhook infrastructure isn't
-earning its keep yet at this size.
+the row entirely — same either way, regardless of which onboarding method was used.
 
 ## What actually gets sent
 

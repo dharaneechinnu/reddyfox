@@ -15,4 +15,5 @@ urlpatterns = [
     path('api/', include('content.urls')),
     path('api/', include('notifications.urls')),
     path('api/', include('feature_flags.urls')),
+    path('api/', include('telegram_alerts.urls')),
 ]
