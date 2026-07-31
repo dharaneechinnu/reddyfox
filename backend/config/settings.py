@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'feature_flags',
     'fx_providers',
     'reference_rates',
+    'telegram_alerts',
 
     # Third party
     'rest_framework',
@@ -290,3 +291,8 @@ REFERENCE_RATE_STALE_AFTER_HOURS = config('REFERENCE_RATE_STALE_AFTER_HOURS', de
 # that hasn't been given a key yet — fetch_with_fallback() treats that as "skip straight to the
 # next provider," not an error. Never has a default other than '': this one is a real secret.
 EXCHANGERATE_API_KEY = config('EXCHANGERATE_API_KEY', default='')
+
+# telegram_alerts — new-lead alerts to admin-approved staff Telegram chats, alongside (never
+# instead of) the existing email alert in content/notifications.py. Get a token from @BotFather.
+# Blank skips the Telegram send entirely (logged, not raised) — see docs/telegram-bot.md.
+TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default='')
