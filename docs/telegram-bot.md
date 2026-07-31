@@ -170,6 +170,41 @@ Call: tel:+919876543210
 Only what a dealer needs to call back. Full detail (message text, service selected, rate-lock
 expiry, etc.) is still in the email and in `/admin/`.
 
+## Which lead kinds actually reach Telegram — the `alert_routing` checklist
+
+Not every lead kind should page the desk on Telegram — a general enquiry is far less
+actionable than a quote or a callback request, and routing it there anyway is just noise.
+Which kinds are switched on is a config rule, not a code change: **Django admin → Alert
+routing → Lead alert rules**. One row per `content.Lead.Kind`, each with a single
+`telegram_enabled` checkbox. Add/delete are disabled — the four rows are the fixed set of lead
+kinds, seeded by a data migration — staff can only flip the checkbox. A toggle takes effect on
+the very next lead submission, no deploy needed.
+
+Default state (seeded by `alert_routing/migrations/0002_seed_rules.py`):
+
+| Lead kind | Telegram alert |
+|---|---|
+| Enquiry | **Off** — the general contact form generates more Telegram noise than it's worth relative to a quote or a callback |
+| Quote request | On |
+| Rate lock | On |
+| Callback request ("Get best price") | On |
+
+This lives in its own app, `alert_routing`, deliberately separate from `telegram_alerts`:
+`telegram_alerts` owns *how* to send a Telegram message, `content` owns *what a lead is*, and
+`alert_routing` owns only the one small decision of *whether* a given kind should reach
+Telegram at all. `telegram_alerts.services.notify_team_telegram()` calls
+`alert_routing.services.is_telegram_enabled_for(lead.kind)` as the very first check — before
+even looking at whether a bot token is configured — and returns immediately without touching
+`TelegramDelivery` if the kind is switched off. The email alert (`content/notifications.py`)
+and the admin lead inbox are completely unaffected by this rule either way; it only gates the
+Telegram channel.
+
+**Fails open, same as everywhere else in this app:** if a lead kind has no matching row (e.g.
+a fifth `Lead.Kind` gets added later before anyone remembers to seed a rule for it), or the
+database lookup itself errors, `is_telegram_enabled_for()` defaults to `True` rather than
+silently going dark — see `alert_routing/services.py`. Missing config should never suppress an
+alert that would otherwise have gone out.
+
 ## Failure handling
 
 Same discipline as every other notification channel on this site:

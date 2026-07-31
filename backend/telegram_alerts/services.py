@@ -17,6 +17,7 @@ from decimal import Decimal
 
 from django.conf import settings
 
+from alert_routing.services import is_telegram_enabled_for
 from content.models import Lead
 
 from .models import TelegramDelivery, TelegramSubscriber
@@ -80,9 +81,17 @@ def _send_one(token, chat_id, text):
 def notify_team_telegram(lead):
     """Send a new-lead alert to every active TelegramSubscriber. Never raises.
 
-    Returns the number of successful sends (0 if not configured, no subscribers, or every send
-    failed — callers don't need to distinguish those cases, the delivery log does).
+    Returns the number of successful sends (0 if not configured, no subscribers, this lead's
+    kind is switched off in the alert_routing checklist, or every send failed — callers don't
+    need to distinguish those cases, the delivery log does).
     """
+    if not is_telegram_enabled_for(lead.kind):
+        logger.info(
+            'Telegram alert skipped for lead #%s: %s is disabled in the alert routing checklist.',
+            lead.pk, lead.kind,
+        )
+        return 0
+
     token = getattr(settings, 'TELEGRAM_BOT_TOKEN', '')
     if not token:
         logger.info('TELEGRAM_BOT_TOKEN not configured; skipping Telegram alert for lead #%s.', lead.pk)
