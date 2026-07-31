@@ -21,6 +21,7 @@ SUBJECT_PREFIX = {
     'enquiry': 'Enquiry',
     'quote': 'Quote request',
     'rate_lock': 'RATE LOCK',
+    'callback': 'Callback request',
 }
 
 
@@ -60,6 +61,13 @@ def _body(lead):
             f'Amount   : {_fmt(lead.amount)}',
             f'Needed by: {lead.needed_by or "(not specified)"}',
         ]
+    elif lead.kind == 'callback':
+        lines += [
+            '',
+            '--- What they were converting ---',
+            f'Pair     : {lead.from_currency or "(not specified)"} -> {lead.to_currency or "(not specified)"}',
+            f'Amount   : {_fmt(lead.amount)} {lead.from_currency or ""}'.rstrip(),
+        ]
     else:
         lines.append(f'Service : {lead.service or "(not specified)"}')
 
@@ -76,10 +84,11 @@ def _body(lead):
     lines.append(f'Email   : mailto:{lead.email}')
 
     base = getattr(settings, 'ADMIN_BASE_URL', '').rstrip('/')
-    if base:
-        # Link into the proxy admin for this type, so the dealer lands on the
-        # list they actually have permission for.
-        proxy = {'enquiry': 'enquiry', 'quote': 'quoterequest', 'rate_lock': 'ratelock'}[lead.kind]
+    # Quote requests and Rate locks have no admin page (deliberately
+    # unregistered — see content/admin.py), so there is nowhere to link for
+    # those two kinds. Reply via the WhatsApp/call/email lines above instead.
+    proxy = {'enquiry': 'enquiry', 'callback': 'callbackrequest'}.get(lead.kind)
+    if base and proxy:
         lines += ['', f'Open in admin: {base}/admin/content/{proxy}/{lead.pk}/change/']
     return '\n'.join(lines)
 
@@ -88,7 +97,7 @@ def _subject(lead):
     label = SUBJECT_PREFIX.get(lead.kind, 'Lead')
     if lead.kind == 'rate_lock':
         detail = f'{lead.from_currency}/{lead.to_currency} {_fmt(lead.amount)}'
-    elif lead.kind == 'quote':
+    elif lead.kind in ('quote', 'callback'):
         detail = f'{lead.from_currency or "?"} {_fmt(lead.amount)}'
     else:
         detail = lead.service or 'general'

@@ -69,8 +69,8 @@ export const fonts = {
   sans: "'Instrument Sans', system-ui, sans-serif",
 };
 
-export const wrap = { maxWidth: 1280, margin: '0 auto', padding: '0 32px' };
-export const wrapNarrow = { maxWidth: 1000, margin: '0 auto', padding: '0 32px' };
+export const wrap = { maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,4.5vw,32px)' };
+export const wrapNarrow = { maxWidth: 1000, margin: '0 auto', padding: '0 clamp(16px,4.5vw,32px)' };
 export const eyebrow = {
   font: `500 11.5px/1.4 ${fonts.mono}`,
   letterSpacing: '.18em',

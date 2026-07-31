@@ -6,7 +6,7 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 
 from rates.models import Currency
-from .models import Enquiry, Lead, QuoteRequest, RateLock
+from .models import CallbackRequest, Enquiry, Lead, QuoteRequest, RateLock
 
 # Rendering an admin page needs a staticfiles manifest, which only exists
 # after `collectstatic`. Production builds one; the test runner shouldn't
@@ -158,6 +158,81 @@ class PriorityAdminActionTests(TestCase):
         self.assertEqual(lead.priority, Lead.Priority.HIGH)
 
 
+@PLAIN_STATIC
+class EnquiryResolvedTests(TestCase):
+    """Resolved enquiries default out of the admin list without ever being deleted, and staff
+    can flip is_resolved individually or in bulk. See EnquiryAdmin.get_queryset."""
+
+    def setUp(self):
+        self.client = APIClient()
+        staff = User.objects.create_superuser('boss', 'b@example.com', 'pw12345')
+        self.client.force_authenticate(user=staff)
+        self.staff = staff
+
+    def _run(self, action, pks, query=''):
+        # Mirrors the real admin form: it has no action= attribute, so it POSTs back to the
+        # current URL including whatever filter querystring is active — matters for
+        # test_mark_unresolved_bulk_action below, which needs the Resolved filter active to
+        # select a resolved row in the first place.
+        self.client.force_login(self.staff)
+        url = reverse('admin:content_enquiry_changelist')
+        if query:
+            url += f'?{query}'
+        return self.client.post(
+            url,
+            {'action': action, '_selected_action': [str(pk) for pk in pks]},
+            follow=True,
+        )
+
+    def test_new_enquiry_defaults_to_unresolved(self):
+        lead = _enquiry()
+        self.assertFalse(lead.is_resolved)
+
+    def test_default_changelist_hides_resolved(self):
+        self.client.force_login(self.staff)
+        unresolved = _enquiry(name='Still open')
+        _enquiry(name='Already handled', is_resolved=True)
+
+        response = self.client.get(reverse('admin:content_enquiry_changelist'))
+
+        self.assertContains(response, 'Still open')
+        self.assertNotContains(response, 'Already handled')
+        self.assertEqual(list(response.context['cl'].queryset), [unresolved])
+
+    def test_is_resolved_filter_reveals_resolved_rows(self):
+        self.client.force_login(self.staff)
+        _enquiry(name='Still open')
+        _enquiry(name='Already handled', is_resolved=True)
+
+        response = self.client.get(reverse('admin:content_enquiry_changelist'), {'is_resolved__exact': '1'})
+
+        self.assertContains(response, 'Already handled')
+        self.assertNotContains(response, 'Still open')
+
+    def test_mark_resolved_bulk_action(self):
+        lead = _enquiry()
+        self._run('mark_resolved', [lead.pk])
+        lead.refresh_from_db()
+        self.assertTrue(lead.is_resolved)
+
+    def test_mark_unresolved_bulk_action(self):
+        # Needs the "Resolved" filter active, same as a real staff member would have it, since
+        # a resolved row isn't in the default (unresolved-only) queryset the action selects from.
+        lead = _enquiry(is_resolved=True)
+        self._run('mark_unresolved', [lead.pk], query='is_resolved__exact=1')
+        lead.refresh_from_db()
+        self.assertFalse(lead.is_resolved)
+
+    def test_bulk_resolve_does_not_touch_other_enquiries(self):
+        target = _enquiry(name='Resolve me')
+        other = _enquiry(name='Leave me alone')
+        self._run('mark_resolved', [target.pk])
+        target.refresh_from_db()
+        other.refresh_from_db()
+        self.assertTrue(target.is_resolved)
+        self.assertFalse(other.is_resolved)
+
+
 class LeadSubmissionStillWorksTests(TestCase):
     """Priority must not disturb the existing public create endpoints."""
 
@@ -188,3 +263,52 @@ class LeadSubmissionStillWorksTests(TestCase):
             'message': 'Need USD', 'priority': 1,
         })
         self.assertEqual(Enquiry.objects.get().priority, Lead.Priority.NORMAL)
+
+
+class CallbackRequestTests(TestCase):
+    """The homepage converter's quick "get your best price" capture — name
+    and phone are the only things a customer must provide."""
+
+    def setUp(self):
+        self.client = APIClient()
+        _make_usd()
+
+    def test_name_and_phone_alone_is_enough(self):
+        res = self.client.post(reverse('callback-create'), {
+            'name': 'Deborah Beck', 'phone': '9876543210',
+        })
+        self.assertEqual(res.status_code, 201, res.data)
+        lead = CallbackRequest.objects.get()
+        self.assertEqual(lead.phone, '9876543210')
+        self.assertEqual(lead.email, '')
+        self.assertEqual(lead.kind, Lead.Kind.CALLBACK)
+
+    def test_amount_and_currency_are_carried_along_when_present(self):
+        res = self.client.post(reverse('callback-create'), {
+            'name': 'Deborah Beck', 'phone': '9876543210',
+            'from_currency': 'USD', 'to_currency': 'INR', 'amount': '500',
+        })
+        self.assertEqual(res.status_code, 201, res.data)
+        lead = CallbackRequest.objects.get()
+        self.assertEqual(lead.from_currency, 'USD')
+        self.assertEqual(str(lead.amount), '500.00')
+
+    def test_missing_phone_is_rejected(self):
+        res = self.client.post(reverse('callback-create'), {'name': 'Deborah Beck'})
+        self.assertEqual(res.status_code, 400)
+        self.assertFalse(CallbackRequest.objects.exists())
+
+    def test_invalid_phone_is_rejected(self):
+        res = self.client.post(reverse('callback-create'), {'name': 'Deborah Beck', 'phone': '12345'})
+        self.assertEqual(res.status_code, 400)
+        self.assertFalse(CallbackRequest.objects.exists())
+
+    def test_arrives_at_normal_priority(self):
+        self.client.post(reverse('callback-create'), {'name': 'Deborah Beck', 'phone': '9876543210'})
+        self.assertEqual(CallbackRequest.objects.get().priority, Lead.Priority.NORMAL)
+
+    def test_does_not_appear_in_other_lead_lists(self):
+        self.client.post(reverse('callback-create'), {'name': 'Deborah Beck', 'phone': '9876543210'})
+        self.assertFalse(Enquiry.objects.exists())
+        self.assertFalse(QuoteRequest.objects.exists())
+        self.assertFalse(RateLock.objects.exists())

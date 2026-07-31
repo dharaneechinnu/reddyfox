@@ -70,8 +70,8 @@ export default function Faq() {
         </div>
       </section>
       <section style={{ background: c.sand, padding: '64px 0 96px' }}>
-        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'minmax(220px,260px) 1fr', gap: 40, alignItems: 'start' }}>
-          <div style={{ position: 'sticky', top: 100, display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div className="fx-faq-grid" style={{ ...wrap, display: 'grid', gridTemplateColumns: 'minmax(220px,260px) 1fr', gap: 40, alignItems: 'start' }}>
+          <div className="fx-faq-rail" style={{ position: 'sticky', top: 100, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span
               onClick={() => setActiveCat(null)}
               style={catStyle(activeCat === null)}

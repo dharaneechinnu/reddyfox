@@ -3,10 +3,12 @@ from rest_framework import generics, status, viewsets
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
+from telegram_alerts.services import notify_team_telegram
+
 from .models import Faq, FaqCategory, SiteSetting, Testimonial
 from .notifications import notify_team
 from .serializers import (
-    EnquiryCreateSerializer, FaqCategorySerializer, FaqSerializer,
+    CallbackRequestCreateSerializer, EnquiryCreateSerializer, FaqCategorySerializer, FaqSerializer,
     QuoteRequestCreateSerializer, RateLockCreateSerializer,
     SiteSettingSerializer, TestimonialSerializer,
 )
@@ -65,8 +67,10 @@ class BaseLeadCreateView(generics.CreateAPIView):
     def perform_create(self, serializer):
         # 1. Save first — the lead is now safe no matter what happens next.
         self.lead = serializer.save(source_ip=self._client_ip())
-        # 2. Then try to notify. Failures are logged inside notify_team.
+        # 2. Then try every notification channel. Each one is independent and never raises —
+        # a broken Telegram bot token must not stop the email, and vice versa.
         notify_team(self.lead)
+        notify_team_telegram(self.lead)
 
     def response_payload(self):
         return {'detail': self.success_message}
@@ -87,6 +91,12 @@ class QuoteRequestCreateView(BaseLeadCreateView):
     """"Get a free quote"."""
     serializer_class = QuoteRequestCreateSerializer
     success_message = 'Thank you — your quote request has reached our dealers. We will come back with a price shortly.'
+
+
+class CallbackRequestCreateView(BaseLeadCreateView):
+    """Quick "get your best price" capture from the homepage converter widget."""
+    serializer_class = CallbackRequestCreateSerializer
+    success_message = "Thanks — we've got your details. Our team will call you back shortly with the best price."
 
 
 class RateLockCreateView(BaseLeadCreateView):

@@ -23,6 +23,7 @@ python manage.py migrate
 python manage.py seed_rates          # sample currency board
 python manage.py seed_content        # real testimonials + FAQs (--replace wipes existing rows first)
 python manage.py setup_teams         # creates/syncs the staff permission groups (see Architecture)
+python manage.py fetch_reference_rates  # optional: pull market FX rates for the admin's typo guard
 python manage.py createsuperuser
 python manage.py runserver 0.0.0.0:8000   # 0.0.0.0 so a phone on the same WiFi can reach it
 ```
@@ -75,11 +76,18 @@ There is no frontend test runner configured (no Jest/Vitest) — `npm run lint` 
               React SPA (fetches on mount, no caching layer)
 ```
 
-### Backend: three Django apps
+### Backend: four Django apps
 
-- **`rates`** — `Currency` model: buy/sell rate, 24h change, region, `is_popular`, `is_visible`, `display_order`. Read-only `CurrencyViewSet` at `/api/rates/`.
+- **`rates`** — `Currency` model: buy/sell rate, 24h change, region, `rate_type` (`cash` or `forex_card` — a currency can have one row of each, unique together), `is_popular`, `is_visible`, `display_order`. Read-only `CurrencyViewSet` at `/api/rates/`, filterable with `?rate_type=cash|forex_card`; a bare `code` lookup (no query param) defaults to the `cash` row so every pre-existing caller keeps working.
 - **`content`** — testimonials, FAQs, and the lead-capture system (see below). Also `SiteSetting`, a singleton row (`pk=1` enforced in `save()`) holding the customer-facing WhatsApp option and per-lead-type notification email overrides.
 - **`notifications`** — Chrome push alerts to *customers* about currency rate changes, via Firebase Cloud Messaging. Independent of `content`'s email alerts.
+- **`feature_flags`** — a standalone on/off switch registry (see below), deliberately not more booleans bolted onto `SiteSetting`.
+
+### Who leads are *for* — the thing to keep in mind
+
+Every lead form on the site (enquiry, quote, rate lock) exists to put a customer's **phone number in front of a dealer**, so a person at the T. Nagar counter can ring them back. Nothing is sold online. The customer-facing confirmation is a courtesy; the product is the alert to the desk.
+
+That reframes what "done" means for anything in this area: the measure is **how few minutes pass between submission and callback**, not how good the success screen looks. Rate locks are the sharpest case — `SiteSetting.rate_lock_hours` is a promise with a deadline, so a lock the desk sees late is worse than useless. See `docs/team-notifications.md` for the reasoning, what's built, and the costed options for getting louder.
 
 ### The `Lead` model: one table, three admin-facing identities
 
@@ -113,17 +121,23 @@ When something currently hardcoded in `frontend/src/data.js` needs to become sta
 
 `frontend/src/hooks/useLeadForm.js` is the shared form logic behind all three lead forms (`EnquiryForm`, `QuoteForm`, `RateLockForm` in `components/`) — validate on blur, clear an error as soon as the field becomes valid while typing, focus the first invalid field on a failed submit, and map server-side field errors back onto the right input (the API re-validates independently and can catch things the client can't, e.g. an unknown currency code). A new lead-type form should reuse this hook rather than reimplementing form state.
 
-Order of operations on every lead submission is deliberate: **save to the database first, then notify** (`content/notifications.py`'s `notify_team`, and separately `notifications.services.send_notification` for the FCM path). A failure in either notification path is caught and logged — it must never lose or block the underlying lead.
+Order of operations on every lead submission is deliberate: **save to the database first, then notify** (`content/notifications.py`'s `notify_team`, `telegram_alerts.services.notify_team_telegram`, and separately `notifications.services.send_notification` for the FCM path). A failure in any one notification path is caught and logged — it must never lose or block the underlying lead, and must never stop the others from being attempted.
 
-### Currency/converter state: one context, one fetch
+### Currency/rate state: one context, one fetch
 
-`frontend/src/context/FxContext.jsx` fetches `/api/rates/` once on mount and derives everything else (converter calculation, favourites, filters, search) from that single `rates` object client-side — there's no per-page refetch. `useFx()` is how every page reads or mutates this state.
+`frontend/src/context/FxContext.jsx` fetches `/api/rates/` (cash rates only) once on mount and derives everything else (conversion calculation, favourites, filters, search) from that single `rates` object client-side — there's no per-page refetch. `useFx()` is how every page reads or mutates this state. **There is no dedicated `/converter` page or route** — the converter widget lives inline in the homepage hero (`Home.jsx`) and feeds straight into `/lock-rate`; don't re-add a standalone converter page, extend the homepage widget or `FxContext` instead. Forex Card rates (`rate_type=forex_card`) are fetched separately per-page where needed (`Home.jsx`, `Rates.jsx`) and merged in by currency code — they're additive display data, not part of the shared conversion state.
+
+### `feature_flags`: the pattern for any new on/off switch
+
+A `FeatureFlag(key, name, description, is_enabled)` registry — not per-feature booleans on `SiteSetting`. `GET /api/flags/` returns a flat `{key: bool}` map, cached and invalidated on save/delete via a signal so an admin toggle takes effect on the next page load. Frontend: one `FeatureFlagsProvider` at the app root (`App.jsx`), `useFeatureFlag(key)` everywhere else. **It fails open** — a key missing from the response (deleted row, or the request failed) is treated as enabled, never disabled — so a flags-API hiccup can't take a working feature offline. Adding a new flag is a migration-seeded admin row (see `feature_flags/migrations/0002_seed_flags.py`) plus one `useFeatureFlag('new_key')` call — no schema change needed unless the flag needs more than on/off.
 
 ### `notifications` app: customer-facing push, not the email alerts
 
 Triggered automatically by a `post_save` signal on `rates.Currency` (see `notifications/signals.py`) whenever `buy_rate`/`sell_rate` changes — including through the rate table's `list_editable` inline admin edit. Priority (`Normal` vs `Urgent`) is based on how far the rate moved (`RATE_ALERT_URGENT_THRESHOLD_PCT`); `Urgent` alerts bypass the per-customer rate limit (`NOTIFICATION_RATE_LIMIT_MINUTES`) entirely. Every send attempt — success, failure, or rate-limit skip — is written as a `NotificationDelivery` row, visible/searchable in `/admin/`.
 
 With `FIREBASE_CREDENTIALS_JSON` unset (the default), subscribers still register and every send is recorded as a logged `FAILED` delivery rather than raising — the same "never let a missing credential break a request" pattern `content/notifications.py`'s email alert already uses. Don't add a `try/except` around calls into this app; the graceful-failure handling is already inside it.
+
+**A note on anything hooked to a `post_save` signal:** an exception raised in a signal receiver rolls back the save that triggered it. So a bug in alert-building code doesn't just lose the alert — it destroys the customer's lead. Keep the "never raises" guarantee at the boundary of the notification code itself (not at each call site), so callers can fire-and-forget. Two real crashes of exactly this kind were fixed in the `team_alerts` work: a customer name long enough to overflow a title column, and a value that was still a `str` rather than a `Decimal` when the signal fired.
 
 ### SEO / AI-assistant discoverability
 

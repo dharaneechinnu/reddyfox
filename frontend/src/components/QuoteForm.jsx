@@ -80,7 +80,7 @@ export default function QuoteForm() {
       <Honeypot id={`${ID}-enquiry_ref`} value={f.values.enquiry_ref} onChange={(e) => f.setField('enquiry_ref', e.target.value)} />
       <ErrorSummary count={f.errorCount} serverError={f.serverError} />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 16, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(200px,100%),1fr))', gap: 16, marginBottom: 16 }}>
         <Field
           id={`${ID}-name`} label="Full name" error={f.errorFor('name')}
           value={f.values.name} onChange={(e) => f.setField('name', e.target.value)}
@@ -104,7 +104,7 @@ export default function QuoteForm() {
         </Field>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 16, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(160px,100%),1fr))', gap: 16, marginBottom: 16 }}>
         <Field
           id={`${ID}-from_currency`} label="Currency" as="select" error={f.errorFor('from_currency')}
           value={f.values.from_currency} onChange={(e) => f.setField('from_currency', e.target.value)}

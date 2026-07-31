@@ -4,7 +4,7 @@ from urllib.parse import quote
 
 from rest_framework import serializers
 
-from .models import Enquiry, Faq, FaqCategory, Lead, QuoteRequest, RateLock, SiteSetting, Testimonial
+from .models import CallbackRequest, Enquiry, Faq, FaqCategory, Lead, QuoteRequest, RateLock, SiteSetting, Testimonial
 from .validators import looks_like_spam, normalize_phone, validate_amount, validate_currency_code
 
 
@@ -142,6 +142,35 @@ class QuoteRequestCreateSerializer(BaseLeadSerializer):
 
     def validate_amount(self, value):
         return validate_amount(value)
+
+
+class CallbackRequestCreateSerializer(BaseLeadSerializer):
+    """Quick "get your best price" capture from the homepage converter widget.
+    Deliberately minimal — name and phone are all that's required. Email is
+    optional here, unlike every other lead form, because the whole point is
+    the lowest possible friction; from_currency/amount are carried along for
+    context but the customer never has to touch them directly."""
+
+    email = serializers.EmailField(required=False, allow_blank=True, default='')
+    kind = Lead.Kind.CALLBACK
+
+    class Meta(BaseLeadSerializer.Meta):
+        model = CallbackRequest
+        fields = BaseLeadSerializer.Meta.fields + ['from_currency', 'to_currency', 'amount']
+        extra_kwargs = {
+            'from_currency': {'required': False, 'allow_blank': True},
+            'to_currency': {'required': False, 'allow_blank': True},
+            'amount': {'required': False},
+        }
+
+    def validate_from_currency(self, value):
+        return validate_currency_code(value) if value else value
+
+    def validate_to_currency(self, value):
+        return validate_currency_code(value) if value else value
+
+    def validate_amount(self, value):
+        return validate_amount(value) if value is not None else value
 
 
 class RateLockCreateSerializer(BaseLeadSerializer):

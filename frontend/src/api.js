@@ -1,7 +1,10 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
-export async function fetchCurrencies() {
-  const res = await fetch(`${API_BASE}/rates/`);
+// rateType defaults to 'cash' — the rate used everywhere except the Forex
+// Card toggle on the rates table, so every existing caller keeps working
+// unchanged now that a currency code alone no longer identifies one row.
+export async function fetchCurrencies(rateType = 'cash') {
+  const res = await fetch(`${API_BASE}/rates/?rate_type=${rateType}`);
   if (!res.ok) throw new Error(`Failed to load rates (${res.status})`);
   return res.json();
 }
@@ -14,6 +17,18 @@ export async function fetchCurrencies() {
 export async function fetchSiteSettings() {
   const res = await fetch(`${API_BASE}/site-settings/`);
   if (!res.ok) throw new Error(`Failed to load site settings (${res.status})`);
+  return res.json();
+}
+
+/**
+ * {key: boolean} map of every feature flag, managed in Django admin under
+ * Feature flags. A key absent from the response (flag deleted, or the
+ * request failed) should be treated as enabled by the caller — see
+ * useFeatureFlag in context/FeatureFlagsContext.jsx, which fails open.
+ */
+export async function fetchFeatureFlags() {
+  const res = await fetch(`${API_BASE}/flags/`);
+  if (!res.ok) throw new Error(`Failed to load feature flags (${res.status})`);
   return res.json();
 }
 
@@ -56,20 +71,7 @@ async function postLead(path, payload) {
 export const submitEnquiry = (payload) => postLead('enquiries', payload);
 export const submitQuoteRequest = (payload) => postLead('quotes', payload);
 export const submitRateLock = (payload) => postLead('rate-locks', payload);
-
-/**
- * Registers this browser's FCM token for rate-alert push notifications.
- * Safe to call repeatedly with the same token — the backend upserts it.
- */
-export async function subscribeToNotifications(fcmToken) {
-  const res = await fetch(`${API_BASE}/notifications/subscribe/`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fcm_token: fcmToken, user_agent: navigator.userAgent }),
-  });
-  if (!res.ok) throw new Error(`Could not subscribe to rate alerts (${res.status})`);
-  return res.json();
-}
+export const submitCallbackRequest = (payload) => postLead('callbacks', payload);
 
 export async function fetchTestimonials() {
   const res = await fetch(`${API_BASE}/testimonials/`);

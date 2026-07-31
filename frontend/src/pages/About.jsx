@@ -29,7 +29,7 @@ export default function About() {
       </section>
 
       <section style={{ background: '#fff', padding: '88px 0' }}>
-        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 56, alignItems: 'start' }}>
+        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 56, alignItems: 'start' }}>
           <div style={{ background: `repeating-linear-gradient(135deg,${c.swatch} 0 10px,${c.swatch2} 10px 20px)`, border: `1px solid ${c.sandBorder4}`, borderRadius: 16, minHeight: 420, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ font: `400 11px/1.7 ${fonts.mono}`, letterSpacing: '.14em', color: c.swatchText, textAlign: 'center' }}>PHOTOGRAPHY<br />The counter at Challa Mall, T. Nagar</span>
           </div>
@@ -54,7 +54,7 @@ export default function About() {
               We undertake to buy and sell foreign currencies and en-cash travellers cheques as per RBI
               guidelines, offering an array of value added customer service at best competitive rates.
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 22, borderTop: `1px solid ${c.sandBorder}`, paddingTop: 26 }}>
+            <div className="fx-stack-480" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 22, borderTop: `1px solid ${c.sandBorder}`, paddingTop: 26 }}>
               <div>
                 <h3 style={{ fontSize: 15.5, fontWeight: 600, color: c.navy, margin: '0 0 8px' }}>Mission</h3>
                 <p style={{ fontSize: 14.5, lineHeight: 1.62, color: c.textMuted, margin: 0 }}>{COMPANY.mission}</p>
@@ -78,7 +78,7 @@ export default function About() {
             We are a solution provider for your foreign exchange needs on your upcoming travel. We will
             always commit and provide 100% satisfaction in terms of price and service.
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 24 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(260px,100%),1fr))', gap: 24 }}>
             {REASONS.map((r) => (
               <div key={r.n} style={{ borderTop: `2px solid ${c.navy}`, paddingTop: 20 }}>
                 <div style={{ fontFamily: fonts.mono, fontSize: 15, color: c.orange, marginBottom: 12 }}>{r.n}</div>
@@ -91,7 +91,7 @@ export default function About() {
       </section>
 
       <section style={{ background: '#fff', padding: '88px 0' }}>
-        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 56, alignItems: 'center' }}>
+        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 56, alignItems: 'center' }}>
           <div>
             <p style={{ font: `500 11.5px/1.4 ${fonts.mono}`, letterSpacing: '.18em', textTransform: 'uppercase', color: c.orange, margin: '0 0 14px' }}>Our team</p>
             <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: 'clamp(28px,3vw,42px)', lineHeight: 1.1, color: c.navy, margin: '0 0 20px' }}>
@@ -117,7 +117,7 @@ export default function About() {
       <section style={{ background: c.navy, padding: '80px 0' }}>
         <div style={wrap}>
           <p style={{ font: `500 11.5px/1.4 ${fonts.mono}`, letterSpacing: '.18em', textTransform: 'uppercase', color: c.accent, margin: '0 0 32px' }}>Compliance</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(260px,100%),1fr))', gap: 18 }}>
             {CERTS.map((cert) => (
               <div key={cert.title} style={{ border: '1px solid rgba(255,255,255,.14)', borderRadius: 12, padding: 24 }}>
                 <div style={{ fontSize: 15.5, fontWeight: 600, color: '#fff', marginBottom: 8 }}>{cert.title}</div>

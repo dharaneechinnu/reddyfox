@@ -123,7 +123,7 @@ export const SERVICES = [
 ];
 
 export const NAV = [
-  ['Home', '/'], ['Exchange rates', '/rates'], ['Converter', '/converter'], ['Services', '/services'],
+  ['Home', '/'], ['Exchange rates', '/rates'], ['Services', '/services'],
   ['About', '/about'], ['Contact', '/contact'],
 ];
 
@@ -177,7 +177,7 @@ export const FOOTER_COLS = [
     title: 'TOOLS',
     links: [
       ['Exchange rates', '/rates'],
-      ['Currency converter', '/converter'],
+      ['Lock a rate', '/lock-rate'],
       ['Student services', '/services/student-services'],
     ],
   },

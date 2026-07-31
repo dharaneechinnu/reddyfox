@@ -8,13 +8,19 @@ class Region(models.TextChoices):
     AMERICAS = 'Americas', 'Americas'
 
 
+class RateType(models.TextChoices):
+    CASH = 'cash', 'Cash (currency notes)'
+    FOREX_CARD = 'forex_card', 'Forex card'
+
+
 class Currency(models.Model):
-    code = models.CharField(max_length=3, unique=True, help_text='ISO currency code, e.g. USD')
+    code = models.CharField(max_length=3, help_text='ISO currency code, e.g. USD')
     name = models.CharField(max_length=60, help_text='Full name, e.g. US Dollar')
     country_code = models.CharField(max_length=2, help_text='ISO country code for the badge, e.g. US')
     region = models.CharField(max_length=20, choices=Region.choices, default=Region.ASIA_PACIFIC)
-    buy_rate = models.DecimalField(max_digits=10, decimal_places=4, help_text='We buy at this rate (INR)')
-    sell_rate = models.DecimalField(max_digits=10, decimal_places=4, help_text='We sell at this rate (INR)')
+    rate_type = models.CharField(max_length=20, choices=RateType.choices, default=RateType.CASH, help_text='Which counter product this row prices — cash or forex card. Each currency can have one row per type.')
+    buy_rate = models.DecimalField(max_digits=10, decimal_places=2, help_text='We buy at this rate (INR)')
+    sell_rate = models.DecimalField(max_digits=10, decimal_places=2, help_text='We sell at this rate (INR)')
     change_pct = models.DecimalField(max_digits=6, decimal_places=2, default=0, help_text='24h change, percent')
     is_popular = models.BooleanField(default=False, help_text='Show on the homepage board and ticker')
     is_visible = models.BooleanField(default=True, help_text='Show this currency anywhere in the UI (rate table, converter, homepage board). Untick to hide it without deleting it.')
@@ -24,6 +30,7 @@ class Currency(models.Model):
     class Meta:
         ordering = ['display_order', 'code']
         verbose_name_plural = 'currencies'
+        unique_together = [('code', 'rate_type')]
 
     def __str__(self):
-        return f'{self.code} — {self.name}'
+        return f'{self.code} — {self.name} ({self.get_rate_type_display()})'

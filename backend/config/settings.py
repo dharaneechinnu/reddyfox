@@ -46,7 +46,10 @@ INSTALLED_APPS = [
     # Project apps
     'rates',
     'content',
-    'notifications',
+    'feature_flags',
+    'fx_providers',
+    'reference_rates',
+    'telegram_alerts',
 
     # Third party
     'rest_framework',
@@ -209,9 +212,6 @@ REST_FRAMEWORK = {
         # enough that a genuine customer who asks for a quote, locks a rate and
         # then sends an enquiry is never blocked.
         'enquiry': config('ENQUIRY_THROTTLE_RATE', default='10/hour'),
-        # Push notification opt-in/opt-out: a browser only ever (re)subscribes
-        # a handful of times an hour, even across tab reloads.
-        'notification-subscribe': config('NOTIFICATION_SUBSCRIBE_THROTTLE_RATE', default='20/hour'),
     },
 }
 
@@ -249,21 +249,42 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER or 'no
 ENQUIRY_NOTIFY_EMAILS = config('ENQUIRY_NOTIFY_EMAILS', default='', cast=Csv())
 
 
-# Chrome browser push — rate alerts via Firebase Cloud Messaging (FCM)
-# https://firebase.google.com/docs/cloud-messaging
+# Reference rates — third-party mid-market rates, admin guidance only
+# https://docs.djangoproject.com/en/6.0/... (see docs/currency-rate-apis.md for the full picture)
 #
-# Leave FIREBASE_CREDENTIALS_JSON blank in development: subscribers and
-# delivery attempts are still recorded (as FAILED, "FCM is not configured"),
-# so the whole flow — admin tracking included — is testable with no
-# credentials. Set it to the absolute path of a Firebase service account key
-# file to send real pushes.
-FIREBASE_CREDENTIALS_JSON = config('FIREBASE_CREDENTIALS_JSON', default='')
+# Populated by `python manage.py fetch_reference_rates`, run on a schedule (a Render Cron Job in
+# production). Never written to Currency.buy_rate/sell_rate — see reference_rates/models.py.
 
-# A subscriber notified within this many minutes is skipped on the next
-# Normal-priority alert, so customers aren't spammed on every minor rate
-# tick. Urgent alerts always ignore this ("urgent is free").
-NOTIFICATION_RATE_LIMIT_MINUTES = config('NOTIFICATION_RATE_LIMIT_MINUTES', default=60, cast=int)
+# How far a staff-entered sell_rate can diverge from the market reference (percent) before the
+# admin flags it in red. A typo guard, not a validator — saving is never blocked.
+REFERENCE_RATE_DIVERGENCE_WARN_PCT = config('REFERENCE_RATE_DIVERGENCE_WARN_PCT', default=5.0, cast=float)
 
-# A currency's buy or sell rate moving by at least this many percent marks
-# the auto-generated alert Urgent instead of Normal.
-RATE_ALERT_URGENT_THRESHOLD_PCT = config('RATE_ALERT_URGENT_THRESHOLD_PCT', default=1.0, cast=float)
+# A reference rate older than this many hours is shown as stale in the admin rather than trusted
+# for the divergence check — a fetch outage must be visible, not silently treated as current.
+REFERENCE_RATE_STALE_AFTER_HOURS = config('REFERENCE_RATE_STALE_AFTER_HOURS', default=48, cast=int)
+
+# fx_providers.providers.fetch_exchangerateapi() — exchangerate-api.com. Blank in an environment
+# that hasn't been given a key yet — fetch_with_fallback() treats that as "skip straight to the
+# next provider," not an error. Never has a default other than '': this one is a real secret.
+EXCHANGERATE_API_KEY = config('EXCHANGERATE_API_KEY', default='')
+
+# telegram_alerts — new-lead alerts to admin-approved staff Telegram chats, alongside (never
+# instead of) the existing email alert in content/notifications.py. Get a token from @BotFather.
+# Blank skips the Telegram send entirely (logged, not raised) — see docs/telegram-bot.md.
+TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default='')
+
+# The bot's @username (no @, no leading https://t.me/) — needed to build the deep link a QR
+# invite encodes. Blank means TelegramInvite.deep_link returns None and the admin shows "set
+# TELEGRAM_BOT_USERNAME" instead of a broken QR code.
+TELEGRAM_BOT_USERNAME = config('TELEGRAM_BOT_USERNAME', default='')
+
+# How long an unscanned QR invite stays valid before it's treated as expired.
+TELEGRAM_INVITE_EXPIRY_HOURS = config('TELEGRAM_INVITE_EXPIRY_HOURS', default=24, cast=int)
+
+# Webhook security (see docs/telegram-bot.md "Production webhook" section): one secret, checked
+# two ways — it's both the unguessable URL path segment (telegram_alerts/urls.py) *and* the
+# value Telegram must echo back as the X-Telegram-Bot-Api-Secret-Token header on every real
+# webhook call (set via `set_telegram_webhook`'s secret_token parameter). A request has to get
+# both right. The default is an obvious placeholder, same pattern as SECRET_KEY above: a
+# production deploy that forgot to set it is caught in review, not silently insecure.
+TELEGRAM_WEBHOOK_SECRET = config('TELEGRAM_WEBHOOK_SECRET', default='changeme-set-a-real-webhook-secret')
