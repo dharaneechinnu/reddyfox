@@ -1,0 +1,88 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label='reference_rates' %}">{{ opts.app_config.verbose_name }}</a>
+  &rsaquo; {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <p>
+    One margin, applied to every currency alike. Turn auto-update on, set the two margins below,
+    then <strong>Save &amp; fetch now</strong> to pull the real market rate from the API and
+    calculate each currency's buy/sell rate as <code>market rate + margin</code> — the result shows
+    in the table below, on this same page. With auto-update off, fetching only refreshes the
+    "Market ref" column on the
+    <a href="{% url 'admin:rates_currency_changelist' %}">Currency list</a>; buy/sell stay exactly
+    as hand-entered.
+  </p>
+
+  <form method="post">
+    {% csrf_token %}
+    <fieldset class="module aligned">
+      <div class="form-row">
+        <div>{{ form.auto_update_enabled.label_tag }} {{ form.auto_update_enabled }}</div>
+        <div class="help">{{ form.auto_update_enabled.help_text }}</div>
+      </div>
+      <div class="form-row">
+        <div>{{ form.buy_margin.label_tag }} {{ form.buy_margin }}</div>
+        <div class="help">{{ form.buy_margin.help_text }}</div>
+      </div>
+      <div class="form-row">
+        <div>{{ form.sell_margin.label_tag }} {{ form.sell_margin }}</div>
+        <div class="help">{{ form.sell_margin.help_text }}</div>
+      </div>
+    </fieldset>
+
+    <div class="submit-row">
+      <input type="submit" value="{% translate 'Save & fetch now' %}" class="default">
+    </div>
+  </form>
+
+  <h2>
+    {% if settings_obj.auto_update_enabled %}
+      {% translate "Last fetch — calculated from market rate + margin" %}
+    {% else %}
+      {% translate "Last fetch — market reference only (auto-update is off)" %}
+    {% endif %}
+  </h2>
+  <div class="module" style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>{% translate "Currency" %}</th>
+          <th>{% translate "Market rate (API)" %}</th>
+          <th>{% translate "Buy rate" %}</th>
+          <th>{% translate "Sell rate" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <td>
+            <strong>{{ row.currency.code }}</strong> — {{ row.currency.name }}
+            <div style="color:var(--body-quiet-color); font-size: 12px">{{ row.currency.get_rate_type_display }}</div>
+          </td>
+          <td>
+            {% if row.reference %}
+              {{ row.reference.inr_rate|floatformat:2 }}
+              <div style="color:var(--body-quiet-color); font-size: 12px">
+                {{ row.reference.source }} · {{ row.reference.fetched_at|timesince }} ago
+              </div>
+            {% else %}
+              <span style="color:var(--body-quiet-color)">{% translate "no reference yet — click Save & fetch now" %}</span>
+            {% endif %}
+          </td>
+          <td>{{ row.currency.buy_rate }}</td>
+          <td>{{ row.currency.sell_rate }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

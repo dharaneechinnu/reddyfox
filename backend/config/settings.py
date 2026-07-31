@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'content',
     'notifications',
     'feature_flags',
+    'reference_rates',
 
     # Third party
     'rest_framework',
@@ -268,3 +269,18 @@ NOTIFICATION_RATE_LIMIT_MINUTES = config('NOTIFICATION_RATE_LIMIT_MINUTES', defa
 # A currency's buy or sell rate moving by at least this many percent marks
 # the auto-generated alert Urgent instead of Normal.
 RATE_ALERT_URGENT_THRESHOLD_PCT = config('RATE_ALERT_URGENT_THRESHOLD_PCT', default=1.0, cast=float)
+
+
+# Reference rates — third-party mid-market rates, admin guidance only
+# https://docs.djangoproject.com/en/6.0/... (see docs/currency-rate-apis.md for the full picture)
+#
+# Populated by `python manage.py fetch_reference_rates`, run on a schedule (a Render Cron Job in
+# production). Never written to Currency.buy_rate/sell_rate — see reference_rates/models.py.
+
+# How far a staff-entered sell_rate can diverge from the market reference (percent) before the
+# admin flags it in red. A typo guard, not a validator — saving is never blocked.
+REFERENCE_RATE_DIVERGENCE_WARN_PCT = config('REFERENCE_RATE_DIVERGENCE_WARN_PCT', default=5.0, cast=float)
+
+# A reference rate older than this many hours is shown as stale in the admin rather than trusted
+# for the divergence check — a fetch outage must be visible, not silently treated as current.
+REFERENCE_RATE_STALE_AFTER_HOURS = config('REFERENCE_RATE_STALE_AFTER_HOURS', default=48, cast=int)
