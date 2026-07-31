@@ -296,3 +296,21 @@ EXCHANGERATE_API_KEY = config('EXCHANGERATE_API_KEY', default='')
 # instead of) the existing email alert in content/notifications.py. Get a token from @BotFather.
 # Blank skips the Telegram send entirely (logged, not raised) — see docs/telegram-bot.md.
 TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default='')
+
+# The bot's @username (no @, no leading https://t.me/) — needed to build the deep link a QR
+# invite encodes. Blank means TelegramInvite.deep_link returns None and the admin shows "set
+# TELEGRAM_BOT_USERNAME" instead of a broken QR code.
+TELEGRAM_BOT_USERNAME = config('TELEGRAM_BOT_USERNAME', default='')
+
+# How long an unscanned QR invite stays valid before it's treated as expired.
+TELEGRAM_INVITE_EXPIRY_HOURS = config('TELEGRAM_INVITE_EXPIRY_HOURS', default=24, cast=int)
+
+# Webhook security (see docs/telegram-bot.md "Production webhook" section):
+#   - TELEGRAM_WEBHOOK_PATH_SECRET is an unguessable URL path segment (defense in depth).
+#   - TELEGRAM_WEBHOOK_SECRET is the value Telegram echoes back as the
+#     X-Telegram-Bot-Api-Secret-Token header on every real webhook call — the actual proof a
+#     request came from Telegram, checked on every call in telegram_alerts/views.py.
+# Both defaults are obvious placeholders, same pattern as SECRET_KEY above: a production
+# deploy that forgot to set them is caught in review, not silently insecure.
+TELEGRAM_WEBHOOK_PATH_SECRET = config('TELEGRAM_WEBHOOK_PATH_SECRET', default='changeme-set-a-real-path-secret')
+TELEGRAM_WEBHOOK_SECRET = config('TELEGRAM_WEBHOOK_SECRET', default='changeme-set-a-real-webhook-secret')
