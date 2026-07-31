@@ -4,7 +4,6 @@ import { NAV, SERVICES, FOOTER_COLS } from '../data';
 import { COMPANY, CONTACT, PRIMARY_PHONE, SOCIALS } from '../company';
 import { c, fonts, wrap } from '../tokens';
 import { useFeatureFlag } from '../context/FeatureFlagsContext';
-import NotificationOptIn from './NotificationOptIn';
 import SocialIcon from './SocialIcon';
 import WhatsAppButton from './WhatsAppButton';
 import MobileBottomNav from './MobileBottomNav';
@@ -208,7 +207,6 @@ export default function Layout() {
       <Outlet />
       <Footer />
       <div className="fx-floating-actions" style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 70, display: 'flex', gap: 10, alignItems: 'center' }}>
-        <NotificationOptIn />
         <WhatsAppButton />
       </div>
       <MobileBottomNav />
