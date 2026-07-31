@@ -10,6 +10,9 @@ Add new docs to this folder and link them below.
   new lead, why minutes matter commercially, what's built today, and a costed
   comparison of the remaining options. **Start here** for anything about
   notifications.
+- [Telegram staff alerts](./telegram-bot.md) — setup (bot creation, staff
+  onboarding), the admin-approval model, message format, and failure handling
+  for the Telegram channel added alongside the email alert.
 - [Product reference](./product-reference.md) — researched, dated reference
   points from comparable real-world businesses (competitors, industry
   findings, channel costs), plus ideas consciously parked and why. Research

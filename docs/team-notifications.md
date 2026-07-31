@@ -37,6 +37,7 @@ inbox for two hours is, commercially, a lost lead.
 | Lead inbox with one-tap call / WhatsApp reply links | `content/admin.py` (`BaseLeadAdmin.reply_links`) | **Live on `main`** |
 | Red "untouched and older than an hour" timestamp | `content/admin.py` (`BaseLeadAdmin.received`) | **Live on `main`** |
 | Rate-lock expiry countdown in the admin list | `Lead.expires_in` | **Live on `main`** |
+| Telegram alert to admin-approved staff, per-send delivery log | `telegram_alerts/` app — see `docs/telegram-bot.md` | **Built** |
 | Chrome push to staff browsers, per-send delivery log | `team_alerts/` app | **PR #16, not yet merged** |
 
 Two rules the existing code already follows, and any new channel must follow too:
@@ -53,21 +54,23 @@ Two rules the existing code already follows, and any new channel must follow too
 Costs are India, mid-2026. "Volume" assumes a single shop doing tens of leads a day, not
 thousands — that assumption is what makes the ranking come out the way it does.
 
-### 1. Telegram group bot — *recommended next step*
+### 1. Telegram bot — *built*
 
-A bot posts every new lead into a staff Telegram group. Whoever is free claims it.
+Originally scoped here as a group chat everyone shares; built instead as **per-staff DMs, gated
+by admin approval** rather than an open group, so access can be granted or revoked per person.
+Full setup and design in **`docs/telegram-bot.md`**.
 
 - **Cost:** free, with no per-message charge and no documented rate ceiling for this volume.
 - **Setup:** talk to `@BotFather`, get a token, `POST` to `sendMessage`. No business
   verification, no approval queue, no vendor contract.
-- **Why it fits here:** the team already carries phones; a group chat matches how a small
-  shop actually coordinates ("I'll take this one"). It degrades gracefully — if the bot
-  breaks, the email still arrives.
+- **Why it fits here:** the team already carries phones; an instant DM matches how a small
+  shop actually coordinates. It degrades gracefully — if the bot breaks, the email still arrives.
 - **Watch out for:** it is a *consumer* messenger holding customer names and phone numbers.
-  Use a private group, keep membership to actual staff, and treat it as covered by the same
-  retention thinking as any other copy of customer PII.
-- **Rough shape:** a `notify_team_telegram(lead)` alongside `notify_team()`, same
-  never-raises discipline, bot token and chat ID from `.env`.
+  Kept to admin-approved staff accounts only (see `telegram_alerts.TelegramSubscriber`), and
+  treated as covered by the same retention thinking as any other copy of customer PII.
+- **Shape actually built:** `telegram_alerts.services.notify_team_telegram(lead)` alongside
+  `notify_team()` in `content/views.py`, same never-raises discipline, bot token from `.env`,
+  per-subscriber delivery log in `TelegramDelivery`.
 
 ### 2. Chrome push to staff (built, needs switching on)
 
@@ -114,7 +117,7 @@ For a single-counter shop in Chennai, Telegram or WhatsApp is where people actua
 ## Suggested order
 
 1. Switch on Firebase so the **already-built** push actually delivers (issue #11).
-2. Add the **Telegram bot** as the everyday alert.
+2. ~~Add the **Telegram bot** as the everyday alert.~~ **Done** — see `docs/telegram-bot.md`.
 3. Add **sound + auto-refresh** on the counter screen if one is permanently open.
 4. Revisit **WhatsApp** only for customer-facing messaging, with a compliance review.
 
