@@ -3,12 +3,37 @@
 Researched **July 2026**. Prices, limits and currency coverage change — re-verify before acting on
 anything here.
 
-> **How solid is this?** Everything below comes from vendor documentation, project READMEs and
-> search results. It was **not** possible to call these endpoints from the environment this
-> research was done in — outbound requests to them are blocked by network policy (HTTP 403 at the
-> proxy). So treat the shapes and claims as *documented*, not *verified*. Run
-> `backend/scripts/check_rate_apis.py` (added alongside this doc) from a machine with normal
-> internet to confirm each one before you rely on it.
+> **How solid is this?** The section below was written from vendor documentation with no outbound
+> access to verify it. It has since been **verified live** — see "Verified findings" — which
+> changed the recommendation. Read that section first; the rest is kept for the reasoning.
+
+---
+
+## Verified findings (`backend/scripts/check_rate_apis.py`, run 2026-07-31)
+
+Running the script settled both open questions from the original research:
+
+| | Frankfurter | fawazahmed0/exchange-api | open.er-api.com |
+|---|---|---|---|
+| Currencies returned | **29** (confirms the smaller figure) | 339 | 166 |
+| Covers our board (16 currencies) | **No — missing AED, SAR, QAR** | Yes, all 16 | Yes, all 16 |
+| 1 USD = ? INR (same day) | 95.69 | 95.65 | 95.69 |
+
+**This changes the recommendation.** Frankfurter's ECB-only dataset does not include the Gulf
+currencies (AED, SAR, QAR) that are a real part of this board — self-hostability doesn't help if a
+third of the board falls back to no reference at all. For the actual use case here (a typo guard
+and a suggested value on *every* currency the desk prices), coverage matters more than
+self-hosting.
+
+**Revised recommendation: `fawazahmed0/exchange-api`, primary.** Free, no key, covers the whole
+board, and one request (`GET .../v1/currencies/inr.json`) returns every rate needed in a single
+call — the app inverts `INR→currency` to get the `currency→INR` figure the board is priced in.
+Not self-hostable, so the implementation below treats a fetch failure as expected/routine (log and
+keep the last known value) rather than something to alert on.
+
+Frankfurter is kept in the code as a secondary/cross-check provider for the ~13 currencies it does
+cover, since a second independent source is a stronger typo guard than one — but it is not the
+primary, and nothing here waits on it.
 
 ---
 
@@ -176,25 +201,29 @@ Worth knowing about as the ultimate fallback: if every wrapper disappears, this 
 
 ---
 
-## If we build this: the recommended shape
+## Built: `reference_rates` app
 
-Deliberately conservative, and consistent with how this codebase already works.
+This shape is implemented, in a dedicated `reference_rates` Django app — deliberately conservative,
+and consistent with how this codebase already works:
 
 1. **A management command, run on a schedule** — `python manage.py fetch_reference_rates`. Not a
-   call during page render. Render Cron or a simple daily job.
-2. **Store into a new `ReferenceRate` model**, *separate from* `Currency`. Never write to
-   `Currency.buy_rate` / `sell_rate` — those stay staff-owned. This separation is the whole
-   safeguard.
-3. **Surface it in the admin as guidance**: next to each currency, "market ref: 83.42 (2h ago)".
-4. **Warn, don't block, on divergence.** If a staff-entered rate is more than N% from the reference,
-   show a warning on save. Blocking would be wrong — there are legitimate reasons for a wide spread,
-   and the desk must stay in charge of its own pricing.
-5. **Fail silently and visibly.** If the fetch fails, the board keeps working on the last
-   staff-entered rates, and the admin shows the reference as stale. Same discipline as the
-   notification code: an external dependency must never be able to take the site down.
+   call during page render. See `docs/team-notifications.md`-style deployment notes below for the
+   Render Cron Job.
+2. **Stores into `ReferenceRate`**, its own model in its own app — *separate from* `rates.Currency`.
+   Nothing ever writes to `Currency.buy_rate` / `sell_rate`; those stay staff-owned. This separation
+   is the whole safeguard.
+3. **Surfaced in the admin as guidance**: a read-only "Market ref" column on `CurrencyAdmin` shows
+   the latest reference rate, its age, and % divergence from our sell rate.
+4. **Warns, never blocks, on divergence.** Divergence beyond `REFERENCE_RATE_DIVERGENCE_WARN_PCT`
+   (default 5%) renders in red in the admin list. Saving is never prevented — there are legitimate
+   reasons for a wide spread, and the desk stays in charge of its own pricing.
+5. **Fails silently and visibly.** A fetch failure is logged and the command exits non-zero (so a
+   cron dashboard can flag it); the board keeps working off the last staff-entered rates, and the
+   admin column shows the reference as stale by its age. Same discipline as the notification apps:
+   an external dependency must never be able to take the site, or a save, down.
 
-Rough size: one model, one management command, one migration, an admin readonly field, and the
-divergence check. Comparable to the priority-ordering work.
+See `backend/reference_rates/` and its app-level notes for the provider/fallback details and the
+production cron setup.
 
 ---
 
@@ -209,6 +238,35 @@ python backend/scripts/check_rate_apis.py
 
 It settles the Frankfurter currency-count discrepancy and tells you whether AED, SAR, QAR and HKD
 are available before any of this gets built.
+
+---
+
+## Running it in production: Render Cron Job
+
+`fetch_reference_rates` is a management command, not a web process — it has no route and nothing
+calls it during a request. On Render, wire it up as a **Cron Job**, a separate service type from
+the web service:
+
+1. Render dashboard → New → Cron Job, pointed at the same repo/branch as the web service.
+2. **Build command:** `pip install -r backend/requirements.txt`
+3. **Command:** `cd backend && python manage.py fetch_reference_rates`
+4. **Schedule:** once a day is enough — every source here refreshes daily, so anything tighter
+   just spends the free instance's minutes for no new data. `0 3 * * *` (03:00 UTC = 08:30 IST,
+   before the desk opens) is a reasonable default.
+5. **Environment:** same `DATABASE_URL` as the web service (same Postgres instance) — the cron job
+   needs to write to `ReferenceRate` in the same database the admin reads from. It does not need
+   `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, or any of the web-only settings.
+
+A missed or failed run is never an outage: the admin's "Market ref" column shows the age of the
+last successful fetch and marks it stale past `REFERENCE_RATE_STALE_AFTER_HOURS`, and the rate
+board itself never reads this table at all. Render's own Cron Job run history is the place to
+notice a run is failing repeatedly (the command exits 1 when both providers are down).
+
+Locally / in any environment without a scheduler, running the command by hand is exactly the same:
+
+```bash
+python manage.py fetch_reference_rates
+```
 
 ---
 

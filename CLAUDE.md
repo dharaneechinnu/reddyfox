@@ -23,6 +23,7 @@ python manage.py migrate
 python manage.py seed_rates          # sample currency board
 python manage.py seed_content        # real testimonials + FAQs (--replace wipes existing rows first)
 python manage.py setup_teams         # creates/syncs the staff permission groups (see Architecture)
+python manage.py fetch_reference_rates  # optional: pull market FX rates for the admin's typo guard
 python manage.py createsuperuser
 python manage.py runserver 0.0.0.0:8000   # 0.0.0.0 so a phone on the same WiFi can reach it
 ```
@@ -75,11 +76,13 @@ There is no frontend test runner configured (no Jest/Vitest) — `npm run lint` 
               React SPA (fetches on mount, no caching layer)
 ```
 
-### Backend: three Django apps
+### Backend: Django apps
 
 - **`rates`** — `Currency` model: buy/sell rate, 24h change, region, `is_popular`, `is_visible`, `display_order`. Read-only `CurrencyViewSet` at `/api/rates/`.
 - **`content`** — testimonials, FAQs, and the lead-capture system (see below). Also `SiteSetting`, a singleton row (`pk=1` enforced in `save()`) holding the customer-facing WhatsApp option and per-lead-type notification email overrides.
 - **`notifications`** — Chrome push alerts to *customers* about currency rate changes, via Firebase Cloud Messaging. Independent of `content`'s email alerts.
+- **`feature_flags`** — gates for rolling out site sections (e.g. the rates page/live board) without a deploy.
+- **`reference_rates`** — third-party mid-market FX rates for **admin guidance only**, never published. `ReferenceRate` is populated by `python manage.py fetch_reference_rates` (scheduled — a Render Cron Job in production, see `docs/currency-rate-apis.md`), never during a request, and never writes to `rates.Currency.buy_rate`/`sell_rate`. Surfaces as a read-only "Market ref" column on `CurrencyAdmin` — a typo guard for staff entering rates by hand, colored red past `REFERENCE_RATE_DIVERGENCE_WARN_PCT`. It never blocks a save: the counter rate, margin included, is always the desk's call. Primary source is `fawazahmed0/exchange-api` (free, no key, covers every currency on our board); Frankfurter is a secondary cross-check for the subset it covers — its ECB-only dataset misses AED/SAR/QAR, which ruled it out as primary despite being self-hostable. Read `docs/currency-rate-apis.md` before touching this app.
 
 ### Who leads are *for* — the thing to keep in mind
 
