@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'feature_flags',
     'fx_providers',
     'reference_rates',
+    'alert_routing',
     'telegram_alerts',
 
     # Third party

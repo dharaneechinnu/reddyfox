@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from django.test import TestCase, override_settings
 
-from content.models import CallbackRequest, QuoteRequest
+from content.models import CallbackRequest, Enquiry, QuoteRequest
 
 from .models import TelegramDelivery, TelegramSubscriber
 from .services import format_message, notify_team_telegram
@@ -13,6 +13,12 @@ def _callback(**kw):
     d = dict(name='Deborah Beck', phone='9876543210', from_currency='USD', to_currency='INR', amount='500')
     d.update(kw)
     return CallbackRequest.objects.create(**d)
+
+
+def _enquiry(**kw):
+    d = dict(name='Deborah Beck', phone='9876543210', email='d@example.com', message='Need USD')
+    d.update(kw)
+    return Enquiry.objects.create(**d)
 
 
 def _quote(**kw):
@@ -85,6 +91,15 @@ class NotifyTeamTelegramTests(TestCase):
             result = notify_team_telegram(lead)
         send.assert_not_called()
         self.assertEqual(result, 0)
+
+    def test_enquiry_kind_is_skipped_by_the_alert_routing_rule(self):
+        _subscriber()
+        lead = _enquiry()
+        with patch('telegram_alerts.services._send_one') as send:
+            result = notify_team_telegram(lead)
+        send.assert_not_called()
+        self.assertEqual(result, 0)
+        self.assertEqual(TelegramDelivery.objects.count(), 0)
 
     def test_only_active_subscribers_are_targeted(self):
         active = _subscriber(name='Active', chat_id='111')
