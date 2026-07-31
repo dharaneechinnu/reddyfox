@@ -145,10 +145,7 @@ With `FIREBASE_CREDENTIALS_JSON` unset (the default), subscribers still register
 
 ### `docs/`
 
-Project documentation beyond this file lives in `docs/` at the repo root (not scattered into `frontend/`/`backend/` READMEs) — see `docs/README.md` for the index. Two are worth reading before starting related work:
-
-- **`team-notifications.md`** — how the desk hears about a lead, why response time is the metric that matters commercially, and a costed comparison of the channels not yet built. Read before adding any notification channel.
-- **`product-reference.md`** — dated research on comparable businesses (competitors, industry findings, messaging costs) and a record of ideas consciously parked with the reason. Read before proposing a feature; it may already have been considered and deferred. It is **research only** — never a source of claims to publish, which still must trace to `company.js`/`data.js`.
+Project documentation beyond this file lives in `docs/` at the repo root (not scattered into `frontend/`/`backend/` READMEs) — see `docs/README.md` for the index. This includes `docs/blog-content-strategy.md`, a content-planning reference for a future blog/free-resources section (educational forex/RBI-regulation topics, glossary, traveller guides) — read its guardrails section before drafting any blog copy from it, since the same "never invent a fact" rule applies there too.
 
 ### Config and deployment
 
