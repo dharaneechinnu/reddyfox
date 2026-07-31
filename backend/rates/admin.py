@@ -47,13 +47,9 @@ class CurrencyAdmin(admin.ModelAdmin):
         return custom + super().get_urls()
 
     def reference_rates_view(self, request):
-        """A settings-only screen: the one global margin config (same for every currency) and a
-        "Save & fetch now" button — nothing else on it.
-
-        The result of a fetch is *not* shown here — it's on the Currency list itself (buy_rate,
-        sell_rate, and the "Market ref" column), which is where saving redirects back to. Keeping
-        this screen to just the inputs is deliberate: configuring margins and reviewing rates are
-        two different jobs, so they get two different screens.
+        """One screen: the global margin config, a "Save & fetch now" button, and — right below
+        it, on the same page — the result of the fetch: real market rate per currency, and the
+        buy/sell rate calculated from it using the saved margins.
         """
         if not request.user.has_perm('rates.change_currency'):
             self.message_user(request, "You don't have permission to change currencies.", level=messages.ERROR)
@@ -67,21 +63,32 @@ class CurrencyAdmin(admin.ModelAdmin):
                 form.save()
                 summary = refresh_reference_rates()
                 if summary['ok']:
-                    text = f'Saved settings. Fetched {summary["fetched"]} reference rates, applied to {summary["applied"]} currencies.'
+                    text = f'Fetched {summary["fetched"]} reference rates, applied to {summary["applied"]} currencies.'
                     if summary['missing']:
                         text += f' No reference available for: {", ".join(summary["missing"])}.'
                     self.message_user(request, text, level=messages.SUCCESS if not summary['missing'] else messages.WARNING)
                 else:
                     self.message_user(request, 'Settings saved, but all reference-rate providers failed — rates were not updated.', level=messages.ERROR)
-                return redirect('admin:rates_currency_changelist')
+                # Redirect to self (not the changelist) — same screen shows the calculated result
+                # right below the form, so there's nowhere else to send them.
+                return redirect('admin:rates_currency_reference_rates')
         else:
             form = ReferenceRateSettingsForm(instance=settings_obj)
 
+        reference_rates = {rr.code: rr for rr in ReferenceRate.objects.all()}
+        currencies = Currency.objects.order_by('display_order', 'code')
+        rows = [
+            {'currency': currency, 'reference': reference_rates.get(currency.code)}
+            for currency in currencies
+        ]
+
         context = {
             **self.admin_site.each_context(request),
-            'title': 'Reference rate settings',
+            'title': 'Reference rates & margins',
             'opts': self.model._meta,
             'form': form,
+            'rows': rows,
+            'settings_obj': settings_obj,
         }
         return TemplateResponse(request, 'admin/rates/currency/reference_rates.html', context)
 

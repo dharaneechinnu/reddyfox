@@ -230,23 +230,28 @@ class CurrencyChangelistRendersTests(TestCase):
     'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
 })
 class ReferenceRatesPageTests(TestCase):
-    """The dedicated settings page: GET renders it, POST saves the one global config and fetches,
-    and it's gated behind the same permission as editing a Currency."""
+    """The one settings-and-results page: GET renders the form plus the last-fetch table, POST
+    saves the global config, fetches, and redirects back to itself so the calculated result shows
+    on the same page. Gated behind the same permission as editing a Currency."""
 
     def setUp(self):
         User = get_user_model()
         self.superuser = User.objects.create_superuser('admin', 'admin@example.com', 'password123')
         self.client = Client()
 
-    def test_get_renders_settings_form(self):
+    def test_get_renders_settings_form_and_currency_table(self):
+        _currency('USD')
+        _currency('EUR')
         self.client.login(username='admin', password='password123')
         response = self.client.get('/admin/rates/currency/reference-rates/')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'auto_update_enabled')
         self.assertContains(response, 'buy_margin')
         self.assertContains(response, 'sell_margin')
+        self.assertContains(response, 'USD')
+        self.assertContains(response, 'EUR')
 
-    def test_post_saves_global_settings_and_fetches(self):
+    def test_post_saves_settings_fetches_and_shows_result_on_same_page(self):
         usd = _currency('USD', sell_rate='1.00', buy_rate='1.00')
         eur = _currency('EUR', sell_rate='1.00', buy_rate='1.00')
         self.client.login(username='admin', password='password123')
@@ -259,9 +264,11 @@ class ReferenceRatesPageTests(TestCase):
         with _patch_providers({'USD': (90.0, 'fawazahmed0'), 'EUR': (97.0, 'fawazahmed0')}):
             response = self.client.post('/admin/rates/currency/reference-rates/', data, follow=True)
 
-        # Saving sends staff to the Currency list to see the result — settings and results are
-        # deliberately two different screens.
-        self.assertRedirects(response, '/admin/rates/currency/')
+        # Redirects to itself (POST-redirect-GET), not the changelist — the calculated result is
+        # shown right on this page.
+        self.assertRedirects(response, '/admin/rates/currency/reference-rates/')
+        self.assertContains(response, '92.00')  # USD sell: 90 market + 2 margin
+        self.assertContains(response, '88.00')  # USD buy: 90 market - 2 margin
         settings_obj = ReferenceRateSettings.load()
         self.assertTrue(settings_obj.auto_update_enabled)
         self.assertEqual(settings_obj.buy_margin, Decimal('-2.00'))

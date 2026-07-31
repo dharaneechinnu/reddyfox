@@ -229,11 +229,12 @@ Implemented in a dedicated `reference_rates` Django app:
    - **Manual, quick**: a "Fetch reference rates now" action in the Currency admin's action
      dropdown — fetches with whatever margin is already saved, no screen change.
    - **Manual, with margin changes**: the **"Reference rates & margins" button** on the Currency
-     changelist (`/admin/rates/currency/`) opens a dedicated **settings-only** screen
-     (`/admin/rates/currency/reference-rates/`) — just the auto-update toggle and the two margin
-     fields, nothing else. Submitting it saves the settings, fetches, and redirects back to the
-     Currency list to see the result. Configuring margins and reviewing rates are two different
-     screens on purpose.
+     changelist (`/admin/rates/currency/`) opens a dedicated screen
+     (`/admin/rates/currency/reference-rates/`) with the auto-update toggle and the two margin
+     fields. Submitting it saves the settings, fetches the real market rate, and — on that same
+     page — shows a table of the result: each currency's fetched market rate next to the buy/sell
+     rate calculated from it (`market rate + margin`). One screen for the whole loop: configure,
+     fetch, see the result.
 4. **Auto-apply is opt-in and staff-configured, globally.** `ReferenceRateSettings.auto_update_enabled`
    defaults to **off** — until a staff member switches it on, `buy_rate`/`sell_rate` stay exactly as
    hand-entered, unaffected by this app entirely. Once on, every fetch (any of the three triggers)
