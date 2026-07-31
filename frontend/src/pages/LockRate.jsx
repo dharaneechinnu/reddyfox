@@ -35,7 +35,7 @@ export default function LockRate() {
       </section>
 
       <section style={{ background: c.sand, padding: '64px 0 96px' }}>
-        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 24, alignItems: 'start' }}>
+        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 24, alignItems: 'start' }}>
           <RateLockForm />
 
           <div style={{ background: c.navy, borderRadius: 16, padding: 32, color: '#fff' }}>

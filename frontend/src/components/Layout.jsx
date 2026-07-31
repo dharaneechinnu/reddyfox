@@ -57,7 +57,7 @@ function MegaMenu({ open, onClose }) {
       <div style={{ ...wrap, padding: '34px 32px 38px', display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 44 }}>
         <div>
           <p style={{ font: `500 11px/1.4 ${fonts.mono}`, letterSpacing: '.18em', textTransform: 'uppercase', color: c.orange, margin: '0 0 20px' }}>Our services</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 6 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(240px,100%),1fr))', gap: 6 }}>
             {SERVICES.map((s) => (
               <div
                 key={s.id}
@@ -134,7 +134,7 @@ function Footer() {
   return (
     <footer style={{ background: c.navyDeep, color: c.navyMuted2, padding: '76px 0 0' }}>
       <div style={wrap}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 44, paddingBottom: 52, borderBottom: '1px solid rgba(255,255,255,.1)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(200px,100%),1fr))', gap: 44, paddingBottom: 52, borderBottom: '1px solid rgba(255,255,255,.1)' }}>
           <div style={{ gridColumn: 'span 1', minWidth: 220 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 18 }}>
               <span style={{ width: 26, height: 26, background: c.orange, transform: 'rotate(45deg)', borderRadius: 5, display: 'block' }} />

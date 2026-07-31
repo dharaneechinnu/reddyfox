@@ -5,7 +5,7 @@ const fieldInput = { width: '100%', border: `1px solid ${c.softLine}`, borderRad
 
 export default function Login() {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(360px,1fr))', minHeight: 720 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(360px,100%),1fr))', minHeight: 720 }}>
       <Seo title="Client Portal Sign In" path="/login" noindex />
       <div style={{ background: c.navy, padding: 'clamp(40px,8vw,80px) clamp(24px,6vw,56px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px)', backgroundSize: '64px 64px' }} />

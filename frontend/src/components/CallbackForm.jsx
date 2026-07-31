@@ -54,7 +54,7 @@ export default function CallbackForm() {
       <Honeypot id={`${ID}-enquiry_ref`} value={f.values.enquiry_ref} onChange={(e) => f.setField('enquiry_ref', e.target.value)} />
       <ErrorSummary count={f.errorCount} serverError={f.serverError} />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12, marginBottom: 4 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(160px,100%),1fr))', gap: 12, marginBottom: 4 }}>
         <Field
           id={`${ID}-name`} label="Full name" error={f.errorFor('name')}
           value={f.values.name} onChange={(e) => f.setField('name', e.target.value)}
