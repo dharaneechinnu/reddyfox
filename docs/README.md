@@ -32,3 +32,8 @@ Add new docs to this folder and link them below.
   educational content pillars (regulatory guides, glossary, traveller
   guides), free-resource formats worth building, and the guardrails for
   writing any of it without drifting into unverifiable claims.
+- [SEO plan — phase tracker](./seo/README.md) — the trackable, phased backlog
+  for turning `seo-and-ai-discoverability.md`'s current state into better
+  ranking and AI citation: crawlability/rendering fix first, then structured
+  data, on-page audit, technical baseline, local SEO, AEO content shaping,
+  and analytics. **Start here** for "what's the next SEO task."
