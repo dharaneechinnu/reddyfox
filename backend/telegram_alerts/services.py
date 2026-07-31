@@ -17,6 +17,8 @@ from decimal import Decimal
 
 from django.conf import settings
 
+from content.models import Lead
+
 from .models import TelegramDelivery, TelegramSubscriber
 
 logger = logging.getLogger(__name__)
@@ -44,6 +46,15 @@ def format_message(lead):
         f'Name : {lead.name}',
         f'Phone: +91 {lead.phone}',
     ]
+    if lead.kind == Lead.Kind.QUOTE:
+        # Mirrors content/notifications.py's "What to price" block — a quote request's
+        # currency/amount is already covered by the "Converting:" line below, but the service
+        # and deadline aren't shown anywhere else in this shorter message.
+        lines += [
+            '',
+            f'Service  : {lead.service or "(not specified)"}',
+            f'Needed by: {lead.needed_by or "(not specified)"}',
+        ]
     if lead.from_currency or lead.to_currency or lead.amount:
         pair = f'{lead.from_currency or "?"} → {lead.to_currency or "?"}'
         lines += ['', f'Converting: {_fmt(lead.amount)} {pair}']
