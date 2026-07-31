@@ -9,8 +9,6 @@ from django.utils import timezone
 from .admin import TelegramInviteAdmin
 from .models import TelegramInvite, TelegramSubscriber
 
-WEBHOOK_URL = f'/api/telegram/webhook/{__import__("django.conf", fromlist=["settings"]).settings.TELEGRAM_WEBHOOK_PATH_SECRET}/'
-
 
 def _headers(secret='changeme-set-a-real-webhook-secret'):
     return {'HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN': secret}
@@ -128,7 +126,7 @@ class TelegramWebhookTests(TestCase):
 
     def test_non_start_message_is_ignored(self):
         body = json.dumps({'message': {'text': 'hello', 'chat': {'id': 1}, 'from': {'id': 1}}}).encode()
-        with patch('telegram_alerts.views._send_one') as send:
+        with patch('telegram_alerts.updates._send_one') as send:
             response = self.client.post(self.url, data=body, content_type='application/json', **_headers())
         self.assertEqual(response.status_code, 200)
         send.assert_not_called()
@@ -136,7 +134,7 @@ class TelegramWebhookTests(TestCase):
 
     def test_valid_start_claims_the_invite_and_creates_a_subscriber(self):
         invite = TelegramInvite.objects.create(label='Ravi')
-        with patch('telegram_alerts.views._send_one') as send:
+        with patch('telegram_alerts.updates._send_one') as send:
             response = self.client.post(
                 self.url, data=_start_update(invite.token, chat_id=555), content_type='application/json', **_headers(),
             )
@@ -153,7 +151,7 @@ class TelegramWebhookTests(TestCase):
         self.assertIn("you're all set", send.call_args[0][2].lower())
 
     def test_unknown_token_does_not_create_a_subscriber(self):
-        with patch('telegram_alerts.views._send_one') as send:
+        with patch('telegram_alerts.updates._send_one') as send:
             response = self.client.post(
                 self.url, data=_start_update('does-not-exist', chat_id=999), content_type='application/json', **_headers(),
             )
@@ -166,7 +164,7 @@ class TelegramWebhookTests(TestCase):
         invite = TelegramInvite.objects.create(label='Ravi')
         TelegramInvite.objects.filter(pk=invite.pk).update(expires_at=timezone.now() - timezone.timedelta(hours=1))
 
-        with patch('telegram_alerts.views._send_one'):
+        with patch('telegram_alerts.updates._send_one'):
             self.client.post(
                 self.url, data=_start_update(invite.token, chat_id=555), content_type='application/json', **_headers(),
             )
@@ -177,14 +175,14 @@ class TelegramWebhookTests(TestCase):
 
     def test_already_claimed_invite_cannot_be_claimed_again(self):
         invite = TelegramInvite.objects.create(label='Ravi')
-        with patch('telegram_alerts.views._send_one'):
+        with patch('telegram_alerts.updates._send_one'):
             self.client.post(
                 self.url, data=_start_update(invite.token, chat_id=555), content_type='application/json', **_headers(),
             )
         first_subscriber_count = TelegramSubscriber.objects.count()
 
         # A second person (different chat) somehow replays the same token.
-        with patch('telegram_alerts.views._send_one') as send:
+        with patch('telegram_alerts.updates._send_one') as send:
             self.client.post(
                 self.url, data=_start_update(invite.token, chat_id=777), content_type='application/json', **_headers(),
             )
@@ -198,7 +196,7 @@ class TelegramWebhookTests(TestCase):
         existing = TelegramSubscriber.objects.create(name='Old Name', chat_id='555', is_active=False)
         invite = TelegramInvite.objects.create(label='New Name')
 
-        with patch('telegram_alerts.views._send_one'):
+        with patch('telegram_alerts.updates._send_one'):
             response = self.client.post(
                 self.url, data=_start_update(invite.token, chat_id=555), content_type='application/json', **_headers(),
             )
@@ -210,7 +208,7 @@ class TelegramWebhookTests(TestCase):
 
     def test_reply_failure_does_not_prevent_the_claim(self):
         invite = TelegramInvite.objects.create(label='Ravi')
-        with patch('telegram_alerts.views._send_one', side_effect=RuntimeError('blocked')):
+        with patch('telegram_alerts.updates._send_one', side_effect=RuntimeError('blocked')):
             response = self.client.post(
                 self.url, data=_start_update(invite.token, chat_id=555), content_type='application/json', **_headers(),
             )
@@ -221,3 +219,95 @@ class TelegramWebhookTests(TestCase):
     def test_get_is_not_allowed(self):
         response = self.client.get(self.url, **_headers())
         self.assertEqual(response.status_code, 405)
+
+
+@override_settings(TELEGRAM_BOT_TOKEN='test-token')
+class HandleUpdateDirectTests(TestCase):
+    """handle_update() exercised directly, the way telegram_poll_dev calls it — not through the
+    webhook view, since the whole point of extracting it is that both callers share this exact
+    function. Also covers the "never raises" contract on a thoroughly malformed update."""
+
+    def test_claims_a_valid_invite(self):
+        from .updates import handle_update
+
+        invite = TelegramInvite.objects.create(label='Ravi')
+        with patch('telegram_alerts.updates._send_one') as send:
+            handle_update(json.loads(_start_update(invite.token, chat_id=321)))
+
+        invite.refresh_from_db()
+        self.assertEqual(invite.status, TelegramInvite.Status.CLAIMED)
+        self.assertTrue(TelegramSubscriber.objects.filter(chat_id='321').exists())
+        send.assert_called_once()
+
+    def test_completely_malformed_update_does_not_raise(self):
+        from .updates import handle_update
+
+        handle_update({'unexpected': 'shape'})  # must not raise
+        handle_update({})
+        handle_update({'message': {'text': '/start', 'chat': {}, 'from': {}}})  # no chat id at all
+        self.assertEqual(TelegramSubscriber.objects.count(), 0)
+
+
+class TelegramPollDevCommandTests(TestCase):
+    """The local-dev long-poll command — just the getUpdates parsing/error handling, not the
+    infinite loop itself (that's exercised by hand when actually testing locally)."""
+
+    @override_settings(TELEGRAM_BOT_TOKEN='test-token')
+    def test_get_updates_parses_a_successful_response(self):
+        from telegram_alerts.management.commands.telegram_poll_dev import Command
+
+        payload = {'ok': True, 'result': [{'update_id': 5, 'message': {}}]}
+        with patch('telegram_alerts.management.commands.telegram_poll_dev.urllib.request.urlopen') as urlopen:
+            urlopen.return_value.__enter__.return_value.read.return_value = json.dumps(payload).encode()
+            updates = Command()._get_updates('test-token', 0)
+
+        self.assertEqual(updates, payload['result'])
+
+    @override_settings(TELEGRAM_BOT_TOKEN='test-token')
+    def test_get_updates_raises_on_a_telegram_error_response(self):
+        from telegram_alerts.management.commands.telegram_poll_dev import Command
+
+        payload = {'ok': False, 'description': 'Unauthorized'}
+        with patch('telegram_alerts.management.commands.telegram_poll_dev.urllib.request.urlopen') as urlopen:
+            urlopen.return_value.__enter__.return_value.read.return_value = json.dumps(payload).encode()
+            with self.assertRaisesMessage(ValueError, 'Unauthorized'):
+                Command()._get_updates('test-token', 0)
+
+    @override_settings(TELEGRAM_BOT_TOKEN='')
+    def test_requires_a_bot_token(self):
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+
+        with self.assertRaises(CommandError):
+            call_command('telegram_poll_dev')
+
+
+class SetTelegramWebhookCommandTests(TestCase):
+    @override_settings(TELEGRAM_BOT_TOKEN='')
+    def test_requires_a_bot_token(self):
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+
+        with self.assertRaises(CommandError):
+            call_command('set_telegram_webhook')
+
+    @override_settings(TELEGRAM_BOT_TOKEN='test-token', ADMIN_BASE_URL='http://localhost:8000')
+    def test_refuses_a_non_https_admin_base_url(self):
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+
+        with self.assertRaisesMessage(CommandError, 'not HTTPS'):
+            call_command('set_telegram_webhook')
+
+    @override_settings(TELEGRAM_BOT_TOKEN='test-token')
+    def test_delete_calls_delete_webhook_not_set_webhook(self):
+        import io
+
+        from django.core.management import call_command
+
+        with patch('telegram_alerts.management.commands.set_telegram_webhook.urllib.request.urlopen') as urlopen:
+            urlopen.return_value.__enter__.return_value.read.return_value = json.dumps({'ok': True}).encode()
+            call_command('set_telegram_webhook', '--delete', stdout=io.StringIO())
+
+        called_url = urlopen.call_args[0][0].full_url
+        self.assertIn('deleteWebhook', called_url)

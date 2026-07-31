@@ -305,12 +305,10 @@ TELEGRAM_BOT_USERNAME = config('TELEGRAM_BOT_USERNAME', default='')
 # How long an unscanned QR invite stays valid before it's treated as expired.
 TELEGRAM_INVITE_EXPIRY_HOURS = config('TELEGRAM_INVITE_EXPIRY_HOURS', default=24, cast=int)
 
-# Webhook security (see docs/telegram-bot.md "Production webhook" section):
-#   - TELEGRAM_WEBHOOK_PATH_SECRET is an unguessable URL path segment (defense in depth).
-#   - TELEGRAM_WEBHOOK_SECRET is the value Telegram echoes back as the
-#     X-Telegram-Bot-Api-Secret-Token header on every real webhook call — the actual proof a
-#     request came from Telegram, checked on every call in telegram_alerts/views.py.
-# Both defaults are obvious placeholders, same pattern as SECRET_KEY above: a production
-# deploy that forgot to set them is caught in review, not silently insecure.
-TELEGRAM_WEBHOOK_PATH_SECRET = config('TELEGRAM_WEBHOOK_PATH_SECRET', default='changeme-set-a-real-path-secret')
+# Webhook security (see docs/telegram-bot.md "Production webhook" section): one secret, checked
+# two ways — it's both the unguessable URL path segment (telegram_alerts/urls.py) *and* the
+# value Telegram must echo back as the X-Telegram-Bot-Api-Secret-Token header on every real
+# webhook call (set via `set_telegram_webhook`'s secret_token parameter). A request has to get
+# both right. The default is an obvious placeholder, same pattern as SECRET_KEY above: a
+# production deploy that forgot to set it is caught in review, not silently insecure.
 TELEGRAM_WEBHOOK_SECRET = config('TELEGRAM_WEBHOOK_SECRET', default='changeme-set-a-real-webhook-secret')
