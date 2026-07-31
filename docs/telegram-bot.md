@@ -36,7 +36,101 @@ Revoking someone is one click: untick `is_active` on their row. No redeploy, no 
 
 No business verification, no approval queue — the bot is usable within a minute of creation.
 
-## Onboarding a staff member (manual, v1)
+## How updates are handled — one function, two callers
+
+Whether a `/start <token>` message reaches us via a production webhook or a local dev poll,
+it's processed by the exact same function: `telegram_alerts/updates.py::handle_update()`. This
+is the standard shape for a Telegram bot ("the transport doesn't matter, only what's in the
+update") and it's what makes local testing below possible without any tunnel — the transport
+that feeds `handle_update()` is the only thing that changes between dev and production.
+
+## Testing locally: `telegram_poll_dev` (no tunnel needed)
+
+Webhooks need a public HTTPS URL, which `localhost` isn't — so rather than standing up an
+ngrok/cloudflared tunnel just to exercise the invite-claim logic, run:
+
+```
+python manage.py telegram_poll_dev
+```
+
+This long-polls Telegram's `getUpdates` in a loop and feeds every update into `handle_update()`
+— the identical function the production webhook calls. Create a `TelegramInvite` in admin, scan
+its QR code (or open the deep link) with your phone, and watch the command's output; the
+subscriber row appears the same way it would in production. Stop it with Ctrl+C when done.
+
+**Only one Telegram transport can be active on a bot at a time.** If a webhook was previously
+registered against this bot token (e.g. you'd tested production once), remove it first or
+`telegram_poll_dev` won't receive anything:
+
+```
+python manage.py set_telegram_webhook --delete
+```
+
+**If you actually need to test the webhook/HTTPS path itself** (not just the business logic) —
+e.g. right before a first production deploy — that does need a real public URL. A tunnel
+(ngrok, cloudflared) pointed at your local `runserver`, with `ADMIN_BASE_URL` set to the
+tunnel's HTTPS URL, is the only way to exercise that specific path locally. Most of the time
+`telegram_poll_dev` is all you need, since the webhook view itself is a thin, already-tested
+wrapper (see `telegram_alerts/tests_onboarding.py`) around the same `handle_update()`.
+
+## Production webhook setup (do this once per environment)
+
+1. Pick one real secret and set it (locally in `backend/.env`, and as a Render environment
+   variable in production):
+
+   ```
+   TELEGRAM_WEBHOOK_SECRET=<random string>
+   ```
+
+   Generate it with `python -c "import secrets; print(secrets.token_urlsafe(32))"`. The default
+   in `.env.example` is an obvious placeholder (`changeme-...`) on purpose — a deploy that
+   forgot to set it is caught in review, not silently insecure.
+2. Set `TELEGRAM_BOT_USERNAME` (no `@`, no `https://t.me/` — just the username BotFather gave
+   you) — needed to build the deep link a QR code encodes.
+3. Make sure `ADMIN_BASE_URL` is the real `https://` production domain (Telegram refuses to
+   register a non-HTTPS webhook).
+4. Run, once, after every deploy where any of the above changed:
+
+   ```
+   python manage.py set_telegram_webhook
+   ```
+
+5. Verify it's registered and healthy any time (safe to run repeatedly, read-only):
+
+   ```
+   python manage.py check_telegram_webhook
+   ```
+
+**Security model — one secret, checked two ways.** `TELEGRAM_WEBHOOK_SECRET` is both the
+unguessable segment in the webhook's URL path (`telegram_alerts/urls.py`) *and* the value
+Telegram must echo back as the `X-Telegram-Bot-Api-Secret-Token` header on every real call (set
+via `secret_token` when registering the webhook). `telegram_alerts/views.py` rejects any request
+where the header doesn't match — a request has to get both the URL and the header right, so
+knowing the URL alone (e.g. from a leaked log line) isn't enough on its own.
+
+## Onboarding a staff member — QR code (primary method)
+
+1. Django admin → **Telegram alerts → Telegram invites → Add**.
+2. Type a label (e.g. "Ravi — counter") — nothing else to fill in — and save.
+3. The invite's page shows a QR code and a plain link, both encoding the same thing: a
+   Telegram deep link with a one-time, unguessable token, expiring in
+   `TELEGRAM_INVITE_EXPIRY_HOURS` (24 by default).
+4. Staff member scans the QR code with their phone camera (or opens the link directly),
+   Telegram opens a chat with the bot, they tap **Start**.
+5. That's it — no chat_id lookup, no admin action needed. `handle_update()` (via the production
+   webhook, or `telegram_poll_dev` locally) creates their `TelegramSubscriber` row automatically,
+   marked active, and the bot replies confirming it worked.
+
+The admin still creates the invite in the first place, so this doesn't loosen the two-gate
+model above — it only makes the *identity* step (Gate 1) faster than the manual lookup below.
+An invite that's expired, already claimed, or was revoked (an admin action on the **Telegram
+invites** list, for an unclaimed one) can't be used again — scanning an old QR code just gets a
+"this invite has expired" reply from the bot, nothing is created.
+
+## Onboarding a staff member — manual lookup (fallback)
+
+Still available if scanning isn't practical for someone, or as a one-off without creating an
+invite first:
 
 1. The staff member searches for the bot's username in Telegram and sends it any message
    (e.g. "hi"). This is the only thing they need to do.
@@ -55,13 +149,7 @@ No business verification, no approval queue — the bot is usable within a minut
    message arrives.
 
 To remove access later, either untick `is_active` (keeps the record, pauses alerts) or delete
-the row entirely.
-
-**A note for later, not needed now:** if the team grows past a handful of people, a
-self-service flow (admin generates a one-time invite link, staff clicks it, the bot
-auto-captures their `chat_id` via a webhook) is worth building — the manual `getUpdates` lookup
-above doesn't scale past a few onboardings. Not built; the extra webhook infrastructure isn't
-earning its keep yet at this size.
+the row entirely — same either way, regardless of which onboarding method was used.
 
 ## What actually gets sent
 
