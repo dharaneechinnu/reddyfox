@@ -13,6 +13,11 @@ from .management.commands.fetch_reference_rates import Command
 from .models import ReferenceRate, ReferenceRateSettings
 from .services import refresh_reference_rates
 
+# Provider-level behavior (exchangerate-api parsing, fallback ordering) has its own coverage in
+# fx_providers/tests.py, now that the fetch functions live there. Everything below mocks
+# fetch_with_fallback as a whole, the same way it always mocked the old reference_rates.providers
+# entry point — refresh_reference_rates() doesn't know or care which provider actually answered.
+
 
 def _currency(code='USD', sell_rate='84.0000', buy_rate='83.0000', **extra):
     return Currency.objects.create(
@@ -22,7 +27,7 @@ def _currency(code='USD', sell_rate='84.0000', buy_rate='83.0000', **extra):
 
 
 def _patch_providers(return_value):
-    return patch('reference_rates.services.fetch_reference_rates', return_value=return_value)
+    return patch('reference_rates.services.fetch_with_fallback', return_value=return_value)
 
 
 def _enable_auto_update(buy_margin='-1.00', sell_margin='1.00'):
@@ -53,6 +58,17 @@ class ReferenceRateSettingsSingletonTests(TestCase):
 
 
 class RefreshReferenceRatesServiceTests(TestCase):
+    def test_passes_the_configured_primary_provider_through(self):
+        _currency('USD')
+        settings_obj = ReferenceRateSettings.load()
+        settings_obj.primary_provider = 'frankfurter'
+        settings_obj.save()
+
+        with _patch_providers({'USD': (84.5, 'frankfurter')}) as fetch:
+            refresh_reference_rates()
+
+        fetch.assert_called_once_with(['USD'], primary='frankfurter')
+
     def test_upserts_rates_for_covered_currencies(self):
         _currency('USD')
         _currency('EUR')
@@ -271,6 +287,7 @@ class ReferenceRatesPageTests(TestCase):
         self.client.login(username='admin', password='password123')
 
         data = {
+            'primary_provider': 'fawazahmed0',
             'auto_update_enabled': 'on',
             'buy_margin': '-2.00',
             'sell_margin': '2.00',
@@ -285,6 +302,7 @@ class ReferenceRatesPageTests(TestCase):
         self.assertContains(response, '88.00')  # USD buy: 90 market - 2 margin
         settings_obj = ReferenceRateSettings.load()
         self.assertTrue(settings_obj.auto_update_enabled)
+        self.assertEqual(settings_obj.primary_provider, 'fawazahmed0')
         self.assertEqual(settings_obj.buy_margin, Decimal('-2.00'))
         self.assertEqual(settings_obj.sell_margin, Decimal('2.00'))
 

@@ -35,6 +35,34 @@ Frankfurter is kept in the code as a secondary/cross-check provider for the ~13 
 cover, since a second independent source is a stronger typo guard than one — but it is not the
 primary, and nothing here waits on it.
 
+**Second revision, production setup: `exchangerate-api.com` promoted to primary.** By explicit
+choice, once production readiness mattered more than staying keyless: exchangerate-api.com is a
+real vendor (dashboard, quota alerts, SLA) rather than a single maintainer's free CDN. Free tier is
+1,500 requests/month, 161 currencies (covers the whole board, Gulf currencies included — verified
+live against the real endpoint), daily updates; our actual usage is ~60 requests/month from the
+daily cron plus occasional manual fetches, comfortably inside the free tier. Requires
+`EXCHANGERATE_API_KEY` (get one at exchangerate-api.com; blank in an environment without a key
+skips straight to the fallback below, no error). Its terms permit caching for internal use like
+ours but prohibit redistributing the data or using it to offer "programmatic or automatic access to
+exchange rates" — `ReferenceRate` stays admin-only with no public serializer, which already
+satisfies this.
+
+**`fawazahmed0/exchange-api` is now the fallback**, not the primary — same free/keyless full-board
+coverage, used automatically if the key is missing, revoked, or the free quota is somehow exceeded.
+Frankfurter remains the last-resort provider, tried only for whatever's still missing after both of
+the above.
+
+**Third revision: the fetch functions moved to their own app, `fx_providers`, and which provider is
+primary became a staff-editable setting instead of a fixed order in code.** `fx_providers` knows
+nothing about currency boards or margins — just `fetch_exchangerateapi()` / `fetch_fawazahmed0()` /
+`fetch_frankfurter()` and `fetch_with_fallback(codes, primary=...)`, so a future feature needing an
+INR rate for something other than the reference-rate guard can reuse it without depending on
+`reference_rates`. `ReferenceRateSettings.primary_provider` (editable on the same "Reference rates &
+margins" admin screen as the margins) picks which one goes first; the other two are tried, in
+`fx_providers.DEFAULT_ORDER`, for whatever the primary doesn't cover. See
+`backend/fx_providers/providers.py` for the exact order and `backend/reference_rates/services.py`
+for how the chosen primary reaches the fetch call.
+
 ---
 
 ## Read this first: market rates are not our rates
@@ -218,9 +246,10 @@ Implemented in a dedicated `reference_rates` Django app:
 1. **`ReferenceRate`**, its own model. Stores the fetched market rate per currency code, with its
    source and fetch time.
 2. **`ReferenceRateSettings`, a singleton** (same `pk=1` pattern as `content.SiteSetting`) holding
-   **one global config, applied to every currency alike**: `auto_update_enabled`, `buy_margin`,
-   `sell_margin`. There's deliberately no per-currency override — one desk-set margin for the whole
-   board, configured in one place.
+   **one global config, applied to every currency alike**: `primary_provider` (which of
+   `fx_providers`' three fetchers goes first), `auto_update_enabled`, `buy_margin`, `sell_margin`.
+   There's deliberately no per-currency override — one desk-set config for the whole board,
+   configured in one place.
 3. **Its own admin surface, not a sub-page of `rates.CurrencyAdmin`.** `ReferenceRateSettingsAdmin`
    is registered in `reference_rates/admin.py` and fully overrides `changelist_view()` — Django's
    default add/change list for this model is replaced with one combined screen: the margin form,
@@ -237,8 +266,9 @@ Implemented in a dedicated `reference_rates` Django app:
      dropdown — fetches with whatever margin is already saved, no screen change.
    - **Manual, with margin changes**: the **"Reference rates & margins" button** on the Currency
      changelist (`/admin/rates/currency/`) opens `/admin/reference_rates/referenceratesettings/`,
-     with the auto-update toggle and the two margin fields. Submitting it saves the settings,
-     fetches the real market rate, and — on that same page — shows a table of the result: each
+     with the provider picker, the auto-update toggle, and the two margin fields. Submitting it
+     saves the settings, fetches the real market rate, and — on that same page — shows a table
+     of the result: each
      currency's fetched market rate next to the buy/sell rate calculated from it
      (`market rate + margin`). One screen for the whole loop: configure, fetch, see the result.
 4. **Auto-apply is opt-in and staff-configured, globally.** `ReferenceRateSettings.auto_update_enabled`

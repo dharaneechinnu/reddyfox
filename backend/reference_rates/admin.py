@@ -26,7 +26,7 @@ class ReferenceRateAdmin(admin.ModelAdmin):
 class ReferenceRateSettingsForm(forms.ModelForm):
     class Meta:
         model = ReferenceRateSettings
-        fields = ['auto_update_enabled', 'buy_margin', 'sell_margin']
+        fields = ['primary_provider', 'auto_update_enabled', 'buy_margin', 'sell_margin']
 
 
 @admin.register(ReferenceRateSettings)

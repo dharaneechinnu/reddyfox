@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'content',
     'notifications',
     'feature_flags',
+    'fx_providers',
     'reference_rates',
 
     # Third party
@@ -284,3 +285,8 @@ REFERENCE_RATE_DIVERGENCE_WARN_PCT = config('REFERENCE_RATE_DIVERGENCE_WARN_PCT'
 # A reference rate older than this many hours is shown as stale in the admin rather than trusted
 # for the divergence check — a fetch outage must be visible, not silently treated as current.
 REFERENCE_RATE_STALE_AFTER_HOURS = config('REFERENCE_RATE_STALE_AFTER_HOURS', default=48, cast=int)
+
+# fx_providers.providers.fetch_exchangerateapi() — exchangerate-api.com. Blank in an environment
+# that hasn't been given a key yet — fetch_with_fallback() treats that as "skip straight to the
+# next provider," not an error. Never has a default other than '': this one is a real secret.
+EXCHANGERATE_API_KEY = config('EXCHANGERATE_API_KEY', default='')
