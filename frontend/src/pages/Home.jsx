@@ -50,6 +50,7 @@ export default function Home() {
   const navigate = useNavigate();
   const fx = useFx();
   const liveBoardOn = useFeatureFlag('live_board');
+  const rateLockPageOn = useFeatureFlag('rate_lock_page');
   const { data: testimonials } = useApi(loadTestimonials, []);
   const { data: faqs } = useApi(loadHomepageFaqs, []);
   const { data: forexCardRates } = useApi(loadForexCardRates, {});
@@ -85,7 +86,7 @@ export default function Home() {
               {COMPANY.legalName} is {COMPANY.regulator.toLowerCase()}, providing comprehensive forex services to international travellers — money exchange, money transfer and money remittance, from our shop in T. Nagar.
             </p>
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 40 }}>
-              <Btn onClick={() => navigate('/lock-rate')}>Lock a rate</Btn>
+              {rateLockPageOn && <Btn onClick={() => navigate('/lock-rate')}>Lock a rate</Btn>}
               <Btn variant="outline" onClick={() => navigate('/quote')}>Get a free quote</Btn>
             </div>
             <div style={{ display: 'flex', gap: 34, flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,.12)', paddingTop: 26 }}>

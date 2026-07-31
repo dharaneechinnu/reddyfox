@@ -130,6 +130,10 @@ function Header() {
 
 function Footer() {
   const navigate = useNavigate();
+  const rateLockPageOn = useFeatureFlag('rate_lock_page');
+  const footerCols = rateLockPageOn
+    ? FOOTER_COLS
+    : FOOTER_COLS.map((col) => ({ ...col, links: col.links.filter(([, to]) => to !== '/lock-rate') }));
   return (
     <footer style={{ background: c.navyDeep, color: c.navyMuted2, padding: '76px 0 0' }}>
       <div style={wrap}>
@@ -160,7 +164,7 @@ function Footer() {
               ))}
             </div>
           </div>
-          {FOOTER_COLS.map((col) => (
+          {footerCols.map((col) => (
             <div key={col.title}>
               <div style={{ font: `500 11px/1.4 ${fonts.mono}`, letterSpacing: '.16em', color: '#fff', marginBottom: 20 }}>{col.title}</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
