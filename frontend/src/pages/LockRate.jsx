@@ -1,12 +1,24 @@
 import { Link } from 'react-router-dom';
 import { CONTACT } from '../company';
 import { useFx } from '../context/FxContext';
+import { useFeatureFlag } from '../context/FeatureFlagsContext';
 import { c, fonts, wrap } from '../tokens';
 import RateLockForm from '../components/RateLockForm';
 import Seo from '../components/Seo';
 
 export default function LockRate() {
   const fx = useFx();
+  const rateLockPageOn = useFeatureFlag('rate_lock_page');
+
+  if (!rateLockPageOn) {
+    return (
+      <div style={{ padding: '120px 32px', textAlign: 'center' }}>
+        <Seo title="Lock Today's Exchange Rate" description="Reserve today's exchange rate with Reddy Forex." path="/lock-rate" />
+        <p style={{ fontSize: 17, color: c.textMuted, marginBottom: 20 }}>The rate lock page isn't available right now.</p>
+        <Link to="/" style={{ fontSize: 14.5, fontWeight: 600, color: c.orange }}>Back to home</Link>
+      </div>
+    );
+  }
 
   if (fx.ratesLoading) {
     return <div style={{ padding: '120px 32px', textAlign: 'center', color: c.textMuted }}>Loading today’s rates…</div>;
