@@ -37,7 +37,7 @@
     var box = document.createElement('div');
     box.id = 'currency-rate-suggestion';
     box.style.cssText = 'display:none;margin-top:8px;padding:10px 14px;border-radius:6px;' +
-      'font-size:13px;background:var(--body-quiet-color,#f4f4f4);max-width:520px;';
+      'font-size:13px;background:#000;color:#fff;max-width:520px;';
     codeField.closest('.form-row, .field-code').appendChild(box);
 
     var lastRequested = '';
@@ -55,7 +55,7 @@
           if (code !== codeField.value.trim().toUpperCase()) return; // stale response, field changed since
 
           if (!data.ok) {
-            renderBox(box, '<span style="color:#a4322a">' + escapeHtml(data.error) + '</span>');
+            renderBox(box, '<span style="color:#ff8a80">' + escapeHtml(data.error) + '</span>');
             return;
           }
 
@@ -65,7 +65,8 @@
             '</strong> (via ' + escapeHtml(data.source) + '). Suggested — Buy: ₹' +
             escapeHtml(data.suggested_buy) + ' · Sell: ₹' + escapeHtml(data.suggested_sell) +
             ' <button type="button" id="currency-rate-suggestion-apply" class="button" ' +
-            'style="margin-left:8px" data-buy="' + escapeHtml(data.suggested_buy) +
+            'style="margin-left:8px;background:#fff;color:#000;border:1px solid #fff" ' +
+            'data-buy="' + escapeHtml(data.suggested_buy) +
             '" data-sell="' + escapeHtml(data.suggested_sell) + '">Use suggestion</button>'
           );
 
