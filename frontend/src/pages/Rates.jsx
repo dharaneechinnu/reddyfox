@@ -102,7 +102,7 @@ export default function Rates() {
           {fx.favs.length > 0 && (
             <div style={{ marginBottom: 36 }}>
               <p style={{ font: `500 11.5px/1.4 ${fonts.mono}`, letterSpacing: '.18em', textTransform: 'uppercase', color: c.orange, margin: '0 0 16px' }}>Favourites</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(230px,100%),1fr))', gap: 16 }}>
                 {fx.favs.map((code) => {
                   const r = fx.rates[code];
                   return (

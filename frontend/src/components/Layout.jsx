@@ -4,21 +4,21 @@ import { NAV, SERVICES, FOOTER_COLS } from '../data';
 import { COMPANY, CONTACT, PRIMARY_PHONE, SOCIALS } from '../company';
 import { c, fonts, wrap } from '../tokens';
 import { useFeatureFlag } from '../context/FeatureFlagsContext';
-import NotificationOptIn from './NotificationOptIn';
 import SocialIcon from './SocialIcon';
 import WhatsAppButton from './WhatsAppButton';
+import MobileBottomNav from './MobileBottomNav';
 
 function TopBar() {
   return (
     <div style={{ background: c.navy, color: '#AEB8C9', fontSize: 12.5, letterSpacing: '.01em' }}>
-      <div style={{ ...wrap, padding: '10px 32px', display: 'flex', flexWrap: 'wrap', gap: '8px 20px', alignItems: 'center', justifyContent: 'space-between', lineHeight: 1.5 }}>
+      <div className="fx-topbar-inner" style={{ ...wrap, padding: '10px 32px', display: 'flex', flexWrap: 'wrap', gap: '8px 20px', alignItems: 'center', justifyContent: 'space-between', lineHeight: 1.5 }}>
         <div style={{ display: 'flex', gap: 22, alignItems: 'center', flexWrap: 'wrap' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.green, display: 'inline-block', animation: 'fx-pulse 2.4s ease-in-out infinite' }} />
             {COMPANY.regulator}
           </span>
-          <span style={{ opacity: .45 }}>|</span>
-          <span>{COMPANY.yearsExperience} years of experience</span>
+          <span className="fx-topbar-years" style={{ opacity: .45 }}>|</span>
+          <span className="fx-topbar-years">{COMPANY.yearsExperience} years of experience</span>
         </div>
         <div style={{ display: 'flex', gap: 22, alignItems: 'center', flexWrap: 'wrap' }}>
           <a href={`tel:${PRIMARY_PHONE.tel}`} style={{ color: '#E9EDF3' }}>{PRIMARY_PHONE.display}</a>
@@ -56,7 +56,7 @@ function MegaMenu({ open, onClose }) {
       <div style={{ ...wrap, padding: '34px 32px 38px', display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 44 }}>
         <div>
           <p style={{ font: `500 11px/1.4 ${fonts.mono}`, letterSpacing: '.18em', textTransform: 'uppercase', color: c.orange, margin: '0 0 20px' }}>Our services</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 6 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(240px,100%),1fr))', gap: 6 }}>
             {SERVICES.map((s) => (
               <div
                 key={s.id}
@@ -103,15 +103,15 @@ function Header() {
           </span>
         </Link>
 
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1, flexWrap: 'wrap' }}>
+        <nav className="fx-nav-desktop" style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1, flexWrap: 'wrap' }}>
           {nav.map(([label, to]) => (
             <NavItem key={to} label={label} to={to} onEnter={() => setMega(to === '/services')} />
           ))}
         </nav>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 'none', marginLeft: 'auto' }}>
           {ratesPageOn && (
-            <Link to="/rates" style={{ fontSize: 14.5, fontWeight: 500, color: c.navyMid, cursor: 'pointer', whiteSpace: 'nowrap' }}>Today's rates</Link>
+            <Link to="/rates" className="fx-header-rates-link" style={{ fontSize: 14.5, fontWeight: 500, color: c.navyMid, cursor: 'pointer', whiteSpace: 'nowrap' }}>Today's rates</Link>
           )}
           <Link
             to="/quote"
@@ -133,7 +133,7 @@ function Footer() {
   return (
     <footer style={{ background: c.navyDeep, color: c.navyMuted2, padding: '76px 0 0' }}>
       <div style={wrap}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 44, paddingBottom: 52, borderBottom: '1px solid rgba(255,255,255,.1)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(200px,100%),1fr))', gap: 44, paddingBottom: 52, borderBottom: '1px solid rgba(255,255,255,.1)' }}>
           <div style={{ gridColumn: 'span 1', minWidth: 220 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 18 }}>
               <span style={{ width: 26, height: 26, background: c.orange, transform: 'rotate(45deg)', borderRadius: 5, display: 'block' }} />
@@ -201,15 +201,15 @@ function Footer() {
 
 export default function Layout() {
   return (
-    <div style={{ minHeight: '100vh', background: '#fff' }}>
+    <div className="fx-page-shell" style={{ minHeight: '100vh', background: '#fff' }}>
       <TopBar />
       <Header />
       <Outlet />
       <Footer />
-      <div style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 70, display: 'flex', gap: 10, alignItems: 'center' }}>
-        <NotificationOptIn />
+      <div className="fx-floating-actions" style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 70, display: 'flex', gap: 10, alignItems: 'center' }}>
         <WhatsAppButton />
       </div>
+      <MobileBottomNav />
     </div>
   );
 }

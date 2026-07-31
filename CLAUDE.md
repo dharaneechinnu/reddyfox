@@ -23,6 +23,7 @@ python manage.py migrate
 python manage.py seed_rates          # sample currency board
 python manage.py seed_content        # real testimonials + FAQs (--replace wipes existing rows first)
 python manage.py setup_teams         # creates/syncs the staff permission groups (see Architecture)
+python manage.py fetch_reference_rates  # optional: pull market FX rates for the admin's typo guard
 python manage.py createsuperuser
 python manage.py runserver 0.0.0.0:8000   # 0.0.0.0 so a phone on the same WiFi can reach it
 ```
@@ -120,7 +121,7 @@ When something currently hardcoded in `frontend/src/data.js` needs to become sta
 
 `frontend/src/hooks/useLeadForm.js` is the shared form logic behind all three lead forms (`EnquiryForm`, `QuoteForm`, `RateLockForm` in `components/`) — validate on blur, clear an error as soon as the field becomes valid while typing, focus the first invalid field on a failed submit, and map server-side field errors back onto the right input (the API re-validates independently and can catch things the client can't, e.g. an unknown currency code). A new lead-type form should reuse this hook rather than reimplementing form state.
 
-Order of operations on every lead submission is deliberate: **save to the database first, then notify** (`content/notifications.py`'s `notify_team`, and separately `notifications.services.send_notification` for the FCM path). A failure in either notification path is caught and logged — it must never lose or block the underlying lead.
+Order of operations on every lead submission is deliberate: **save to the database first, then notify** (`content/notifications.py`'s `notify_team`, `telegram_alerts.services.notify_team_telegram`, and separately `notifications.services.send_notification` for the FCM path). A failure in any one notification path is caught and logged — it must never lose or block the underlying lead, and must never stop the others from being attempted.
 
 ### Currency/rate state: one context, one fetch
 

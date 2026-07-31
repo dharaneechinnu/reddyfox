@@ -142,6 +142,7 @@ class Lead(models.Model):
         ENQUIRY = 'enquiry', 'Enquiry'
         QUOTE = 'quote', 'Quote request'
         RATE_LOCK = 'rate_lock', 'Rate lock'
+        CALLBACK = 'callback', 'Callback request'
 
     class Status(models.TextChoices):
         NEW = 'new', 'New'
@@ -206,6 +207,12 @@ class Lead(models.Model):
 
     # --- workflow (the only fields staff edit) ---
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.NEW, db_index=True)
+    is_resolved = models.BooleanField(
+        default=False, db_index=True,
+        help_text='Untick (default) while the desk still needs to act on this. Tick once it\'s '
+                  'fully handled — resolved items drop out of the default admin list, same as '
+                  '"unresolved" being the working set. Never deletes anything.',
+    )
     priority = models.PositiveSmallIntegerField(
         choices=Priority.choices, default=Priority.NORMAL, db_index=True,
         help_text='Which end of the list this sits at. Set automatically when the lead arrives '
@@ -345,6 +352,23 @@ class QuoteRequest(Lead):
 
     def save(self, *args, **kwargs):
         self.kind = Lead.Kind.QUOTE
+        super().save(*args, **kwargs)
+
+
+class CallbackRequest(Lead):
+    """Proxy: quick "get your best price" capture from the homepage converter
+    widget — just a name and phone number, with the amount/currency they were
+    converting carried along for context. Own admin list and own permissions."""
+
+    objects = KindManager(Lead.Kind.CALLBACK)
+
+    class Meta:
+        proxy = True
+        verbose_name = 'callback request'
+        verbose_name_plural = 'callback requests'
+
+    def save(self, *args, **kwargs):
+        self.kind = Lead.Kind.CALLBACK
         super().save(*args, **kwargs)
 
 

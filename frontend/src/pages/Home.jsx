@@ -5,6 +5,7 @@ import { HERO_TRUST, STATS, SERVICES, REASONS, fmt } from '../data';
 import { COMPANY, CONTACT } from '../company';
 import { c, fonts, wrap, eyebrow, h2Style } from '../tokens';
 import FaqAccordion from '../components/FaqAccordion';
+import CallbackForm from '../components/CallbackForm';
 import Seo from '../components/Seo';
 import useApi from '../hooks/useApi';
 import { fetchTestimonials, fetchFaqs, fetchCurrencies, toRatesMap } from '../api';
@@ -73,7 +74,7 @@ export default function Home() {
       <section style={{ background: c.navy, position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px)', backgroundSize: '72px 72px' }} />
         <div style={{ position: 'absolute', top: -180, right: -140, width: 620, height: 620, borderRadius: '50%', background: 'radial-gradient(circle,rgba(226,87,31,.28),transparent 62%)' }} />
-        <div style={{ position: 'relative', ...wrap, padding: '88px 32px 96px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(380px,1fr))', gap: 64, alignItems: 'center' }}>
+        <div style={{ position: 'relative', ...wrap, padding: '88px 32px 96px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(380px,100%),1fr))', gap: 64, alignItems: 'center' }}>
           <div style={{ animation: 'fx-up .7s ease both' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 9, border: '1px solid rgba(255,255,255,.18)', borderRadius: 100, padding: '7px 15px', marginBottom: 26 }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.green, display: 'block' }} />
@@ -122,27 +123,21 @@ export default function Home() {
               <div style={{ flex: 1, height: 1, background: c.sandLine2 }} />
             </div>
 
-            <label style={{ display: 'block', fontSize: 12.5, fontWeight: 500, color: c.textMuted, marginBottom: 8 }}>They receive</label>
+            <label style={{ display: 'block', fontSize: 12.5, fontWeight: 500, color: c.textMuted, marginBottom: 8 }}>They receive (approx.)</label>
             <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-              <div style={{ flex: 1, minWidth: 0, border: `1px solid ${c.sandLine2}`, background: c.sand, borderRadius: 10, padding: '15px 16px', fontSize: 20, fontFamily: fonts.mono, color: c.navy, overflow: 'hidden', textOverflow: 'ellipsis' }}>{fx.calc.converted}</div>
+              <div style={{ flex: 1, minWidth: 0, border: `1px solid ${c.sandLine2}`, background: c.sand, borderRadius: 10, padding: '15px 16px', fontSize: 20, fontFamily: fonts.mono, color: c.navy, overflow: 'hidden', textOverflow: 'ellipsis' }}>≈ {fx.calc.converted}</div>
               <select value={fx.to} onChange={(e) => fx.setTo(e.target.value)} style={{ border: `1px solid ${c.softLine}`, borderRadius: 10, padding: '15px 12px', fontSize: 15, fontWeight: 600, color: c.navy, background: c.sand, outline: 'none', cursor: 'pointer' }}>
                 {fx.currencyList.map((cur) => <option key={cur.code} value={cur.code}>{cur.label}</option>)}
               </select>
             </div>
 
             <div style={{ borderTop: `1px dashed ${c.sandBorder}`, paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 9, fontSize: 13.5, color: c.textMuted }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Exchange rate</span><span style={{ fontFamily: fonts.mono, color: c.navy }}>{fx.calc.rateLine}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Exchange rate (approx.)</span><span style={{ fontFamily: fonts.mono, color: c.navy }}>{fx.calc.rateLine}</span></div>
             </div>
 
-            <span
-              onClick={() => navigate('/lock-rate')}
-              style={{ marginTop: 20, display: 'block', textAlign: 'center', background: c.navy, color: '#fff', padding: 15, borderRadius: 9, fontSize: 15, fontWeight: 600, cursor: 'pointer', transition: 'background .18s' }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = c.navyLight)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = c.navy)}
-            >
-              Lock this rate
-            </span>
-            <p style={{ margin: '14px 0 0', fontSize: 11.5, lineHeight: 1.5, color: c.textFainter, textAlign: 'center' }}>Indicative rates. Final rate confirmed at the counter against valid ID and travel documents.</p>
+            <div style={{ marginTop: 20, borderTop: `1px solid ${c.sandLine2}`, paddingTop: 20 }}>
+              <CallbackForm />
+            </div>
           </div>
         </div>
 
@@ -163,7 +158,7 @@ export default function Home() {
       </section>
 
       <section style={{ background: '#fff', borderBottom: `1px solid ${c.sandLine2}` }}>
-        <div style={{ ...wrap, padding: '56px 32px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 40 }}>
+        <div style={{ ...wrap, padding: '56px 32px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(200px,100%),1fr))', gap: 40 }}>
           {STATS.map((s) => (
             <div key={s.label}>
               <div style={{ fontFamily: fonts.serif, fontSize: 44, lineHeight: 1, color: c.navy, marginBottom: 9 }}>{s.value}</div>
@@ -238,7 +233,7 @@ export default function Home() {
             <h2 style={{ ...h2Style, maxWidth: 560 }}>Every foreign exchange need, under one licence</h2>
             <p style={{ fontSize: 16.5, lineHeight: 1.62, color: c.textMuted, maxWidth: 420, margin: 0 }}>From a ₹5,000 holiday buy to a ₹4 crore import settlement — handled by the same compliance team.</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 20 }}>
             {SERVICES.map((s) => (
               <div
                 key={s.id}
@@ -258,7 +253,7 @@ export default function Home() {
       </section>
 
       <section style={{ background: c.sand, padding: '96px 0' }}>
-        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(360px,1fr))', gap: 64, alignItems: 'center' }}>
+        <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(360px,100%),1fr))', gap: 64, alignItems: 'center' }}>
           <div style={{ background: `repeating-linear-gradient(135deg,${c.swatch} 0 10px,${c.swatch2} 10px 20px)`, border: `1px solid ${c.sandBorder4}`, borderRadius: 16, minHeight: 460, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ font: `400 11px/1.7 ${fonts.mono}`, letterSpacing: '.14em', color: c.swatchText, textAlign: 'center' }}>PHOTOGRAPHY<br />Counter service, T. Nagar branch</span>
           </div>
@@ -285,7 +280,7 @@ export default function Home() {
           <div style={wrap}>
             <p style={eyebrow}>Customer voices</p>
             <h2 style={{ ...h2Style, fontSize: 'clamp(32px,3.4vw,46px)', marginBottom: 40 }}>Trusted by travellers and finance teams</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(300px,100%),1fr))', gap: 20 }}>
               {testimonials.map((t) => (
                 <div key={t.id} style={{ background: '#fff', border: `1px solid ${c.sandLine}`, borderRadius: 14, padding: 30, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <p style={{ fontFamily: fonts.serif, fontSize: 20, lineHeight: 1.45, color: c.ink, margin: '0 0 26px' }}>“{t.quote}”</p>

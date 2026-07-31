@@ -10,10 +10,18 @@ Add new docs to this folder and link them below.
   new lead, why minutes matter commercially, what's built today, and a costed
   comparison of the remaining options. **Start here** for anything about
   notifications.
+- [Telegram staff alerts](./telegram-bot.md) — setup (bot creation, staff
+  onboarding), the admin-approval model, message format, and failure handling
+  for the Telegram channel added alongside the email alert.
 - [Product reference](./product-reference.md) — researched, dated reference
   points from comparable real-world businesses (competitors, industry
   findings, channel costs), plus ideas consciously parked and why. Research
   only — never a source of published claims.
+- [Currency rate APIs](./currency-rate-apis.md) — researched options for
+  fetching world exchange rates (Frankfurter, fawazahmed0, ECB), why FBIL is
+  the authoritative Indian source, and **why an API rate must never be
+  published as our counter rate**. Read before wiring up any external rate
+  feed. Verify with `backend/scripts/check_rate_apis.py`.
 - [SEO & AI discoverability](./seo-and-ai-discoverability.md) — what's
   implemented so the site ranks well in search and gets cited correctly by
   AI assistants (ChatGPT, Claude, Perplexity) when someone asks about forex

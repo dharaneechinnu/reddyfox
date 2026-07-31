@@ -2,7 +2,7 @@ from django.contrib import admin, messages
 from django.utils import timezone
 from django.utils.html import format_html
 
-from .models import Enquiry, Faq, FaqCategory, Lead, QuoteRequest, RateLock, SiteSetting, Testimonial
+from .models import CallbackRequest, Enquiry, Faq, FaqCategory, Lead, SiteSetting, Testimonial
 
 
 @admin.register(Testimonial)
@@ -199,6 +199,20 @@ class BaseLeadAdmin(admin.ModelAdmin):
     def mark_spam(self, request, queryset):
         self._bulk_set(request, queryset, Lead.Status.SPAM, 'spam')
 
+    @admin.action(description='Mark selected as resolved')
+    def mark_resolved(self, request, queryset):
+        updated = queryset.update(is_resolved=True)
+        self.message_user(request, f'{updated} record(s) marked resolved.', messages.SUCCESS)
+
+    @admin.action(description='Mark selected as unresolved')
+    def mark_unresolved(self, request, queryset):
+        updated = queryset.update(is_resolved=False)
+        self.message_user(request, f'{updated} record(s) marked unresolved.', messages.SUCCESS)
+
+    @admin.display(description='Resolved', ordering='is_resolved', boolean=True)
+    def resolved_badge(self, obj):
+        return obj.is_resolved
+
     def _shift_priority(self, request, queryset, step, label):
         # Clamp rather than wrap: stepping past Urgent should stay Urgent,
         # not roll around to Low.
@@ -226,97 +240,59 @@ class BaseLeadAdmin(admin.ModelAdmin):
 
 @admin.register(Enquiry)
 class EnquiryAdmin(BaseLeadAdmin):
-    """Front office inbox — general contact-form enquiries."""
+    """Front office inbox — general contact-form enquiries.
 
-    list_display = ('priority_badge', 'status_badge', 'received', 'name', 'phone_links', 'email', 'service', 'priority', 'assigned_to')
-    list_filter = ('priority', 'status', 'service', 'assigned_to', 'created_at')
+    Resolved enquiries drop out of the default list — this is the working queue, not a full
+    archive. Nothing is hidden permanently: clicking the "Resolved" (or "All") option under the
+    "Is resolved" filter in the sidebar shows them again, same as `is_visible` elsewhere in this
+    codebase never actually deletes a row.
+    """
+
+    list_display = ('priority_badge', 'status_badge', 'resolved_badge', 'received', 'name', 'phone_links', 'email', 'service', 'priority', 'assigned_to')
+    list_filter = ('is_resolved', 'priority', 'status', 'service', 'assigned_to', 'created_at')
+    actions = BaseLeadAdmin.actions + ('mark_resolved', 'mark_unresolved')
     customer_fields = ('name', 'phone', 'email', 'service', 'message')
     fieldsets = (
         ('Customer enquiry', {'fields': ('name', 'phone', 'email', 'service', 'message', 'reply_links')}),
-        ('Handling', {'fields': ('priority', 'status', 'assigned_to', 'internal_note')}),
+        ('Handling', {'fields': ('priority', 'status', 'is_resolved', 'assigned_to', 'internal_note')}),
         ('Audit', {'classes': ('collapse',),
                    'fields': ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
     )
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # Unresolved is the default working view. Staff can still reach resolved rows by picking
+        # "Resolved" (or "All") from the "Is resolved" filter in the sidebar — this only changes
+        # what shows with no filter applied, never what exists.
+        if 'is_resolved__exact' not in request.GET:
+            qs = qs.filter(is_resolved=False)
+        return qs
 
-@admin.register(QuoteRequest)
-class QuoteRequestAdmin(BaseLeadAdmin):
-    """Quotes desk — customers asking for a price."""
 
-    list_display = ('priority_badge', 'status_badge', 'received', 'name', 'phone_links', 'wants', 'needed_by', 'priority', 'assigned_to')
-    list_filter = ('priority', 'status', 'service', 'from_currency', 'assigned_to', 'created_at')
-    customer_fields = ('name', 'phone', 'email', 'service', 'from_currency', 'amount', 'needed_by', 'message')
+@admin.register(CallbackRequest)
+class CallbackRequestAdmin(BaseLeadAdmin):
+    """Quick "get your best price" requests from the homepage converter widget.
+    Email is genuinely optional here — the point of this form is minimum
+    friction, so don't be surprised to see it blank."""
+
+    list_display = ('priority_badge', 'status_badge', 'received', 'name', 'phone_links', 'wants', 'priority', 'assigned_to')
+    list_filter = ('priority', 'status', 'from_currency', 'assigned_to', 'created_at')
+    customer_fields = ('name', 'phone', 'email', 'from_currency', 'to_currency', 'amount', 'message')
     fieldsets = (
         ('Customer', {'fields': ('name', 'phone', 'email', 'reply_links')}),
-        ('What to price', {'fields': ('service', 'from_currency', 'amount', 'needed_by', 'message')}),
+        ('What they were converting', {'fields': ('from_currency', 'to_currency', 'amount')}),
         ('Handling', {'fields': ('priority', 'status', 'assigned_to', 'internal_note')}),
         ('Audit', {'classes': ('collapse',),
                    'fields': ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
     )
 
-    @admin.display(description='Wants')
+    @admin.display(description='Was converting')
     def wants(self, obj):
-        amount = f'{obj.amount:,.2f}' if obj.amount is not None else '—'
-        return format_html(
-            '<span style="font-family:monospace">{} {}</span>'
-            '<br><span style="font-size:11px;color:#666">{}</span>',
-            amount, obj.from_currency or '', obj.service or '',
-        )
-
-
-@admin.register(RateLock)
-class RateLockAdmin(BaseLeadAdmin):
-    """Rates desk — customers who locked a rate in the converter.
-
-    The only type with an expiry, so the list leads with a countdown: an expired
-    lock is no longer honourable and shows in red.
-    """
-
-    list_display = ('priority_badge', 'status_badge', 'lock_state', 'received', 'name', 'phone_links', 'pair', 'priority', 'assigned_to')
-    list_filter = ('priority', 'status', 'from_currency', 'to_currency', 'assigned_to', 'created_at')
-    customer_fields = (
-        'name', 'phone', 'email', 'from_currency', 'to_currency',
-        'amount', 'quoted_rate', 'converted_amount', 'message',
-    )
-    audit_fields = ('lock_expires_at', 'created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')
-    fieldsets = (
-        ('Customer', {'fields': ('name', 'phone', 'email', 'reply_links')}),
-        ('Rate the customer locked', {
-            'fields': ('from_currency', 'to_currency', 'amount', 'quoted_rate',
-                       'converted_amount', 'lock_expires_at', 'message'),
-            'description': 'Exactly what the converter showed them. Compare against the current board before confirming.',
-        }),
-        ('Handling', {'fields': ('priority', 'status', 'assigned_to', 'internal_note')}),
-        ('Audit', {'classes': ('collapse',),
-                   'fields': ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
-    )
-
-    @admin.display(description='Lock', ordering='lock_expires_at')
-    def lock_state(self, obj):
-        if not obj.lock_expires_at:
+        if obj.amount is None or not obj.from_currency:
             return '—'
-        if obj.is_expired:
-            return format_html(
-                '<span style="background:#FBEDE9;color:#B4351F;padding:3px 9px;border-radius:5px;'
-                'font-size:11px;font-weight:600">EXPIRED</span>'
-            )
         return format_html(
-            '<span title="{}" style="background:#EAF6F0;color:#1C7A50;padding:3px 9px;'
-            'border-radius:5px;font-size:11px;font-weight:600;white-space:nowrap">{}</span>',
-            timezone.localtime(obj.lock_expires_at).strftime('%d %b %Y, %H:%M'),
-            obj.expires_in.upper(),
-        )
-
-    @admin.display(description='Locked rate')
-    def pair(self, obj):
-        return format_html(
-            '<span style="font-family:monospace">{} {} → {}</span>'
-            '<br><span style="font-size:11px;color:#666">@ {} = {} {}</span>',
-            f'{obj.amount:,.2f}' if obj.amount is not None else '—',
-            obj.from_currency, obj.to_currency,
-            f'{obj.quoted_rate:,.4f}' if obj.quoted_rate is not None else '—',
-            f'{obj.converted_amount:,.2f}' if obj.converted_amount is not None else '—',
-            obj.to_currency,
+            '<span style="font-family:monospace">{} {} → {}</span>',
+            f'{obj.amount:,.2f}', obj.from_currency, obj.to_currency or '?',
         )
 
 

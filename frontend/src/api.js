@@ -71,20 +71,7 @@ async function postLead(path, payload) {
 export const submitEnquiry = (payload) => postLead('enquiries', payload);
 export const submitQuoteRequest = (payload) => postLead('quotes', payload);
 export const submitRateLock = (payload) => postLead('rate-locks', payload);
-
-/**
- * Registers this browser's FCM token for rate-alert push notifications.
- * Safe to call repeatedly with the same token — the backend upserts it.
- */
-export async function subscribeToNotifications(fcmToken) {
-  const res = await fetch(`${API_BASE}/notifications/subscribe/`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fcm_token: fcmToken, user_agent: navigator.userAgent }),
-  });
-  if (!res.ok) throw new Error(`Could not subscribe to rate alerts (${res.status})`);
-  return res.json();
-}
+export const submitCallbackRequest = (payload) => postLead('callbacks', payload);
 
 export async function fetchTestimonials() {
   const res = await fetch(`${API_BASE}/testimonials/`);
