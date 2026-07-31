@@ -46,29 +46,39 @@ commercial rates**, set at the counter, including our margin. Every API below re
 or *mid-market* rates — the midpoint banks quote each other, which no retail customer anywhere
 gets.
 
-So there is one thing we must never do:
+So the default we ship with is:
 
-> **Do not pipe an API's rate straight onto the public rate board.**
+> **An API's rate must never silently become the public rate.**
 
-Doing so would advertise a rate the business does not actually offer. For a regulated financial
-business that is a compliance and consumer-protection problem, not a rounding error — and it
-collides directly with the content rule in `CLAUDE.md`: everything published must be something the
-business can stand behind.
+Piping a mid-market rate onto the board unchanged would advertise a rate the business doesn't
+actually offer — a compliance and consumer-protection problem, not a rounding error, and it
+collides with the content rule in `CLAUDE.md`: everything published must be something the business
+can stand behind.
 
-The existing architecture already says the same thing, in `README.md`:
+**Update, after building this (see "What got built" below):** by explicit request, the app *does*
+support auto-setting `buy_rate`/`sell_rate` from the fetched market rate — but only per currency,
+only when a staff member opts that currency in (`auto_update_from_reference`, off by default), and
+only using a margin that same staff member sets (`buy_margin`/`sell_margin`). Nothing is ever
+published off a formula the desk didn't configure. If a currency is left opted out — the default —
+its rates stay 100% hand-entered, exactly as before.
+
+The existing architecture already said the underlying shape, in `README.md`:
 
 > *If external data is ever pulled in (news, ECB reference rates), the correct shape is ingest on a
 > schedule → store locally → serve from your own DB — never call a third party during page render.*
+
+That still holds: the fetch never happens during a request, whether triggered by the schedule or by
+the manual admin action.
 
 ### What external rates are genuinely good for
 
 | Use | Worth doing? | Why |
 |---|---|---|
-| **Typo guard on rate entry** | ⭐ **Strongest case** | Staff type rates by hand into `list_editable`. If someone enters `8.30` instead of `83.00`, nothing currently catches it — and a push alert fires to every subscriber announcing it. Comparing against a market reference and warning on a large divergence would catch that before it goes out. |
-| **Pre-fill a suggested rate** | Good | Staff open the admin and see "market is ~83.4 today" next to the field, then set the counter rate from it. Speeds up the daily task without ever auto-publishing. |
+| **Typo guard on rate entry** | ⭐ **Strongest case** | Staff type rates by hand into `list_editable`. If someone enters `8.30` instead of `83.00`, nothing currently catches it — and a push alert fires to every subscriber announcing it. The admin's "Market ref" column flags a large divergence in red without blocking the save. |
+| **Pre-fill a suggested rate** | Good | Staff open the admin and see "market ref: 83.4 (2h ago)" next to the field they're editing. |
 | **Internal margin visibility** | Good | Show the desk how far our rate sits from market. Purely an internal number. |
-| **Auto-setting the public board** | ❌ **No** | See above. |
-| **A "market comparison" shown to customers** | Careful | Technically possible, but invites "why is your rate worse?" and needs a clear explanation of what a money changer's spread covers. A business decision, not a technical one. |
+| **Auto-setting buy/sell rate** | ⚠️ **Opt-in, staff-controlled** | Built as `auto_update_from_reference` + staff-set margins, off by default per currency. See below. |
+| **A "market comparison" shown to customers** | Careful | Technically possible, but invites "why is your rate worse?" and needs a clear explanation of what a money changer's spread covers. A business decision, not a technical one — not built. |
 
 ---
 
@@ -203,24 +213,38 @@ Worth knowing about as the ultimate fallback: if every wrapper disappears, this 
 
 ## Built: `reference_rates` app
 
-This shape is implemented, in a dedicated `reference_rates` Django app — deliberately conservative,
-and consistent with how this codebase already works:
+Implemented in a dedicated `reference_rates` Django app:
 
-1. **A management command, run on a schedule** — `python manage.py fetch_reference_rates`. Not a
-   call during page render. See `docs/team-notifications.md`-style deployment notes below for the
-   Render Cron Job.
-2. **Stores into `ReferenceRate`**, its own model in its own app — *separate from* `rates.Currency`.
-   Nothing ever writes to `Currency.buy_rate` / `sell_rate`; those stay staff-owned. This separation
-   is the whole safeguard.
-3. **Surfaced in the admin as guidance**: a read-only "Market ref" column on `CurrencyAdmin` shows
-   the latest reference rate, its age, and % divergence from our sell rate.
-4. **Warns, never blocks, on divergence.** Divergence beyond `REFERENCE_RATE_DIVERGENCE_WARN_PCT`
-   (default 5%) renders in red in the admin list. Saving is never prevented — there are legitimate
-   reasons for a wide spread, and the desk stays in charge of its own pricing.
-5. **Fails silently and visibly.** A fetch failure is logged and the command exits non-zero (so a
-   cron dashboard can flag it); the board keeps working off the last staff-entered rates, and the
-   admin column shows the reference as stale by its age. Same discipline as the notification apps:
-   an external dependency must never be able to take the site, or a save, down.
+1. **`ReferenceRate`**, its own model in its own app — *separate from* `rates.Currency`. Stores
+   the fetched market rate per currency code, with its source and fetch time.
+2. **One shared entry point, two triggers.** `reference_rates/services.py::refresh_reference_rates()`
+   does the fetch-store-apply work; both the scheduled command and the manual admin action call it,
+   so a cron tick and a staff click always do exactly the same thing.
+   - **Scheduled**: `python manage.py fetch_reference_rates`, once every 24h via a Render Cron Job
+     (see below). Never runs during a request.
+   - **Manual**: a "Fetch reference rates now" action in the Currency admin's action dropdown —
+     select any row, pick the action, run it on demand. Reports what it did (fetched / applied /
+     missing) as an admin message.
+3. **Auto-apply is opt-in and staff-configured, per currency.** `Currency.auto_update_from_reference`
+   defaults to **off** — until a staff member switches it on for a specific currency, that
+   currency's `buy_rate`/`sell_rate` are exactly as hand-entered as before, unaffected by this app
+   entirely. Once on, every fetch (scheduled or manual) recalculates:
+   - `sell_rate = market_rate + sell_margin`
+   - `buy_rate = market_rate + buy_margin`
+
+   `sell_margin` and `buy_margin` are plain Decimal fields on `Currency`, editable in the same admin
+   form as everything else — e.g. `sell_margin = 1.00`, `buy_margin = -1.00` sells ₹1 above and buys
+   ₹1 below the fetched market rate. The desk sets both numbers; nothing is hardcoded.
+4. **Currencies left opted out still get the guard, not the automation.** The read-only "Market ref"
+   column on `CurrencyAdmin` shows every currency's latest reference rate, its age, and % divergence
+   from `sell_rate` — colored red past `REFERENCE_RATE_DIVERGENCE_WARN_PCT` (default 5%). This
+   column never blocks a save; it's informational for opted-out currencies and a sanity check for
+   opted-in ones.
+5. **Fails silently and visibly.** If both providers are down, `refresh_reference_rates()` reports
+   `ok: False` and touches nothing — existing `ReferenceRate` rows and every `Currency` row are left
+   as they were. The command exits non-zero (so a cron dashboard can flag it) and the admin action
+   shows a red error message. Same discipline as the notification apps: an external dependency must
+   never be able to take the site, or a save, down.
 
 See `backend/reference_rates/` and its app-level notes for the provider/fallback details and the
 production cron setup.

@@ -1,22 +1,44 @@
 from decimal import Decimal
 
 from django.conf import settings
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.utils import timezone
 from django.utils.html import format_html
 
 from reference_rates.models import ReferenceRate
+from reference_rates.services import refresh_reference_rates
 
 from .models import Currency
 
 
 @admin.register(Currency)
 class CurrencyAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name', 'rate_type', 'region', 'buy_rate', 'sell_rate', 'change_pct', 'market_reference', 'is_popular', 'is_visible', 'display_order', 'updated_at')
-    list_editable = ('buy_rate', 'sell_rate', 'change_pct', 'is_popular', 'is_visible', 'display_order')
-    list_filter = ('rate_type', 'region', 'is_popular', 'is_visible')
+    list_display = ('code', 'name', 'rate_type', 'region', 'buy_rate', 'sell_rate', 'change_pct', 'market_reference', 'auto_update_from_reference', 'is_popular', 'is_visible', 'display_order', 'updated_at')
+    list_editable = ('buy_rate', 'sell_rate', 'change_pct', 'auto_update_from_reference', 'is_popular', 'is_visible', 'display_order')
+    list_filter = ('rate_type', 'region', 'is_popular', 'is_visible', 'auto_update_from_reference')
     search_fields = ('code', 'name')
     ordering = ('display_order', 'code')
+    actions = ['fetch_reference_rates_now']
+    fields = (
+        'code', 'name', 'country_code', 'region', 'rate_type',
+        'buy_rate', 'sell_rate', 'change_pct',
+        'auto_update_from_reference', 'buy_margin', 'sell_margin',
+        'is_popular', 'is_visible', 'display_order',
+    )
+
+    @admin.action(description='Fetch reference rates now, and apply to auto-update currencies')
+    def fetch_reference_rates_now(self, request, queryset):
+        """Manual equivalent of the scheduled `fetch_reference_rates` command — same underlying
+        call, so a click and a cron tick always produce the same result."""
+        summary = refresh_reference_rates()
+        if not summary['ok']:
+            self.message_user(request, 'All reference-rate providers failed — nothing was updated.', level=messages.ERROR)
+            return
+
+        text = f'Fetched {summary["fetched"]} reference rates, applied to {summary["applied"]} currencies.'
+        if summary['missing']:
+            text += f' No reference available for: {", ".join(summary["missing"])}.'
+        self.message_user(request, text, level=messages.SUCCESS if not summary['missing'] else messages.WARNING)
 
     def get_queryset(self, request):
         # One query for every reference rate on the page, instead of one per row.

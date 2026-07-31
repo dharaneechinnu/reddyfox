@@ -27,6 +27,22 @@ class Currency(models.Model):
     display_order = models.PositiveIntegerField(default=0, help_text='Lower numbers appear first in the rate table')
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Reference-rate auto-update. Off by default and per-row, so nothing changes for a currency
+    # until staff explicitly opts it in here and sets its own margin — the desk stays in control
+    # of both whether this runs and what it computes. See reference_rates/services.py.
+    auto_update_from_reference = models.BooleanField(
+        default=False,
+        help_text='When on, buy_rate/sell_rate are recalculated automatically from the fetched market rate plus the margins below, on every scheduled or manual reference-rate fetch.',
+    )
+    sell_margin = models.DecimalField(
+        max_digits=8, decimal_places=4, default=1,
+        help_text='Added to the fetched market rate to set sell_rate automatically, e.g. 1.00 to sell ₹1 above market. Only used when auto-update is on.',
+    )
+    buy_margin = models.DecimalField(
+        max_digits=8, decimal_places=4, default=-1,
+        help_text='Added to the fetched market rate to set buy_rate automatically, e.g. -1.00 to buy ₹1 below market. Only used when auto-update is on.',
+    )
+
     class Meta:
         ordering = ['display_order', 'code']
         verbose_name_plural = 'currencies'
