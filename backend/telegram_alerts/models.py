@@ -1,4 +1,19 @@
+import secrets
+
+from django.conf import settings
 from django.db import models
+from django.utils import timezone
+
+
+def _generate_token():
+    # url-safe, unguessable — this is the only thing the QR code / deep link carries, so it must
+    # never be predictable. 16 bytes -> ~22 url-safe characters.
+    return secrets.token_urlsafe(16)
+
+
+def _default_expiry():
+    hours = getattr(settings, 'TELEGRAM_INVITE_EXPIRY_HOURS', 24)
+    return timezone.now() + timezone.timedelta(hours=hours)
 
 
 class TelegramSubscriber(models.Model):
@@ -28,6 +43,59 @@ class TelegramSubscriber(models.Model):
 
     def __str__(self):
         return f'{self.name} ({self.chat_id})' + ('' if self.is_active else ' — inactive')
+
+
+class TelegramInvite(models.Model):
+    """A one-time, expiring QR/deep-link invite an admin generates for one staff member.
+
+    This is the v2 onboarding path (see docs/telegram-bot.md): an admin creates one of these
+    (label only — everything else is generated), gets back a QR code encoding a Telegram deep
+    link `https://t.me/<bot>?start=<token>`. The staff member scans it, taps Start, and the
+    production webhook (telegram_alerts/views.py) turns that into a TelegramSubscriber row
+    automatically — no manual chat_id lookup.
+
+    The admin still creates the invite in the first place, so this doesn't loosen the
+    authorization model at all (see TelegramSubscriber's docstring) — it only replaces the
+    *identity-proving* step with something faster than grepping `getUpdates`.
+    """
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending — not yet scanned'
+        CLAIMED = 'claimed', 'Claimed'
+        EXPIRED = 'expired', 'Expired'
+        REVOKED = 'revoked', 'Revoked'
+
+    token = models.CharField(max_length=64, unique=True, default=_generate_token, editable=False)
+    label = models.CharField(max_length=100, help_text="Who this invite is for, e.g. \"Ravi — counter\". Becomes the subscriber's name once claimed.")
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING, db_index=True)
+    expires_at = models.DateTimeField(default=_default_expiry)
+    claimed_by = models.OneToOneField(
+        TelegramSubscriber, null=True, blank=True, on_delete=models.SET_NULL, related_name='claimed_invite',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.label} ({self.get_status_display()})'
+
+    @property
+    def is_expired(self):
+        return self.status == self.Status.PENDING and timezone.now() > self.expires_at
+
+    @property
+    def is_claimable(self):
+        """The one check the webhook actually relies on — a fresh call each time, never cached,
+        so a token that expires mid-request is never accidentally claimed."""
+        return self.status == self.Status.PENDING and timezone.now() <= self.expires_at
+
+    @property
+    def deep_link(self):
+        bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', '')
+        if not bot_username:
+            return None
+        return f'https://t.me/{bot_username}?start={self.token}'
 
 
 class TelegramDelivery(models.Model):
