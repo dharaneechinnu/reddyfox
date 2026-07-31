@@ -207,6 +207,12 @@ class Lead(models.Model):
 
     # --- workflow (the only fields staff edit) ---
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.NEW, db_index=True)
+    is_resolved = models.BooleanField(
+        default=False, db_index=True,
+        help_text='Untick (default) while the desk still needs to act on this. Tick once it\'s '
+                  'fully handled — resolved items drop out of the default admin list, same as '
+                  '"unresolved" being the working set. Never deletes anything.',
+    )
     priority = models.PositiveSmallIntegerField(
         choices=Priority.choices, default=Priority.NORMAL, db_index=True,
         help_text='Which end of the list this sits at. Set automatically when the lead arrives '

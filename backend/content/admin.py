@@ -199,6 +199,20 @@ class BaseLeadAdmin(admin.ModelAdmin):
     def mark_spam(self, request, queryset):
         self._bulk_set(request, queryset, Lead.Status.SPAM, 'spam')
 
+    @admin.action(description='Mark selected as resolved')
+    def mark_resolved(self, request, queryset):
+        updated = queryset.update(is_resolved=True)
+        self.message_user(request, f'{updated} record(s) marked resolved.', messages.SUCCESS)
+
+    @admin.action(description='Mark selected as unresolved')
+    def mark_unresolved(self, request, queryset):
+        updated = queryset.update(is_resolved=False)
+        self.message_user(request, f'{updated} record(s) marked unresolved.', messages.SUCCESS)
+
+    @admin.display(description='Resolved', ordering='is_resolved', boolean=True)
+    def resolved_badge(self, obj):
+        return obj.is_resolved
+
     def _shift_priority(self, request, queryset, step, label):
         # Clamp rather than wrap: stepping past Urgent should stay Urgent,
         # not roll around to Low.
@@ -226,17 +240,33 @@ class BaseLeadAdmin(admin.ModelAdmin):
 
 @admin.register(Enquiry)
 class EnquiryAdmin(BaseLeadAdmin):
-    """Front office inbox — general contact-form enquiries."""
+    """Front office inbox — general contact-form enquiries.
 
-    list_display = ('priority_badge', 'status_badge', 'received', 'name', 'phone_links', 'email', 'service', 'priority', 'assigned_to')
-    list_filter = ('priority', 'status', 'service', 'assigned_to', 'created_at')
+    Resolved enquiries drop out of the default list — this is the working queue, not a full
+    archive. Nothing is hidden permanently: clicking the "Resolved" (or "All") option under the
+    "Is resolved" filter in the sidebar shows them again, same as `is_visible` elsewhere in this
+    codebase never actually deletes a row.
+    """
+
+    list_display = ('priority_badge', 'status_badge', 'resolved_badge', 'received', 'name', 'phone_links', 'email', 'service', 'priority', 'assigned_to')
+    list_filter = ('is_resolved', 'priority', 'status', 'service', 'assigned_to', 'created_at')
+    actions = BaseLeadAdmin.actions + ('mark_resolved', 'mark_unresolved')
     customer_fields = ('name', 'phone', 'email', 'service', 'message')
     fieldsets = (
         ('Customer enquiry', {'fields': ('name', 'phone', 'email', 'service', 'message', 'reply_links')}),
-        ('Handling', {'fields': ('priority', 'status', 'assigned_to', 'internal_note')}),
+        ('Handling', {'fields': ('priority', 'status', 'is_resolved', 'assigned_to', 'internal_note')}),
         ('Audit', {'classes': ('collapse',),
                    'fields': ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
     )
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # Unresolved is the default working view. Staff can still reach resolved rows by picking
+        # "Resolved" (or "All") from the "Is resolved" filter in the sidebar — this only changes
+        # what shows with no filter applied, never what exists.
+        if 'is_resolved__exact' not in request.GET:
+            qs = qs.filter(is_resolved=False)
+        return qs
 
 
 @admin.register(CallbackRequest)
