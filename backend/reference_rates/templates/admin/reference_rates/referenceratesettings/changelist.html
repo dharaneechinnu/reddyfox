@@ -4,8 +4,7 @@
 {% block breadcrumbs %}
 <div class="breadcrumbs">
   <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
-  &rsaquo; <a href="{% url 'admin:app_list' app_label='rates' %}">{{ opts.app_config.verbose_name }}</a>
-  &rsaquo; <a href="{% url 'admin:rates_currency_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+  &rsaquo; <a href="{% url 'admin:app_list' app_label='reference_rates' %}">{{ opts.app_config.verbose_name }}</a>
   &rsaquo; {{ title }}
 </div>
 {% endblock %}
@@ -17,7 +16,9 @@
     then <strong>Save &amp; fetch now</strong> to pull the real market rate from the API and
     calculate each currency's buy/sell rate as <code>market rate + margin</code> — the result shows
     in the table below, on this same page. With auto-update off, fetching only refreshes the
-    "Market ref" column; buy/sell stay exactly as hand-entered.
+    "Market ref" column on the
+    <a href="{% url 'admin:rates_currency_changelist' %}">Currency list</a>; buy/sell stay exactly
+    as hand-entered.
   </p>
 
   <form method="post">

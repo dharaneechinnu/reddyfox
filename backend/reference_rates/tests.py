@@ -222,7 +222,7 @@ class CurrencyChangelistRendersTests(TestCase):
         client = Client()
         client.login(username='admin', password='password123')
         response = client.get('/admin/rates/currency/')
-        self.assertContains(response, '/admin/rates/currency/reference-rates/')
+        self.assertContains(response, '/admin/reference_rates/referenceratesettings/')
 
 
 @override_settings(STORAGES={
@@ -243,7 +243,7 @@ class ReferenceRatesPageTests(TestCase):
         _currency('USD')
         _currency('EUR')
         self.client.login(username='admin', password='password123')
-        response = self.client.get('/admin/rates/currency/reference-rates/')
+        response = self.client.get('/admin/reference_rates/referenceratesettings/')
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'auto_update_enabled')
         self.assertContains(response, 'buy_margin')
@@ -262,11 +262,11 @@ class ReferenceRatesPageTests(TestCase):
             'sell_margin': '2.00',
         }
         with _patch_providers({'USD': (90.0, 'fawazahmed0'), 'EUR': (97.0, 'fawazahmed0')}):
-            response = self.client.post('/admin/rates/currency/reference-rates/', data, follow=True)
+            response = self.client.post('/admin/reference_rates/referenceratesettings/', data, follow=True)
 
         # Redirects to itself (POST-redirect-GET), not the changelist — the calculated result is
         # shown right on this page.
-        self.assertRedirects(response, '/admin/rates/currency/reference-rates/')
+        self.assertRedirects(response, '/admin/reference_rates/referenceratesettings/')
         self.assertContains(response, '92.00')  # USD sell: 90 market + 2 margin
         self.assertContains(response, '88.00')  # USD buy: 90 market - 2 margin
         settings_obj = ReferenceRateSettings.load()
@@ -282,12 +282,12 @@ class ReferenceRatesPageTests(TestCase):
         self.assertEqual(eur.buy_rate, Decimal('95.00'))
 
     def test_requires_login(self):
-        response = self.client.get('/admin/rates/currency/reference-rates/')
+        response = self.client.get('/admin/reference_rates/referenceratesettings/')
         self.assertNotEqual(response.status_code, 200)
 
     def test_staff_without_change_permission_is_redirected(self):
         User = get_user_model()
         limited = User.objects.create_user('limited', 'limited@example.com', 'password123', is_staff=True)
         self.client.login(username='limited', password='password123')
-        response = self.client.get('/admin/rates/currency/reference-rates/', follow=True)
+        response = self.client.get('/admin/reference_rates/referenceratesettings/', follow=True)
         self.assertRedirects(response, '/admin/')

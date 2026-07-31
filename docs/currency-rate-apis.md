@@ -215,13 +215,20 @@ Worth knowing about as the ultimate fallback: if every wrapper disappears, this 
 
 Implemented in a dedicated `reference_rates` Django app:
 
-1. **`ReferenceRate`**, its own model in its own app — *separate from* `rates.Currency`. Stores
-   the fetched market rate per currency code, with its source and fetch time.
+1. **`ReferenceRate`**, its own model. Stores the fetched market rate per currency code, with its
+   source and fetch time.
 2. **`ReferenceRateSettings`, a singleton** (same `pk=1` pattern as `content.SiteSetting`) holding
    **one global config, applied to every currency alike**: `auto_update_enabled`, `buy_margin`,
    `sell_margin`. There's deliberately no per-currency override — one desk-set margin for the whole
    board, configured in one place.
-3. **One shared entry point, three triggers.** `reference_rates/services.py::refresh_reference_rates()`
+3. **Its own admin surface, not a sub-page of `rates.CurrencyAdmin`.** `ReferenceRateSettingsAdmin`
+   is registered in `reference_rates/admin.py` and fully overrides `changelist_view()` — Django's
+   default add/change list for this model is replaced with one combined screen: the margin form,
+   and, on the same page after saving, a table of the result. `rates.CurrencyAdmin` only keeps a
+   "Reference rates & margins" *link* to it (`/admin/reference_rates/referenceratesettings/`), not
+   any of the logic — moving that logic here means the Currency app doesn't need to know how
+   reference rates work at all, only that this button exists.
+4. **One shared entry point, three triggers.** `reference_rates/services.py::refresh_reference_rates()`
    does the fetch-store-apply work; the scheduled command, the manual admin action, and the settings
    page all call it, so any of the three always do exactly the same thing.
    - **Scheduled**: `python manage.py fetch_reference_rates`, once every 24h via a Render Cron Job
@@ -229,12 +236,11 @@ Implemented in a dedicated `reference_rates` Django app:
    - **Manual, quick**: a "Fetch reference rates now" action in the Currency admin's action
      dropdown — fetches with whatever margin is already saved, no screen change.
    - **Manual, with margin changes**: the **"Reference rates & margins" button** on the Currency
-     changelist (`/admin/rates/currency/`) opens a dedicated screen
-     (`/admin/rates/currency/reference-rates/`) with the auto-update toggle and the two margin
-     fields. Submitting it saves the settings, fetches the real market rate, and — on that same
-     page — shows a table of the result: each currency's fetched market rate next to the buy/sell
-     rate calculated from it (`market rate + margin`). One screen for the whole loop: configure,
-     fetch, see the result.
+     changelist (`/admin/rates/currency/`) opens `/admin/reference_rates/referenceratesettings/`,
+     with the auto-update toggle and the two margin fields. Submitting it saves the settings,
+     fetches the real market rate, and — on that same page — shows a table of the result: each
+     currency's fetched market rate next to the buy/sell rate calculated from it
+     (`market rate + margin`). One screen for the whole loop: configure, fetch, see the result.
 4. **Auto-apply is opt-in and staff-configured, globally.** `ReferenceRateSettings.auto_update_enabled`
    defaults to **off** — until a staff member switches it on, `buy_rate`/`sell_rate` stay exactly as
    hand-entered, unaffected by this app entirely. Once on, every fetch (any of the three triggers)

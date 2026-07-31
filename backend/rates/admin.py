@@ -1,24 +1,14 @@
 from decimal import Decimal
 
-from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
-from django.shortcuts import redirect
-from django.template.response import TemplateResponse
-from django.urls import path
 from django.utils import timezone
 from django.utils.html import format_html
 
-from reference_rates.models import ReferenceRate, ReferenceRateSettings
+from reference_rates.models import ReferenceRate
 from reference_rates.services import refresh_reference_rates
 
 from .models import Currency
-
-
-class ReferenceRateSettingsForm(forms.ModelForm):
-    class Meta:
-        model = ReferenceRateSettings
-        fields = ['auto_update_enabled', 'buy_margin', 'sell_margin']
 
 
 @admin.register(Currency)
@@ -36,66 +26,11 @@ class CurrencyAdmin(admin.ModelAdmin):
         'is_popular', 'is_visible', 'display_order',
     )
 
-    def get_urls(self):
-        custom = [
-            path(
-                'reference-rates/',
-                self.admin_site.admin_view(self.reference_rates_view),
-                name='rates_currency_reference_rates',
-            ),
-        ]
-        return custom + super().get_urls()
-
-    def reference_rates_view(self, request):
-        """One screen: the global margin config, a "Save & fetch now" button, and — right below
-        it, on the same page — the result of the fetch: real market rate per currency, and the
-        buy/sell rate calculated from it using the saved margins.
-        """
-        if not request.user.has_perm('rates.change_currency'):
-            self.message_user(request, "You don't have permission to change currencies.", level=messages.ERROR)
-            return redirect('admin:index')
-
-        settings_obj = ReferenceRateSettings.load()
-
-        if request.method == 'POST':
-            form = ReferenceRateSettingsForm(request.POST, instance=settings_obj)
-            if form.is_valid():
-                form.save()
-                summary = refresh_reference_rates()
-                if summary['ok']:
-                    text = f'Fetched {summary["fetched"]} reference rates, applied to {summary["applied"]} currencies.'
-                    if summary['missing']:
-                        text += f' No reference available for: {", ".join(summary["missing"])}.'
-                    self.message_user(request, text, level=messages.SUCCESS if not summary['missing'] else messages.WARNING)
-                else:
-                    self.message_user(request, 'Settings saved, but all reference-rate providers failed — rates were not updated.', level=messages.ERROR)
-                # Redirect to self (not the changelist) — same screen shows the calculated result
-                # right below the form, so there's nowhere else to send them.
-                return redirect('admin:rates_currency_reference_rates')
-        else:
-            form = ReferenceRateSettingsForm(instance=settings_obj)
-
-        reference_rates = {rr.code: rr for rr in ReferenceRate.objects.all()}
-        currencies = Currency.objects.order_by('display_order', 'code')
-        rows = [
-            {'currency': currency, 'reference': reference_rates.get(currency.code)}
-            for currency in currencies
-        ]
-
-        context = {
-            **self.admin_site.each_context(request),
-            'title': 'Reference rates & margins',
-            'opts': self.model._meta,
-            'form': form,
-            'rows': rows,
-            'settings_obj': settings_obj,
-        }
-        return TemplateResponse(request, 'admin/rates/currency/reference_rates.html', context)
-
-    @admin.action(description='Fetch reference rates now, and apply to auto-update currencies')
+    @admin.action(description='Fetch reference rates now, and apply if auto-update is on')
     def fetch_reference_rates_now(self, request, queryset):
         """Manual equivalent of the scheduled `fetch_reference_rates` command — same underlying
-        call, so a click and a cron tick always produce the same result."""
+        call, so a click and a cron tick always produce the same result. Margin configuration
+        itself lives on the reference_rates app's own admin screen, not here."""
         summary = refresh_reference_rates()
         if not summary['ok']:
             self.message_user(request, 'All reference-rate providers failed — nothing was updated.', level=messages.ERROR)
