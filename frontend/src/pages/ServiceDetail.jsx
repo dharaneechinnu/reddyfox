@@ -46,20 +46,34 @@ export default function ServiceDetail() {
         </div>
       </section>
 
-      <div style={{ background: '#fff', borderBottom: `1px solid ${c.sandLine2}`, position: 'sticky', top: 73, zIndex: 40 }}>
-        <div style={{ ...wrap, padding: '14px 32px', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {SERVICES.map((s) => (
-            <span
-              key={s.id}
-              onClick={() => navigate(`/services/${s.id}`)}
-              style={{
-                padding: '9px 15px', borderRadius: 100, border: `1px solid ${c.sandBorder3}`, fontSize: 13.5, fontWeight: 500, cursor: 'pointer',
-                background: s.id === active.id ? c.navy : '#fff', color: s.id === active.id ? '#fff' : c.text, transition: 'all .18s',
-              }}
-            >{s.title}</span>
-          ))}
+      <nav
+        aria-label="Services"
+        style={{ background: '#fff', borderBottom: `1px solid ${c.sandLine2}`, position: 'sticky', top: 73, zIndex: 40 }}
+      >
+        <div
+          className="fx-service-nav-row"
+          style={{
+            ...wrap, padding: '0 32px', display: 'flex', flexWrap: 'nowrap',
+            overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none',
+          }}
+        >
+          {SERVICES.map((s) => {
+            const isActive = s.id === active.id;
+            return (
+              <span
+                key={s.id}
+                className="fx-service-tab"
+                onClick={() => navigate(`/services/${s.id}`)}
+                style={{
+                  flex: 'none', whiteSpace: 'nowrap', padding: '17px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                  color: isActive ? c.navy : c.textMuted, borderBottom: `2px solid ${isActive ? c.orange : 'transparent'}`,
+                  transition: 'color .18s, border-color .18s',
+                }}
+              >{s.title}</span>
+            );
+          })}
         </div>
-      </div>
+      </nav>
 
       <section style={{ background: '#fff', padding: '88px 0' }}>
         <div style={wrap}>

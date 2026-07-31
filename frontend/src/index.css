@@ -148,3 +148,16 @@ button {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Service detail page's sub-nav: a single scrollable row of service tabs, never wrapping onto a
+   second line regardless of viewport width. scrollbar-width:none (Firefox) is set inline; these
+   cover WebKit/Blink and old Edge, which don't support that CSS property. */
+.fx-service-nav-row::-webkit-scrollbar {
+  display: none;
+}
+.fx-service-nav-row {
+  -ms-overflow-style: none;
+}
+.fx-service-tab:hover {
+  color: #0B1B33 !important; /* tokens.js c.navy — a lighter touch than jumping straight to the active state */
+}

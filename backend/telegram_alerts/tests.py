@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from django.test import TestCase, override_settings
 
-from content.models import CallbackRequest
+from content.models import CallbackRequest, QuoteRequest
 
 from .models import TelegramDelivery, TelegramSubscriber
 from .services import format_message, notify_team_telegram
@@ -13,6 +13,16 @@ def _callback(**kw):
     d = dict(name='Deborah Beck', phone='9876543210', from_currency='USD', to_currency='INR', amount='500')
     d.update(kw)
     return CallbackRequest.objects.create(**d)
+
+
+def _quote(**kw):
+    d = dict(
+        name='Deborah Beck', phone='9876543210', email='d@example.com',
+        from_currency='USD', to_currency='INR', amount='500',
+        service='Foreign Exchange', needed_by='2026-08-15',
+    )
+    d.update(kw)
+    return QuoteRequest.objects.create(**d)
 
 
 def _subscriber(**kw):
@@ -35,6 +45,26 @@ class FormatMessageTests(TestCase):
         lead = _callback(from_currency='', to_currency='', amount=None)
         text = format_message(lead)
         self.assertNotIn('Converting', text)
+
+    def test_quote_request_includes_service_and_needed_by(self):
+        lead = _quote(service='Money Transfer', needed_by='2026-09-01')
+        text = format_message(lead)
+        self.assertIn('Service  : Money Transfer', text)
+        self.assertIn('Needed by: 2026-09-01', text)
+        # Still gets the generic currency/amount line too, not replaced by the quote-specific one.
+        self.assertIn('Converting', text)
+
+    def test_quote_request_with_blank_service_and_needed_by_shows_placeholder(self):
+        lead = _quote(service='', needed_by=None)
+        text = format_message(lead)
+        self.assertIn('Service  : (not specified)', text)
+        self.assertIn('Needed by: (not specified)', text)
+
+    def test_non_quote_leads_do_not_get_the_service_needed_by_block(self):
+        lead = _callback()
+        text = format_message(lead)
+        self.assertNotIn('Service  :', text)
+        self.assertNotIn('Needed by:', text)
 
 
 @override_settings(TELEGRAM_BOT_TOKEN='test-token')
