@@ -45,6 +45,27 @@ class LookupRateViewTests(TestCase):
         self.assertEqual(data['suggested_sell'], '255.52')
         self.assertEqual(data['source'], Provider.EXCHANGERATE_API)
 
+    def test_known_code_also_suggests_name_country_and_region(self):
+        with _patch_fetch({'BHD': (254.52, Provider.EXCHANGERATE_API)}):
+            response = self.client.get('/admin/rates/currency/lookup-rate/', {'code': 'BHD'})
+
+        data = response.json()
+        self.assertEqual(data['name'], 'Bahraini Dinar')
+        self.assertEqual(data['country_code'], 'BH')
+        self.assertEqual(data['region'], 'Middle East')
+
+    def test_code_covered_by_a_provider_but_missing_from_the_metadata_table(self):
+        # A currency the market-rate providers know about but our small name/country/region
+        # table doesn't — the rate suggestion must still work, just without those three extras.
+        with _patch_fetch({'ZZZ': (10.0, Provider.EXCHANGERATE_API)}):
+            response = self.client.get('/admin/rates/currency/lookup-rate/', {'code': 'ZZZ'})
+
+        data = response.json()
+        self.assertTrue(data['ok'])
+        self.assertIsNone(data['name'])
+        self.assertIsNone(data['country_code'])
+        self.assertIsNone(data['region'])
+
     def test_code_not_covered_by_any_provider(self):
         with _patch_fetch({}):
             response = self.client.get('/admin/rates/currency/lookup-rate/', {'code': 'XYZ'})

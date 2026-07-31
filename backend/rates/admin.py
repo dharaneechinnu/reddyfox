@@ -11,6 +11,7 @@ from fx_providers.providers import fetch_with_fallback
 from reference_rates.models import ReferenceRate, ReferenceRateSettings
 from reference_rates.services import refresh_reference_rates
 
+from .currency_metadata import CURRENCY_METADATA
 from .models import Currency
 
 TWO_PLACES = Decimal('0.01')
@@ -76,6 +77,11 @@ class CurrencyAdmin(admin.ModelAdmin):
         suggested_buy = (market_rate + settings_obj.buy_margin).quantize(TWO_PLACES, rounding=ROUND_HALF_UP)
         suggested_sell = (market_rate + settings_obj.sell_margin).quantize(TWO_PLACES, rounding=ROUND_HALF_UP)
 
+        # Name/country/region come from a small static ISO table, not from any rate provider —
+        # none of their basic endpoints return currency metadata. A code missing from that table
+        # just means those three fields aren't suggested; the rate suggestion above is unaffected.
+        name, country_code, region = CURRENCY_METADATA.get(code, (None, None, None))
+
         return JsonResponse({
             'ok': True,
             'code': code,
@@ -83,6 +89,9 @@ class CurrencyAdmin(admin.ModelAdmin):
             'source': source,
             'suggested_buy': str(suggested_buy),
             'suggested_sell': str(suggested_sell),
+            'name': name,
+            'country_code': country_code,
+            'region': region,
         })
 
     @admin.action(description='Fetch reference rates now, and apply if auto-update is on')

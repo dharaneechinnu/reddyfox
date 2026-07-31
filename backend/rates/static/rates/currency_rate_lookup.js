@@ -45,6 +45,13 @@
     var codeField = document.getElementById('id_code');
     var buyField = document.getElementById('id_buy_rate');
     var sellField = document.getElementById('id_sell_rate');
+    // These three are optional — name/country_code/region are known for a smaller table of
+    // currencies (rates/currency_metadata.py) than the rate itself, and the change form's other
+    // fields might not all be present on every future variant of this page. Rate suggestions
+    // still work even if these are missing; only "Use suggestion" filling them is skipped.
+    var nameField = document.getElementById('id_name');
+    var countryField = document.getElementById('id_country_code');
+    var regionField = document.getElementById('id_region');
     if (!codeField || !buyField || !sellField) return;
 
     var box = document.createElement('div');
@@ -84,6 +91,14 @@
             return;
           }
 
+          var detailBits = [];
+          if (data.name) detailBits.push(escapeHtml(data.name));
+          if (data.country_code) detailBits.push(escapeHtml(data.country_code));
+          if (data.region) detailBits.push(escapeHtml(data.region));
+          var detailText = detailBits.length
+            ? ' Also fills in: ' + detailBits.join(', ') + '.'
+            : ' (Name/country/region not known for this code — only the rate will be filled.)';
+
           renderBox(
             box,
             'Market rate for ' + escapeHtml(data.code) + ': <strong>₹' + escapeHtml(data.rate) +
@@ -92,7 +107,12 @@
             ' <button type="button" id="currency-rate-suggestion-apply" class="button" ' +
             'style="margin-left:8px;background:#fff;color:#000;border:1px solid #fff" ' +
             'data-buy="' + escapeHtml(data.suggested_buy) +
-            '" data-sell="' + escapeHtml(data.suggested_sell) + '">Use suggestion</button>'
+            '" data-sell="' + escapeHtml(data.suggested_sell) +
+            '" data-name="' + escapeHtml(data.name) +
+            '" data-country="' + escapeHtml(data.country_code) +
+            '" data-region="' + escapeHtml(data.region) +
+            '">Use suggestion</button>' +
+            '<div style="margin-top:4px;font-size:12px;opacity:.85">' + detailText + '</div>'
           );
 
           var applyBtn = document.getElementById('currency-rate-suggestion-apply');
@@ -100,6 +120,23 @@
             applyBtn.addEventListener('click', function () {
               buyField.value = applyBtn.getAttribute('data-buy');
               sellField.value = applyBtn.getAttribute('data-sell');
+
+              var name = applyBtn.getAttribute('data-name');
+              if (name && nameField) nameField.value = name;
+
+              var country = applyBtn.getAttribute('data-country');
+              if (country && countryField) countryField.value = country;
+
+              var region = applyBtn.getAttribute('data-region');
+              if (region && regionField) {
+                // <select> — only set it if the value actually matches one of the option values;
+                // silently doing nothing is safer than leaving the field on an invalid selection.
+                var matched = false;
+                for (var i = 0; i < regionField.options.length; i++) {
+                  if (regionField.options[i].value === region) { matched = true; break; }
+                }
+                if (matched) regionField.value = region;
+              }
             });
           }
         })
