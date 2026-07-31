@@ -284,3 +284,8 @@ REFERENCE_RATE_DIVERGENCE_WARN_PCT = config('REFERENCE_RATE_DIVERGENCE_WARN_PCT'
 # A reference rate older than this many hours is shown as stale in the admin rather than trusted
 # for the divergence check — a fetch outage must be visible, not silently treated as current.
 REFERENCE_RATE_STALE_AFTER_HOURS = config('REFERENCE_RATE_STALE_AFTER_HOURS', default=48, cast=int)
+
+# Primary reference-rate provider (exchangerate-api.com). Blank in an environment that hasn't been
+# given a key yet — reference_rates/providers.py treats that as "skip straight to the fawazahmed0
+# fallback," not an error. Never has a default other than '': this one is a real secret.
+EXCHANGERATE_API_KEY = config('EXCHANGERATE_API_KEY', default='')

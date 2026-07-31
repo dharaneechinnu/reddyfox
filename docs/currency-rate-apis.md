@@ -35,6 +35,23 @@ Frankfurter is kept in the code as a secondary/cross-check provider for the ~13 
 cover, since a second independent source is a stronger typo guard than one — but it is not the
 primary, and nothing here waits on it.
 
+**Second revision, production setup: `exchangerate-api.com` promoted to primary.** By explicit
+choice, once production readiness mattered more than staying keyless: exchangerate-api.com is a
+real vendor (dashboard, quota alerts, SLA) rather than a single maintainer's free CDN. Free tier is
+1,500 requests/month, 161 currencies (covers the whole board, Gulf currencies included — verified
+live against the real endpoint), daily updates; our actual usage is ~60 requests/month from the
+daily cron plus occasional manual fetches, comfortably inside the free tier. Requires
+`EXCHANGERATE_API_KEY` (get one at exchangerate-api.com; blank in an environment without a key
+skips straight to the fallback below, no error). Its terms permit caching for internal use like
+ours but prohibit redistributing the data or using it to offer "programmatic or automatic access to
+exchange rates" — `ReferenceRate` stays admin-only with no public serializer, which already
+satisfies this.
+
+**`fawazahmed0/exchange-api` is now the fallback**, not the primary — same free/keyless full-board
+coverage, used automatically if the key is missing, revoked, or the free quota is somehow exceeded.
+Frankfurter remains the last-resort provider, tried only for whatever's still missing after both of
+the above. See `reference_rates/providers.py` for the exact order.
+
 ---
 
 ## Read this first: market rates are not our rates
