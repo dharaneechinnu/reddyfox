@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.db import models
 from django.utils import timezone
 
-from .validators import normalize_phone, validate_indian_phone
+from .validators import normalize_phone, validate_image_upload, validate_indian_phone
 
 
 class VisibleOrderedQuerySet(models.QuerySet):
@@ -478,3 +478,98 @@ class SiteSetting(models.Model):
     def load(cls):
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
+
+
+# Longest side an uploaded photo is downscaled to on save. Keeps a staff phone
+# photo (routinely 3000px+) from sitting on disk — and going out over every
+# page load — at full camera resolution. A number, not a setting: this is an
+# implementation detail of how uploads are stored, not something an operator
+# needs to tune per-deploy.
+SITE_IMAGE_MAX_DIMENSION = 1600
+
+
+class SiteImage(models.Model):
+    """A staff-uploaded photo for one fixed spot on the site.
+
+    Slots are a fixed enum, not free text — each one corresponds to a
+    specific placeholder block in the React frontend (see SitePhoto.jsx).
+    If a slot has no row yet, or is hidden, the frontend quietly keeps its
+    decorative placeholder instead of breaking the layout — same
+    never-block-on-missing-content pattern as is_visible elsewhere in this
+    app. Stored on local disk (Django's default FileSystemStorage) — no
+    third-party image host. See MEDIA_ROOT/MEDIA_URL in settings.py for how
+    that's served, including the production caveat about disk persistence.
+    """
+
+    class Slot(models.TextChoices):
+        HOME_WHY_US = 'home_why_us', 'Homepage — "Why us" counter photo'
+        ABOUT_COUNTER = 'about_counter', 'About us — counter photo'
+        ABOUT_TEAM = 'about_team', 'About us — front office team photo'
+        SERVICE_EXCHANGE = 'service_exchange', 'Service page — Foreign Exchange'
+        SERVICE_MONEY_TRANSFER = 'service_money-transfer', 'Service page — Money Transfer'
+        SERVICE_REMITTANCE = 'service_remittance', 'Service page — Money Remittance'
+        SERVICE_FOREX_CARD = 'service_forex-card', 'Service page — Prepaid Forex Card'
+        SERVICE_WIRE_TRANSFER = 'service_wire-transfer', 'Service page — Drafts / TT / Swift Transfer'
+        SERVICE_STUDENT = 'service_student-services', 'Service page — Student Services'
+
+    slot = models.CharField(
+        max_length=40, choices=Slot.choices, unique=True,
+        help_text='Which spot on the site this photo fills. Each slot can only be used once — '
+                  'edit the existing row for that slot rather than adding a second one.',
+    )
+    image = models.ImageField(
+        upload_to='site-images/%Y/%m/',
+        validators=[validate_image_upload],
+        help_text='JPEG, PNG or WebP, under 8 MB. Resized automatically if larger than '
+                  f'{SITE_IMAGE_MAX_DIMENSION}px on the longest side.',
+    )
+    alt_text = models.CharField(
+        max_length=200, blank=True,
+        help_text='Describes the photo for screen readers and search engines. '
+                  'Leave blank and the slot\'s label is used instead.',
+    )
+    is_visible = models.BooleanField(
+        default=True,
+        help_text='Untick to fall back to the plain placeholder on the site without deleting the upload.',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['slot']
+        verbose_name = 'site image'
+        verbose_name_plural = 'site images'
+
+    def __str__(self):
+        return self.get_slot_display()
+
+    @property
+    def resolved_alt_text(self):
+        return self.alt_text or self.get_slot_display()
+
+    def save(self, *args, **kwargs):
+        # Skip the Pillow round-trip entirely when this save couldn't possibly
+        # have touched the file (e.g. a list_editable toggle of is_visible).
+        update_fields = kwargs.get('update_fields')
+        touches_image = update_fields is None or 'image' in update_fields
+        super().save(*args, **kwargs)
+        if touches_image and self.image:
+            self._downscale_if_needed()
+
+    def _downscale_if_needed(self):
+        """Shrink the file on disk in place if it's larger than we ever serve it at.
+
+        Runs after super().save() because the file only exists at self.image.path
+        once Django's storage backend has actually written it. Rewrites the same
+        path — no new model save, no field/filename change — so this is safe to
+        call unconditionally; it's a no-op read+skip for an already-small image.
+        """
+        from PIL import Image
+
+        path = self.image.path
+        with Image.open(path) as img:
+            if max(img.size) <= SITE_IMAGE_MAX_DIMENSION:
+                return
+            img.thumbnail((SITE_IMAGE_MAX_DIMENSION, SITE_IMAGE_MAX_DIMENSION), Image.LANCZOS)
+            save_kwargs = {'quality': 85, 'optimize': True} if img.format == 'JPEG' else {'optimize': True}
+            img.save(path, format=img.format, **save_kwargs)
