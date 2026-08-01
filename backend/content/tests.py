@@ -6,6 +6,7 @@ from datetime import timedelta
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from PIL import Image
@@ -456,3 +457,44 @@ class SiteImageAdminTests(TestCase):
     def test_add_form_renders(self):
         res = self.client.get(reverse('admin:content_siteimage_add'))
         self.assertEqual(res.status_code, 200)
+
+
+@override_settings(MEDIA_ROOT=_TEST_MEDIA_ROOT)
+class SeedSiteImagesTests(TestCase):
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(_TEST_MEDIA_ROOT, ignore_errors=True)
+
+    def test_creates_one_row_per_slot(self):
+        call_command('seed_site_images', stdout=io.StringIO())
+        self.assertEqual(SiteImage.objects.count(), len(SiteImage.Slot.choices))
+        for slot, _label in SiteImage.Slot.choices:
+            self.assertTrue(SiteImage.objects.filter(slot=slot).exists())
+
+    def test_generated_images_are_real_decodable_images(self):
+        call_command('seed_site_images', stdout=io.StringIO())
+        for obj in SiteImage.objects.all():
+            with Image.open(obj.image.path) as img:
+                img.verify()
+
+    def test_never_overwrites_an_existing_slot(self):
+        # A staff-uploaded photo already sits in this slot — re-running the
+        # seed command (e.g. on every deploy) must leave it untouched.
+        real_upload = SiteImage.objects.create(
+            slot=SiteImage.Slot.HOME_WHY_US, image=_generated_image(), alt_text='The real shop',
+        )
+        original_name = real_upload.image.name
+
+        call_command('seed_site_images', stdout=io.StringIO())
+
+        real_upload.refresh_from_db()
+        self.assertEqual(real_upload.image.name, original_name)
+        self.assertEqual(real_upload.alt_text, 'The real shop')
+        # Every other slot should still have been seeded.
+        self.assertEqual(SiteImage.objects.count(), len(SiteImage.Slot.choices))
+
+    def test_is_idempotent(self):
+        call_command('seed_site_images', stdout=io.StringIO())
+        call_command('seed_site_images', stdout=io.StringIO())  # must not error or duplicate
+        self.assertEqual(SiteImage.objects.count(), len(SiteImage.Slot.choices))
