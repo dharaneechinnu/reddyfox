@@ -1,6 +1,6 @@
 import { useFx } from '../context/FxContext';
 import { c, fonts } from '../tokens';
-import { PRIMARY_PHONE } from '../company';
+import { useCompanyInfo } from '../context/CompanyInfoContext';
 import { fmt } from '../data';
 import { validateEmail, validatePhone, validateRequired } from '../validation';
 import { submitRateLock } from '../api';
@@ -24,6 +24,7 @@ const VALIDATORS = {
  */
 export default function RateLockForm() {
   const fx = useFx();
+  const { primaryPhone } = useCompanyInfo();
 
   const f = useLeadForm({
     initial: { name: '', phone: '', email: '', message: '', consent: false, enquiry_ref: '' },
@@ -147,7 +148,7 @@ export default function RateLockForm() {
       <SubmitButton sending={f.sending} sendingLabel="Reserving…">Reserve this rate</SubmitButton>
       <p style={{ margin: '14px 0 0', fontSize: 11.8, lineHeight: 1.55, color: c.textFainter, textAlign: 'center' }}>
         Indicative until a dealer confirms. Final rate is set at the counter against valid ID.
-        Prefer to talk? Call {PRIMARY_PHONE.display}.
+        Prefer to talk? Call {primaryPhone.display}.
       </p>
     </form>
   );

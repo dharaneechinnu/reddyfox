@@ -6,7 +6,8 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 
 from rates.models import Currency
-from .models import CallbackRequest, Enquiry, Lead, QuoteRequest, RateLock
+from .models import CallbackRequest, Enquiry, Lead, QuoteRequest, RateLock, SiteSetting
+from .validators import landline_tel, validate_landline
 
 # Rendering an admin page needs a staticfiles manifest, which only exists
 # after `collectstatic`. Production builds one; the test runner shouldn't
@@ -312,3 +313,106 @@ class CallbackRequestTests(TestCase):
         self.assertFalse(Enquiry.objects.exists())
         self.assertFalse(QuoteRequest.objects.exists())
         self.assertFalse(RateLock.objects.exists())
+
+
+class LandlineValidatorTests(TestCase):
+    def test_accepts_a_real_looking_landline(self):
+        validate_landline('044-24353596')  # must not raise
+
+    def test_rejects_letters(self):
+        with self.assertRaises(Exception):
+            validate_landline('044-ABCDE')
+
+    def test_rejects_too_short(self):
+        with self.assertRaises(Exception):
+            validate_landline('123')
+
+    def test_tel_strips_dashes_and_leading_trunk_zero(self):
+        self.assertEqual(landline_tel('044-24353596'), '+914424353596')
+
+    def test_tel_is_none_for_blank(self):
+        self.assertIsNone(landline_tel(''))
+
+
+class SiteSettingContactInfoTests(TestCase):
+    """Company contact info (address/phones/socials) — shared by the header,
+    footer, Contact page and WhatsApp messages. See CompanyInfoContext.jsx on
+    the frontend for how a blank/unreachable API falls back to company.js."""
+
+    def test_defaults_match_the_real_published_numbers(self):
+        # These defaults exist so a fresh install shows the real business
+        # facts already published on the live site, not a placeholder —
+        # same "never invent a fact" discipline as CLAUDE.md's content rule.
+        setting = SiteSetting.load()
+        self.assertEqual(setting.mobiles[0]['display'], '+91 99414 56261')
+        self.assertEqual(setting.contact_email, 'reddyforex@gmail.com')
+
+    def test_mobiles_drops_blank_optional_numbers(self):
+        setting = SiteSetting.load()
+        setting.mobile_2 = ''
+        setting.mobile_3 = ''
+        setting.save()
+        self.assertEqual(len(setting.mobiles), 1)
+        self.assertEqual(setting.mobiles[0]['tel'], '+919941456261')
+
+    def test_mobile_is_normalized_on_save(self):
+        setting = SiteSetting.load()
+        setting.mobile_1 = '+91 99414-56261'
+        setting.save()
+        setting.refresh_from_db()
+        self.assertEqual(setting.mobile_1, '9941456261')
+
+    def test_landlines_drops_blank_optional_numbers(self):
+        setting = SiteSetting.load()
+        setting.landline_2 = ''
+        setting.save()
+        self.assertEqual(len(setting.landlines), 1)
+
+    def test_address_lines_splits_on_newline_and_drops_blanks(self):
+        setting = SiteSetting.load()
+        setting.address = 'Line one,\n\nLine two,\n  '
+        setting.save()
+        self.assertEqual(setting.address_lines, ['Line one,', 'Line two,'])
+
+    def test_address_one_line_does_not_double_commas(self):
+        setting = SiteSetting.load()
+        setting.address = 'Shop No 1,\nMain Road,'
+        setting.address_note = '(Landmark)'
+        setting.save()
+        self.assertEqual(setting.address_one_line, 'Shop No 1, Main Road (Landmark)')
+
+    def test_socials_drops_platforms_left_blank(self):
+        setting = SiteSetting.load()
+        setting.x_url = ''
+        setting.save()
+        icons = [s['icon'] for s in setting.socials]
+        self.assertEqual(icons, ['facebook', 'youtube'])
+
+    def test_public_api_exposes_contact_and_socials(self):
+        client = APIClient()
+        res = client.get(reverse('site-settings'))
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('contact', res.data)
+        self.assertIn('socials', res.data)
+        self.assertEqual(res.data['contact']['email'], 'reddyforex@gmail.com')
+        self.assertEqual(len(res.data['contact']['mobiles']), 3)
+
+    def test_public_api_is_read_only(self):
+        client = APIClient()
+        res = client.post(reverse('site-settings'), {'contact_email': 'hacked@example.com'})
+        self.assertEqual(res.status_code, 405)
+
+
+@PLAIN_STATIC
+class SiteSettingAdminTests(TestCase):
+    def setUp(self):
+        self.staff = User.objects.create_superuser('admin', 'admin@example.com', 'password')
+        self.client = APIClient()
+        self.client.force_login(self.staff)
+
+    def test_change_form_renders_with_new_contact_fields(self):
+        setting = SiteSetting.load()
+        res = self.client.get(reverse('admin:content_sitesetting_change', args=[setting.pk]))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, 'id_mobile_1')
+        self.assertContains(res, 'id_address')

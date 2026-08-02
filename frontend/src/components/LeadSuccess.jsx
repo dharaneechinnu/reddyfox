@@ -1,7 +1,7 @@
-import { CONTACT, PRIMARY_PHONE } from '../company';
 import { c, fonts } from '../tokens';
 import useApi from '../hooks/useApi';
 import { fetchSiteSettings } from '../api';
+import { useCompanyInfo } from '../context/CompanyInfoContext';
 import SocialIcon from './SocialIcon';
 
 // Module scope so useApi does not refetch on every render.
@@ -13,6 +13,7 @@ const loadSiteSettings = () => fetchSiteSettings();
  */
 export default function LeadSuccess({ heading, children, onReset, resetLabel = 'Send another request' }) {
   const { data: site } = useApi(loadSiteSettings, null);
+  const { contact, primaryPhone } = useCompanyInfo();
 
   return (
     <div role="status" style={{ background: '#fff', border: `1px solid ${c.greenBorder}`, borderRadius: 16, padding: 34 }}>
@@ -47,16 +48,16 @@ export default function LeadSuccess({ heading, children, onReset, resetLabel = '
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <a
-          href={`tel:${PRIMARY_PHONE.tel}`}
+          href={`tel:${primaryPhone.tel}`}
           style={{ display: 'block', textAlign: 'center', background: c.orange, color: '#fff', padding: 15, borderRadius: 9, fontSize: 15, fontWeight: 600, fontFamily: fonts.mono }}
         >
-          Call {PRIMARY_PHONE.display}
+          Call {primaryPhone.display}
         </a>
         <a
-          href={`mailto:${CONTACT.email}`}
+          href={`mailto:${contact.email}`}
           style={{ display: 'block', textAlign: 'center', border: `1px solid ${c.softLine}`, color: c.navy, padding: 15, borderRadius: 9, fontSize: 15, fontWeight: 600 }}
         >
-          Email {CONTACT.email}
+          Email {contact.email}
         </a>
       </div>
 

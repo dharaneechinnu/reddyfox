@@ -37,6 +37,34 @@ def validate_indian_phone(value):
         )
 
 
+LANDLINE_CLEAN = re.compile(r'[\s\-().]')
+
+
+def validate_landline(value):
+    """Looser than validate_indian_phone: landlines have an STD code and
+    don't start with 6-9, so the mobile-shaped regex above doesn't apply.
+    Just guards against staff leaving something obviously broken."""
+    digits = LANDLINE_CLEAN.sub('', str(value or ''))
+    if not digits.isdigit() or not (8 <= len(digits) <= 12):
+        raise ValidationError(
+            'Enter a valid landline number, digits and dashes only (e.g. 044-24353596).',
+            code='invalid_landline',
+        )
+
+
+def landline_tel(display):
+    """Build a tel: URI digit string from a staff-entered display string
+    (e.g. '044-24353596' -> '914424353596'), stripping one leading trunk
+    '0' the way a dialled +91 number never includes it. Returns None for a
+    blank/unset landline rather than a URI to nowhere."""
+    digits = LANDLINE_CLEAN.sub('', str(display or ''))
+    if not digits:
+        return None
+    if digits.startswith('0'):
+        digits = digits[1:]
+    return f'+91{digits}'
+
+
 def looks_like_spam(message, name=''):
     """Heuristic check. Returns a reason string, or None if it looks genuine."""
     text = f'{name}\n{message}'

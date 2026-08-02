@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
 import { CERTS, REASONS } from '../data';
-import { COMPANY, CONTACT } from '../company';
+import { COMPANY } from '../company';
 import { c, fonts, wrap } from '../tokens';
 import Seo from '../components/Seo';
+import { useCompanyInfo } from '../context/CompanyInfoContext';
 
 export default function About() {
+  const { contact } = useCompanyInfo();
   return (
     <div>
       <Seo
@@ -129,13 +131,13 @@ export default function About() {
             <div>
               <div style={{ fontSize: 12.5, color: c.navyMuted2, marginBottom: 6 }}>Visit us</div>
               <div style={{ fontSize: 15, color: '#fff', lineHeight: 1.6 }}>
-                {CONTACT.addressLines.join(' ')} {CONTACT.addressNote}
+                {contact.addressLines.join(' ')} {contact.addressNote}
               </div>
             </div>
             <div>
               <div style={{ fontSize: 12.5, color: c.navyMuted2, marginBottom: 6 }}>Call us</div>
               <div style={{ fontFamily: fonts.mono, fontSize: 15, color: '#fff' }}>
-                {CONTACT.mobiles.map((m) => m.display).join(' · ')}
+                {contact.mobiles.map((m) => m.display).join(' · ')}
               </div>
             </div>
           </div>

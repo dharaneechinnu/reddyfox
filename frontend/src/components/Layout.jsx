@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { NAV, SERVICES, FOOTER_COLS } from '../data';
-import { COMPANY, CONTACT, PRIMARY_PHONE, SOCIALS } from '../company';
+import { COMPANY } from '../company';
 import { c, fonts, wrap } from '../tokens';
 import { useFeatureFlag } from '../context/FeatureFlagsContext';
+import { useCompanyInfo } from '../context/CompanyInfoContext';
 import SocialIcon from './SocialIcon';
 import WhatsAppButton from './WhatsAppButton';
 import MobileBottomNav from './MobileBottomNav';
 
 function TopBar() {
+  const { contact, primaryPhone } = useCompanyInfo();
   return (
     <div style={{ background: c.navy, color: '#AEB8C9', fontSize: 12.5, letterSpacing: '.01em' }}>
       <div className="fx-topbar-inner" style={{ ...wrap, padding: '10px 32px', display: 'flex', flexWrap: 'wrap', gap: '8px 20px', alignItems: 'center', justifyContent: 'space-between', lineHeight: 1.5 }}>
@@ -21,9 +23,9 @@ function TopBar() {
           <span className="fx-topbar-years">{COMPANY.yearsExperience} years of experience</span>
         </div>
         <div style={{ display: 'flex', gap: 22, alignItems: 'center', flexWrap: 'wrap' }}>
-          <a href={`tel:${PRIMARY_PHONE.tel}`} style={{ color: '#E9EDF3' }}>{PRIMARY_PHONE.display}</a>
+          <a href={`tel:${primaryPhone.tel}`} style={{ color: '#E9EDF3' }}>{primaryPhone.display}</a>
           <span style={{ opacity: .45 }}>|</span>
-          <a href={`mailto:${CONTACT.email}`} style={{ color: '#E9EDF3' }}>{CONTACT.email}</a>
+          <a href={`mailto:${contact.email}`} style={{ color: '#E9EDF3' }}>{contact.email}</a>
         </div>
       </div>
     </div>
@@ -50,6 +52,7 @@ function NavItem({ label, to, onEnter }) {
 
 function MegaMenu({ open, onClose }) {
   const navigate = useNavigate();
+  const { contact } = useCompanyInfo();
   if (!open) return null;
   return (
     <div onMouseLeave={onClose} style={{ borderTop: `1px solid ${c.sandLine}`, background: '#fff', boxShadow: '0 22px 40px -24px rgba(11,27,51,.28)' }}>
@@ -78,7 +81,7 @@ function MegaMenu({ open, onClose }) {
             <p style={{ fontSize: 13.5, lineHeight: 1.6, color: c.onNavyText, margin: 0 }}>Ring us for today’s rate on the currency you need, or to reserve notes for collection at our T. Nagar shop.</p>
           </div>
           <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {CONTACT.mobiles.slice(0, 2).map((m) => (
+            {contact.mobiles.slice(0, 2).map((m) => (
               <a key={m.tel} href={`tel:${m.tel}`} style={{ fontFamily: fonts.mono, fontSize: 15, color: '#fff' }}>{m.display}</a>
             ))}
           </div>
@@ -131,6 +134,7 @@ function Header() {
 function Footer() {
   const navigate = useNavigate();
   const rateLockPageOn = useFeatureFlag('rate_lock_page');
+  const { contact, socials } = useCompanyInfo();
   const footerCols = rateLockPageOn
     ? FOOTER_COLS
     : FOOTER_COLS.map((col) => ({ ...col, links: col.links.filter(([, to]) => to !== '/lock-rate') }));
@@ -147,7 +151,7 @@ function Footer() {
               {COMPANY.regulator}. Foreign currency exchange, money transfer and remittance services in Chennai since {COMPANY.since}.
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
-              {SOCIALS.map((s) => (
+              {socials.map((s) => (
                 <a
                   key={s.icon}
                   href={s.url}
@@ -177,17 +181,17 @@ function Footer() {
           <div>
             <div style={{ font: `500 11px/1.4 ${fonts.mono}`, letterSpacing: '.16em', color: '#fff', marginBottom: 20 }}>SHOP INFO</div>
             <p style={{ fontSize: 14, lineHeight: 1.68, margin: '0 0 14px' }}>
-              {CONTACT.addressLines.map((l) => <span key={l}>{l}<br /></span>)}
-              {CONTACT.addressNote}
+              {contact.addressLines.map((l) => <span key={l}>{l}<br /></span>)}
+              {contact.addressNote}
             </p>
             <p style={{ fontSize: 14, lineHeight: 1.9, margin: 0 }}>
-              {CONTACT.mobiles.map((m) => (
+              {contact.mobiles.map((m) => (
                 <span key={m.tel}><a href={`tel:${m.tel}`} style={{ color: '#fff' }}>{m.display}</a><br /></span>
               ))}
-              {CONTACT.landlines.map((l) => (
+              {contact.landlines.map((l) => (
                 <span key={l.tel}><a href={`tel:${l.tel}`} style={{ color: c.onNavyText4 }}>{l.display}</a><br /></span>
               ))}
-              <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a>
+              <a href={`mailto:${contact.email}`}>{contact.email}</a>
             </p>
           </div>
         </div>

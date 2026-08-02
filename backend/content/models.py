@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.db import models
 from django.utils import timezone
 
-from .validators import normalize_phone, validate_indian_phone
+from .validators import landline_tel, normalize_phone, validate_indian_phone, validate_landline
 
 
 class VisibleOrderedQuerySet(models.QuerySet):
@@ -396,9 +396,62 @@ class RateLock(Lead):
         super().save(*args, **kwargs)
 
 
+def _mobile_pair(digits):
+    """'9941456261' -> {'display': '+91 99414 56261', 'tel': '+919941456261'}."""
+    return {'display': f'+91 {digits[:5]} {digits[5:]}', 'tel': f'+91{digits}'}
+
+
 class SiteSetting(models.Model):
     """Singleton row for contact options the business wants to change without a
-    deploy. Currently the WhatsApp number offered after an enquiry is sent."""
+    deploy: the company's own address/phone/email/socials (shown in the
+    header, footer, Contact page and WhatsApp messages — one edit here
+    updates every one of them), plus WhatsApp, rate lock and notification
+    settings.
+
+    Frontend defaults live in frontend/src/company.js and are used only as
+    the fallback while this loads or if the API is unreachable — the same
+    fail-open rule as feature_flags. They are NOT the source of truth once
+    this row has been edited in the admin.
+    """
+
+    # --- company contact info (header, footer, Contact page, WhatsApp) ---
+    contact_email = models.EmailField(
+        default='reddyforex@gmail.com',
+        help_text='Public "contact us" email shown on the site. Different from the notify_* '
+                  'addresses below, which are where staff get alerted internally.',
+    )
+    address = models.TextField(
+        default='Shop No 105, Challa Mall,\n17, Thyagaraya Road, T. Nagar,\nChennai, Tamil Nadu 600017',
+        help_text='One address line per line — each becomes its own line on the site.',
+    )
+    address_note = models.CharField(
+        max_length=100, blank=True, default='(Opposite Globus)',
+        help_text='Optional landmark note shown after the address, e.g. "(Opposite Globus)".',
+    )
+    mobile_1 = models.CharField(
+        max_length=20, default='9941456261', validators=[validate_indian_phone],
+        verbose_name='Primary mobile',
+        help_text='Shown first everywhere on the site. 10 digits; +91, spaces and dashes are fine and get stripped.',
+    )
+    mobile_2 = models.CharField(
+        max_length=20, blank=True, default='9551699221', validators=[validate_indian_phone],
+        verbose_name='Second mobile (optional)',
+    )
+    mobile_3 = models.CharField(
+        max_length=20, blank=True, default='9551699055', validators=[validate_indian_phone],
+        verbose_name='Third mobile (optional)',
+    )
+    landline_1 = models.CharField(
+        max_length=20, blank=True, default='044-24353596', validators=[validate_landline],
+        verbose_name='Landline 1 (optional)', help_text='Shown as entered, e.g. "044-24353596".',
+    )
+    landline_2 = models.CharField(
+        max_length=20, blank=True, default='044-24353604', validators=[validate_landline],
+        verbose_name='Landline 2 (optional)',
+    )
+    facebook_url = models.URLField(blank=True, default='https://www.facebook.com/Reddy-Forex-Private-Limited-100909432036543')
+    x_url = models.URLField(blank=True, default='https://x.com/ReddyForex', verbose_name='X (Twitter) URL')
+    youtube_url = models.URLField(blank=True, default='https://www.youtube.com/channel/UCrFuWjK4Yfma9A6RMbywE5g')
 
     whatsapp_enabled = models.BooleanField(
         default=True,
@@ -447,6 +500,39 @@ class SiteSetting(models.Model):
 
     updated_at = models.DateTimeField(auto_now=True)
 
+    # --- contact info, shaped for the frontend (see SiteSettingSerializer) ---
+    @property
+    def address_lines(self):
+        return [line.strip() for line in self.address.splitlines() if line.strip()]
+
+    @property
+    def address_one_line(self):
+        # Each line commonly ends with its own trailing comma (for the
+        # multi-line display) — strip it first so joining doesn't double up.
+        line = ', '.join(l.rstrip(',').strip() for l in self.address_lines)
+        return f'{line} {self.address_note}'.strip() if self.address_note else line
+
+    @property
+    def mobiles(self):
+        """{display, tel} pairs, blank optional numbers dropped. Every site
+        phone link (header, footer, forms, LeadSuccess) uses this shape."""
+        return [_mobile_pair(n) for n in (self.mobile_1, self.mobile_2, self.mobile_3) if n]
+
+    @property
+    def landlines(self):
+        return [{'display': n, 'tel': landline_tel(n)} for n in (self.landline_1, self.landline_2) if n]
+
+    @property
+    def socials(self):
+        """Only the platforms staff have actually filled in — same
+        blank-means-hidden rule as whatsapp_url below, not a broken link."""
+        options = [
+            ('facebook', 'Facebook', self.facebook_url),
+            ('x', 'X (formerly Twitter)', self.x_url),
+            ('youtube', 'YouTube', self.youtube_url),
+        ]
+        return [{'icon': icon, 'label': label, 'url': url} for icon, label, url in options if url]
+
     def recipients_for(self, kind):
         """Emails to alert for a given Lead.kind, falling back to the project
         default so a blank field never means "nobody gets told"."""
@@ -469,6 +555,9 @@ class SiteSetting(models.Model):
     def save(self, *args, **kwargs):
         self.pk = 1  # enforce singleton
         self.whatsapp_number = normalize_phone(self.whatsapp_number) or self.whatsapp_number
+        self.mobile_1 = normalize_phone(self.mobile_1) or self.mobile_1
+        self.mobile_2 = normalize_phone(self.mobile_2) or self.mobile_2
+        self.mobile_3 = normalize_phone(self.mobile_3) or self.mobile_3
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):

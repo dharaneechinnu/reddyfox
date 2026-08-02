@@ -212,14 +212,24 @@ class RateLockCreateSerializer(BaseLeadSerializer):
 
 class SiteSettingSerializer(serializers.ModelSerializer):
     """Public contact options. The wa.me URL is built here so the frontend never
-    has to reimplement number formatting or message encoding."""
+    has to reimplement number formatting or message encoding.
+
+    `contact` and `socials` mirror the shape of the CONTACT/SOCIALS objects in
+    frontend/src/company.js exactly (addressLines, addressNote, mobiles,
+    landlines, ...) — CompanyInfoContext.jsx uses those same values as its
+    fallback default, so keeping the field names identical means it can
+    merge a real response straight over the static defaults with no
+    reshaping in between.
+    """
 
     whatsapp_url = serializers.SerializerMethodField()
     whatsapp_display = serializers.SerializerMethodField()
+    contact = serializers.SerializerMethodField()
+    socials = serializers.SerializerMethodField()
 
     class Meta:
         model = SiteSetting
-        fields = ['whatsapp_enabled', 'whatsapp_display', 'whatsapp_label', 'whatsapp_url']
+        fields = ['whatsapp_enabled', 'whatsapp_display', 'whatsapp_label', 'whatsapp_url', 'contact', 'socials']
 
     def get_whatsapp_display(self, obj):
         n = obj.whatsapp_number or ''
@@ -233,3 +243,16 @@ class SiteSettingSerializer(serializers.ModelSerializer):
         if obj.whatsapp_greeting:
             url += f'?text={quote(obj.whatsapp_greeting)}'
         return url
+
+    def get_contact(self, obj):
+        return {
+            'addressLines': obj.address_lines,
+            'addressNote': obj.address_note,
+            'addressOneLine': obj.address_one_line,
+            'email': obj.contact_email,
+            'mobiles': obj.mobiles,
+            'landlines': obj.landlines,
+        }
+
+    def get_socials(self, obj):
+        return obj.socials
