@@ -1,5 +1,5 @@
 """
-Team notification for new leads (enquiries, quote requests, rate locks).
+Team notification for new leads (enquiries, quote requests, callbacks).
 
 Design rule: the lead is ALWAYS saved to the database before this runs, and
 every failure here is swallowed and logged. A wrong SMTP password must never
@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 SUBJECT_PREFIX = {
     'enquiry': 'Enquiry',
     'quote': 'Quote request',
-    'rate_lock': 'RATE LOCK',
     'callback': 'Callback request',
 }
 
@@ -38,21 +37,7 @@ def _body(lead):
         f'Email   : {lead.email}',
     ]
 
-    if lead.kind == 'rate_lock':
-        lines += [
-            '',
-            '--- Rate the customer locked ---',
-            f'Pair     : {lead.from_currency} -> {lead.to_currency}',
-            f'Amount   : {_fmt(lead.amount)} {lead.from_currency}',
-            f'Rate      : {_fmt(lead.quoted_rate, 4)}',
-            f'They expect: {_fmt(lead.converted_amount)} {lead.to_currency}',
-        ]
-        if lead.lock_expires_at:
-            lines.append(
-                f'Valid until: {timezone.localtime(lead.lock_expires_at):%d %b %Y, %H:%M} IST '
-                f'({lead.expires_in})'
-            )
-    elif lead.kind == 'quote':
+    if lead.kind == 'quote':
         lines += [
             '',
             '--- What to price ---',
@@ -84,9 +69,9 @@ def _body(lead):
     lines.append(f'Email   : mailto:{lead.email}')
 
     base = getattr(settings, 'ADMIN_BASE_URL', '').rstrip('/')
-    # Quote requests and Rate locks have no admin page (deliberately
-    # unregistered — see content/admin.py), so there is nowhere to link for
-    # those two kinds. Reply via the WhatsApp/call/email lines above instead.
+    # Quote requests have no admin page (deliberately unregistered — see
+    # content/admin.py), so there is nowhere to link for that kind. Reply
+    # via the WhatsApp/call/email lines above instead.
     proxy = {'enquiry': 'enquiry', 'callback': 'callbackrequest'}.get(lead.kind)
     if base and proxy:
         lines += ['', f'Open in admin: {base}/admin/content/{proxy}/{lead.pk}/change/']
@@ -95,9 +80,7 @@ def _body(lead):
 
 def _subject(lead):
     label = SUBJECT_PREFIX.get(lead.kind, 'Lead')
-    if lead.kind == 'rate_lock':
-        detail = f'{lead.from_currency}/{lead.to_currency} {_fmt(lead.amount)}'
-    elif lead.kind in ('quote', 'callback'):
+    if lead.kind in ('quote', 'callback'):
         detail = f'{lead.from_currency or "?"} {_fmt(lead.amount)}'
     else:
         detail = lead.service or 'general'

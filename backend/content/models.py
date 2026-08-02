@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 from django.db import models
 from django.utils import timezone
 
@@ -123,11 +121,11 @@ class LeadQuerySet(models.QuerySet):
 class Lead(models.Model):
     """A customer request from the website.
 
-    One table backs three request types, discriminated by `kind`:
+    One table backs multiple request types, discriminated by `kind`:
 
       enquiry    — the general contact form
       quote      — "Get a free quote"
-      rate_lock  — "Lock this rate" from the converter
+      callback   — quick "get your best price" from the homepage converter
 
     They share ~80% of their fields (who the customer is, workflow state, audit
     trail), so a single table keeps validation, spam protection, notification and
@@ -141,7 +139,6 @@ class Lead(models.Model):
     class Kind(models.TextChoices):
         ENQUIRY = 'enquiry', 'Enquiry'
         QUOTE = 'quote', 'Quote request'
-        RATE_LOCK = 'rate_lock', 'Rate lock'
         CALLBACK = 'callback', 'Callback request'
 
     class Status(models.TextChoices):
@@ -166,8 +163,8 @@ class Lead(models.Model):
         LOW = 4, 'Low'
 
     #: Priority a brand-new lead of this kind gets, unless the caller asked
-    #: for something else. Overridden on the proxies below — a rate lock is
-    #: the one type with a deadline, so it arrives Urgent.
+    #: for something else. Every kind currently arrives Normal; a proxy can
+    #: override this if a future lead type needs to arrive pre-flagged.
     default_priority = Priority.NORMAL
 
     kind = models.CharField(
@@ -184,26 +181,13 @@ class Lead(models.Model):
     # --- quote + enquiry ---
     service = models.CharField(max_length=120, blank=True, help_text='Which service they selected.')
 
-    # --- quote + rate lock ---
+    # --- quote + callback ---
     from_currency = models.CharField(max_length=3, blank=True)
     to_currency = models.CharField(max_length=3, blank=True)
     amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
 
     # --- quote only ---
     needed_by = models.DateField(null=True, blank=True, help_text='When the customer needs the currency.')
-
-    # --- rate lock only ---
-    quoted_rate = models.DecimalField(
-        max_digits=12, decimal_places=4, null=True, blank=True,
-        help_text='The rate the customer saw when they locked it.',
-    )
-    converted_amount = models.DecimalField(
-        max_digits=16, decimal_places=2, null=True, blank=True,
-        help_text='What the converter showed they would receive.',
-    )
-    lock_expires_at = models.DateTimeField(
-        null=True, blank=True, help_text='Set automatically from the lock window in Site settings.',
-    )
 
     # --- workflow (the only fields staff edit) ---
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.NEW, db_index=True)
@@ -215,8 +199,8 @@ class Lead(models.Model):
     )
     priority = models.PositiveSmallIntegerField(
         choices=Priority.choices, default=Priority.NORMAL, db_index=True,
-        help_text='Which end of the list this sits at. Set automatically when the lead arrives '
-                  '(rate locks come in Urgent because they expire); change it here any time.',
+        help_text='Which end of the list this sits at. Set automatically when the lead arrives; '
+                  'change it here any time.',
     )
     assigned_to = models.ForeignKey(
         'auth.User', null=True, blank=True, on_delete=models.SET_NULL,
@@ -234,8 +218,7 @@ class Lead(models.Model):
     objects = LeadQuerySet.as_manager()
 
     class Meta:
-        # Most urgent first, then newest — so the desk works top-down and a
-        # rate lock about to expire never sits below a day-old enquiry.
+        # Most urgent first, then newest — so the desk always works top-down.
         ordering = ['priority', '-created_at']
         verbose_name = 'lead'
         verbose_name_plural = 'all leads'
@@ -285,7 +268,6 @@ class Lead(models.Model):
             return None
         first = self.name.split()[0] if self.name.split() else 'there'
         subject = {
-            self.Kind.RATE_LOCK: f'your {self.from_currency}/{self.to_currency} rate lock',
             self.Kind.QUOTE: f'your quote request for {self.service or "forex"}',
         }.get(self.kind, f'your enquiry about {self.service or "our services"}')
         return f'https://wa.me/91{d}?text={quote(f"Hello {first}, thank you for {subject} with Reddy Forex.")}'
@@ -294,24 +276,6 @@ class Lead(models.Model):
     def tel_url(self):
         d = self._digits
         return f'tel:+91{d}' if len(d) == 10 else None
-
-    # --- rate lock helpers ---
-    @property
-    def is_expired(self):
-        return bool(self.lock_expires_at and timezone.now() > self.lock_expires_at)
-
-    @property
-    def expires_in(self):
-        """Human countdown, or None when this lead has no lock window."""
-        if not self.lock_expires_at:
-            return None
-        delta = self.lock_expires_at - timezone.now()
-        mins = int(delta.total_seconds() // 60)
-        if mins < 0:
-            return 'expired'
-        if mins < 60:
-            return f'{mins} min left'
-        return f'{mins // 60} hr {mins % 60} min left'
 
 
 class KindManager(models.Manager):
@@ -372,30 +336,6 @@ class CallbackRequest(Lead):
         super().save(*args, **kwargs)
 
 
-class RateLock(Lead):
-    """Proxy: "Lock this rate" from the converter. Own admin list and own
-    permissions, and the only type with an expiry window."""
-
-    objects = KindManager(Lead.Kind.RATE_LOCK)
-
-    # The only lead type with a deadline attached: the customer has been
-    # promised a rate that lapses, so these arrive at the top of the desk's
-    # list. Staff can still lower it.
-    default_priority = Lead.Priority.URGENT
-
-    class Meta:
-        proxy = True
-        verbose_name = 'rate lock'
-        verbose_name_plural = 'rate locks'
-
-    def save(self, *args, **kwargs):
-        self.kind = Lead.Kind.RATE_LOCK
-        if not self.lock_expires_at:
-            hours = SiteSetting.load().rate_lock_hours
-            self.lock_expires_at = timezone.now() + timedelta(hours=hours)
-        super().save(*args, **kwargs)
-
-
 def _mobile_pair(digits):
     """'9941456261' -> {'display': '+91 99414 56261', 'tel': '+919941456261'}."""
     return {'display': f'+91 {digits[:5]} {digits[5:]}', 'tel': f'+91{digits}'}
@@ -405,8 +345,7 @@ class SiteSetting(models.Model):
     """Singleton row for contact options the business wants to change without a
     deploy: the company's own address/phone/email/socials (shown in the
     header, footer, Contact page and WhatsApp messages — one edit here
-    updates every one of them), plus WhatsApp, rate lock and notification
-    settings.
+    updates every one of them), plus WhatsApp and notification settings.
 
     Frontend defaults live in frontend/src/company.js and are used only as
     the fallback while this loads or if the API is unreachable — the same
@@ -477,13 +416,6 @@ class SiteSetting(models.Model):
         help_text='Message pre-filled in the customer’s WhatsApp. '
                   'Leave blank to open an empty chat.',
     )
-    # --- rate lock ---
-    rate_lock_hours = models.PositiveSmallIntegerField(
-        default=4,
-        verbose_name='Rate lock validity (hours)',
-        help_text='How long a locked rate stays valid. The customer is told the exact expiry time.',
-    )
-
     # --- per-type notification recipients ---
     notify_enquiries = models.CharField(
         max_length=255, blank=True,
@@ -492,10 +424,6 @@ class SiteSetting(models.Model):
     notify_quotes = models.CharField(
         max_length=255, blank=True,
         help_text='Comma-separated emails for quote requests. Blank = use the default.',
-    )
-    notify_rate_locks = models.CharField(
-        max_length=255, blank=True,
-        help_text='Comma-separated emails for rate locks. Blank = use the default.',
     )
 
     updated_at = models.DateTimeField(auto_now=True)
@@ -540,7 +468,6 @@ class SiteSetting(models.Model):
         raw = {
             'enquiry': self.notify_enquiries,
             'quote': self.notify_quotes,
-            'rate_lock': self.notify_rate_locks,
         }.get(kind, '')
         addrs = [a.strip() for a in (raw or '').split(',') if a.strip()]
         return addrs or list(getattr(settings, 'ENQUIRY_NOTIFY_EMAILS', []) or [])

@@ -177,7 +177,6 @@ export const FOOTER_COLS = [
     title: 'TOOLS',
     links: [
       ['Exchange rates', '/rates'],
-      ['Lock a rate', '/lock-rate'],
       ['Student services', '/services/student-services'],
     ],
   },

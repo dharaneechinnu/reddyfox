@@ -4,7 +4,7 @@ from urllib.parse import quote
 
 from rest_framework import serializers
 
-from .models import CallbackRequest, Enquiry, Faq, FaqCategory, Lead, QuoteRequest, RateLock, SiteSetting, Testimonial
+from .models import CallbackRequest, Enquiry, Faq, FaqCategory, Lead, QuoteRequest, SiteSetting, Testimonial
 from .validators import looks_like_spam, normalize_phone, validate_amount, validate_currency_code
 
 
@@ -171,43 +171,6 @@ class CallbackRequestCreateSerializer(BaseLeadSerializer):
 
     def validate_amount(self, value):
         return validate_amount(value) if value is not None else value
-
-
-class RateLockCreateSerializer(BaseLeadSerializer):
-    """"Lock this rate" from the converter. Captures exactly what the customer
-    saw, so the desk can honour it or explain a change."""
-
-    kind = Lead.Kind.RATE_LOCK
-
-    class Meta(BaseLeadSerializer.Meta):
-        model = RateLock
-        fields = BaseLeadSerializer.Meta.fields + [
-            'from_currency', 'to_currency', 'amount',
-            'quoted_rate', 'converted_amount', 'message',
-        ]
-        extra_kwargs = {
-            'from_currency': {'required': True, 'allow_blank': False},
-            'to_currency': {'required': True, 'allow_blank': False},
-            'amount': {'required': True},
-            'quoted_rate': {'required': True},
-        }
-
-    def validate_from_currency(self, value):
-        return validate_currency_code(value)
-
-    def validate_to_currency(self, value):
-        return validate_currency_code(value)
-
-    def validate_amount(self, value):
-        return validate_amount(value)
-
-    def validate(self, attrs):
-        attrs = super().validate(attrs)
-        if attrs.get('from_currency') == attrs.get('to_currency'):
-            raise serializers.ValidationError(
-                {'to_currency': 'Choose two different currencies to lock a rate.'}
-            )
-        return attrs
 
 
 class SiteSettingSerializer(serializers.ModelSerializer):

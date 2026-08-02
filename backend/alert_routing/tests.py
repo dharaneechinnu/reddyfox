@@ -12,12 +12,12 @@ class LeadAlertRuleSeedTests(TestCase):
         self.assertFalse(LeadAlertRule.objects.get(kind='enquiry').telegram_enabled)
 
     def test_every_other_kind_defaults_on(self):
-        for kind in ('quote', 'rate_lock', 'callback'):
+        for kind in ('quote', 'callback'):
             self.assertTrue(LeadAlertRule.objects.get(kind=kind).telegram_enabled, kind)
 
-    def test_all_four_lead_kinds_are_seeded(self):
+    def test_all_three_lead_kinds_are_seeded(self):
         seeded = set(LeadAlertRule.objects.values_list('kind', flat=True))
-        self.assertEqual(seeded, {'enquiry', 'quote', 'rate_lock', 'callback'})
+        self.assertEqual(seeded, {'enquiry', 'quote', 'callback'})
 
 
 class IsTelegramEnabledForTests(TestCase):
@@ -46,7 +46,7 @@ class IsTelegramEnabledForTests(TestCase):
 
 
 class AdminPermissionTests(TestCase):
-    """The checklist is toggle-only — no adding or deleting rows, since the four rows represent
+    """The checklist is toggle-only — no adding or deleting rows, since the three rows represent
     the fixed set of lead kinds, not arbitrary records."""
 
     def test_add_and_delete_are_disabled(self):
