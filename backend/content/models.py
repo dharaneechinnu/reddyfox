@@ -398,6 +398,19 @@ class SiteSetting(models.Model):
     x_url = models.URLField(blank=True, default='https://x.com/ReddyForex', verbose_name='X (Twitter) URL')
     youtube_url = models.URLField(blank=True, default='https://www.youtube.com/channel/UCrFuWjK4Yfma9A6RMbywE5g')
 
+    # --- footer content ---
+    footer_legal_name = models.CharField(
+        max_length=150,
+        default='Reddy Forex Private Limited',
+        help_text='Full registered company name — shown in the footer copyright line.',
+    )
+    footer_tagline = models.TextField(
+        blank=True,
+        default='Licensed and Regulated by Reserve Bank of India. Foreign currency exchange, money transfer '
+                'and remittance services in Chennai since 2000.',
+        help_text='Short description shown under the logo in the footer.',
+    )
+
     whatsapp_enabled = models.BooleanField(
         default=True,
         verbose_name='Show WhatsApp option',

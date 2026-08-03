@@ -133,7 +133,7 @@ function Header() {
 
 function Footer() {
   const navigate = useNavigate();
-  const { contact, socials } = useCompanyInfo();
+  const { contact, socials, footer } = useCompanyInfo();
   return (
     <footer style={{ background: c.navyDeep, color: c.navyMuted2, padding: '76px 0 0' }}>
       <div style={wrap}>
@@ -144,7 +144,7 @@ function Footer() {
               <span style={{ fontFamily: fonts.serif, fontSize: 20, color: '#fff' }}>{COMPANY.wordmark}</span>
             </div>
             <p style={{ fontSize: 14, lineHeight: 1.68, margin: '0 0 22px', maxWidth: 280 }}>
-              {COMPANY.regulator}. Foreign currency exchange, money transfer and remittance services in Chennai since {COMPANY.since}.
+              {footer.tagline}
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
               {socials.map((s) => (
@@ -192,7 +192,7 @@ function Footer() {
           </div>
         </div>
         <div style={{ padding: '26px 0 34px', display: 'flex', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', fontSize: 12.8 }}>
-          <span>© {new Date().getFullYear()} {COMPANY.legalName}. All rights reserved.</span>
+          <span>© {new Date().getFullYear()} {footer.legalName}. All rights reserved.</span>
           <div style={{ display: 'flex', gap: 24 }}>
             <Link to="/faq" style={{ cursor: 'pointer', color: c.onNavyText4 }}>FAQ</Link>
             <Link to="/contact" style={{ cursor: 'pointer', color: c.onNavyText4 }}>Contact</Link>

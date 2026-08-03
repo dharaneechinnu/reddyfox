@@ -213,10 +213,14 @@ class SiteSettingSerializer(serializers.ModelSerializer):
     whatsapp_display = serializers.SerializerMethodField()
     contact = serializers.SerializerMethodField()
     socials = serializers.SerializerMethodField()
+    footer = serializers.SerializerMethodField()
 
     class Meta:
         model = SiteSetting
-        fields = ['whatsapp_enabled', 'whatsapp_display', 'whatsapp_label', 'whatsapp_url', 'contact', 'socials']
+        fields = [
+            'whatsapp_enabled', 'whatsapp_display', 'whatsapp_label', 'whatsapp_url',
+            'contact', 'socials', 'footer',
+        ]
 
     def get_whatsapp_display(self, obj):
         n = obj.whatsapp_number or ''
@@ -243,3 +247,9 @@ class SiteSettingSerializer(serializers.ModelSerializer):
 
     def get_socials(self, obj):
         return obj.socials
+
+    def get_footer(self, obj):
+        return {
+            'legalName': obj.footer_legal_name,
+            'tagline': obj.footer_tagline,
+        }
