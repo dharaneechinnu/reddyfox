@@ -352,6 +352,12 @@ class SiteSettingAdmin(admin.ModelAdmin):
             'description': 'The same values shown everywhere on the site — one edit here updates the header top '
                            'bar, the footer, the Contact page and every "call us" prompt at once.',
         }),
+        ('Footer content', {
+            'fields': ('footer_legal_name', 'footer_tagline'),
+            'description': 'The company name in the footer copyright line and the short description shown '
+                           'under the logo. Facts here must match what is actually published — do not invent '
+                           'or change licensing/regulatory wording without confirming it first.',
+        }),
         ('Who gets alerted', {
             'fields': ('notify_enquiries', 'notify_quotes'),
             'description': 'Comma-separated email addresses per request type. Leave a field blank to fall back to '
