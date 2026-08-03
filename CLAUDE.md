@@ -148,6 +148,10 @@ With `FIREBASE_CREDENTIALS_JSON` unset (the default), subscribers still register
 
 Project documentation beyond this file lives in `docs/` at the repo root (not scattered into `frontend/`/`backend/` READMEs) — see `docs/README.md` for the index. This includes `docs/blog-content-strategy.md`, a content-planning reference for a future blog/free-resources section (educational forex/RBI-regulation topics, glossary, traveller guides) — read its guardrails section before drafting any blog copy from it, since the same "never invent a fact" rule applies there too.
 
+### Git workflow
+
+Every PR merges into `main` via **squash merge** — one commit per PR, not a merge commit and not individual commits from the branch. Branch fresh off `main` for each new piece of work rather than stacking on an unmerged branch.
+
 ### Config and deployment
 
 All settings come from environment variables via `python-decouple` (`backend/.env`, gitignored; `.env.example` documents every variable — frontend has its own `.env`/`.env.example` for Vite). Deployed on Render: `DATABASE_URL` (parsed by `dj-database-url`) and `RENDER_EXTERNAL_HOSTNAME` are only set there, `whitenoise` serves static files in production, and `gunicorn` is the app server — all three are harmless no-ops locally. Migrations are the only way the schema changes; there's no hand-editing the database.

@@ -6,6 +6,7 @@ import useApi from '../hooks/useApi';
 import { fetchFaqs } from '../api';
 import FaqAccordion from '../components/FaqAccordion';
 import Seo from '../components/Seo';
+import SitePhoto from '../components/SitePhoto';
 
 const loadFaqs = () => fetchFaqs();
 
@@ -39,9 +40,15 @@ export default function ServiceDetail() {
                 <span onClick={() => navigate('/rates')} style={{ border: '1px solid rgba(255,255,255,.26)', color: '#fff', padding: '15px 26px', borderRadius: 9, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>See today's rates</span>
               </div>
             </div>
-            <div style={{ background: 'repeating-linear-gradient(135deg,rgba(255,255,255,.07) 0 10px,rgba(255,255,255,.03) 10px 20px)', border: '1px solid rgba(255,255,255,.14)', borderRadius: 16, minHeight: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ font: `400 11px/1.7 ${fonts.mono}`, letterSpacing: '.14em', color: c.navyMuted, textAlign: 'center' }}>PHOTOGRAPHY<br />{active.title}</span>
-            </div>
+            <SitePhoto
+              slot={`service_${active.id}`}
+              placeholderLabel={<>PHOTOGRAPHY<br />{active.title}</>}
+              style={{
+                minHeight: 300,
+                background: 'repeating-linear-gradient(135deg,rgba(255,255,255,.07) 0 10px,rgba(255,255,255,.03) 10px 20px)',
+                border: '1px solid rgba(255,255,255,.14)',
+              }}
+            />
           </div>
         </div>
       </section>

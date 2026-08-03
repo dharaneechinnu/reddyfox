@@ -9,6 +9,46 @@ import re
 
 from django.core.exceptions import ValidationError
 
+# --- site image uploads (content.models.SiteImage) -------------------------
+
+MAX_IMAGE_UPLOAD_MB = 8
+ALLOWED_IMAGE_FORMATS = {'JPEG', 'PNG', 'WEBP'}
+
+
+def validate_image_upload(file):
+    """Reject anything too large, or that isn't actually a real image.
+
+    Django's ImageField already runs Pillow's verify() to catch a renamed
+    non-image file, but not file size or format — a careless staff upload of
+    a 40MB camera photo would otherwise sit on disk (and in every page load)
+    forever. Checked here, not just relied on client-side, for the same
+    reason every other validator in this file is server-side: the admin form
+    is not the only way to POST a file.
+    """
+    if file.size > MAX_IMAGE_UPLOAD_MB * 1024 * 1024:
+        raise ValidationError(
+            f'Image is too large ({file.size / 1024 / 1024:.1f} MB) — please '
+            f'keep uploads under {MAX_IMAGE_UPLOAD_MB} MB.',
+            code='image_too_large',
+        )
+
+    from PIL import Image
+    try:
+        file.seek(0)
+        with Image.open(file) as img:
+            img.verify()
+            fmt = img.format
+    except Exception as exc:
+        raise ValidationError('That file is not a valid image.', code='invalid_image') from exc
+    finally:
+        file.seek(0)
+
+    if fmt not in ALLOWED_IMAGE_FORMATS:
+        raise ValidationError(
+            f'Unsupported image format ({fmt or "unknown"}) — please upload a JPEG, PNG or WebP.',
+            code='invalid_image_format',
+        )
+
 PHONE_CLEAN = re.compile(r'[\s\-().]')
 PHONE_RE = re.compile(r'^(?:\+?91|0)?([6-9]\d{9})$')
 

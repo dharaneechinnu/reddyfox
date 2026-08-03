@@ -3,13 +3,14 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (
     CallbackRequestCreateView, EnquiryCreateView, FaqCategoryViewSet, FaqViewSet, QuoteRequestCreateView,
-    SiteSettingView, TestimonialViewSet,
+    SiteImageViewSet, SiteSettingView, TestimonialViewSet,
 )
 
 router = DefaultRouter()
 router.register('testimonials', TestimonialViewSet, basename='testimonial')
 router.register('faqs', FaqViewSet, basename='faq')
 router.register('faq-categories', FaqCategoryViewSet, basename='faq-category')
+router.register('site-images', SiteImageViewSet, basename='site-image')
 
 urlpatterns = router.urls + [
     # All three are create-only: there is intentionally no GET on any of them.

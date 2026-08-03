@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("content", "0008_lead_is_resolved"),
+        ("content", "0009_siteimage"),
     ]
 
     operations = [

@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("content", "0009_sitesetting_address_sitesetting_address_note_and_more"),
+        ("content", "0010_sitesetting_address_sitesetting_address_note_and_more"),
     ]
 
     operations = [

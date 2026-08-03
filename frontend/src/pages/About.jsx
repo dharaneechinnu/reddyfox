@@ -4,6 +4,7 @@ import { COMPANY } from '../company';
 import { c, fonts, wrap } from '../tokens';
 import Seo from '../components/Seo';
 import { useCompanyInfo } from '../context/CompanyInfoContext';
+import SitePhoto from '../components/SitePhoto';
 
 export default function About() {
   const { contact } = useCompanyInfo();
@@ -32,9 +33,11 @@ export default function About() {
 
       <section style={{ background: '#fff', padding: '88px 0' }}>
         <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 56, alignItems: 'start' }}>
-          <div style={{ background: `repeating-linear-gradient(135deg,${c.swatch} 0 10px,${c.swatch2} 10px 20px)`, border: `1px solid ${c.sandBorder4}`, borderRadius: 16, minHeight: 420, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ font: `400 11px/1.7 ${fonts.mono}`, letterSpacing: '.14em', color: c.swatchText, textAlign: 'center' }}>PHOTOGRAPHY<br />The counter at Challa Mall, T. Nagar</span>
-          </div>
+          <SitePhoto
+            slot="about_counter"
+            placeholderLabel={<>PHOTOGRAPHY<br />The counter at Challa Mall, T. Nagar</>}
+            style={{ minHeight: 420 }}
+          />
           <div>
             <p style={{ font: `500 11.5px/1.4 ${fonts.mono}`, letterSpacing: '.18em', textTransform: 'uppercase', color: c.orange, margin: '0 0 14px' }}>Welcome to {COMPANY.shortName}</p>
             <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: 'clamp(28px,3vw,42px)', lineHeight: 1.1, color: c.navy, margin: '0 0 20px' }}>
@@ -110,9 +113,11 @@ export default function About() {
               to them.
             </p>
           </div>
-          <div style={{ background: `repeating-linear-gradient(135deg,${c.swatch} 0 10px,${c.swatch2} 10px 20px)`, border: `1px solid ${c.sandBorder4}`, borderRadius: 16, minHeight: 340, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ font: `400 11px/1.7 ${fonts.mono}`, letterSpacing: '.14em', color: c.swatchText, textAlign: 'center' }}>PHOTOGRAPHY<br />Front office team</span>
-          </div>
+          <SitePhoto
+            slot="about_team"
+            placeholderLabel={<>PHOTOGRAPHY<br />Front office team</>}
+            style={{ minHeight: 340 }}
+          />
         </div>
       </section>
 

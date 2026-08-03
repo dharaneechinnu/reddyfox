@@ -4,12 +4,11 @@ from rest_framework.throttling import AnonRateThrottle
 
 from telegram_alerts.services import notify_team_telegram
 
-from .models import Faq, FaqCategory, SiteSetting, Testimonial
+from .models import Faq, FaqCategory, SiteImage, SiteSetting, Testimonial
 from .notifications import notify_team
 from .serializers import (
     CallbackRequestCreateSerializer, EnquiryCreateSerializer, FaqCategorySerializer, FaqSerializer,
-    QuoteRequestCreateSerializer,
-    SiteSettingSerializer, TestimonialSerializer,
+    QuoteRequestCreateSerializer, SiteImageSerializer, SiteSettingSerializer, TestimonialSerializer,
 )
 
 
@@ -40,6 +39,15 @@ class FaqCategoryViewSet(viewsets.ReadOnlyModelViewSet):
     """Categories for the FAQ page sidebar."""
     queryset = FaqCategory.objects.all()
     serializer_class = FaqCategorySerializer
+
+
+class SiteImageViewSet(viewsets.ReadOnlyModelViewSet):
+    """Staff-uploaded photos, one per fixed slot. Edited in the Django admin
+    under Content -> Site images. `alt_text`/`url` per SiteImageSerializer."""
+    serializer_class = SiteImageSerializer
+
+    def get_queryset(self):
+        return SiteImage.objects.filter(is_visible=True)
 
 
 class LeadRateThrottle(AnonRateThrottle):
