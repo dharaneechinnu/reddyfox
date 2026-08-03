@@ -13,8 +13,8 @@ from PIL import Image
 from rest_framework.test import APIClient
 
 from rates.models import Currency
-from .models import CallbackRequest, Enquiry, Lead, QuoteRequest, RateLock, SiteImage
-from .validators import validate_image_upload
+from .models import CallbackRequest, Enquiry, Lead, QuoteRequest, SiteImage, SiteSetting
+from .validators import landline_tel, validate_image_upload, validate_landline
 
 # Rendering an admin page needs a staticfiles manifest, which only exists
 # after `collectstatic`. Production builds one; the test runner shouldn't
@@ -38,22 +38,9 @@ def _enquiry(**kw):
     return Enquiry.objects.create(**d)
 
 
-def _rate_lock(**kw):
-    d = dict(
-        name='Deborah Beck', phone='9876543210', email='d@example.com',
-        from_currency='USD', to_currency='INR',
-        amount='500', quoted_rate='84.0000', converted_amount='42000.00',
-    )
-    d.update(kw)
-    return RateLock.objects.create(**d)
-
-
 class PriorityOnArrivalTests(TestCase):
-    """A rate lock is the only lead type with a deadline, so it should reach
-    the desk already flagged. Everything else arrives Normal."""
-
-    def test_rate_lock_arrives_urgent(self):
-        self.assertEqual(_rate_lock().priority, Lead.Priority.URGENT)
+    """Every lead kind arrives Normal by default. Urgent is only reached by
+    an explicit priority set on creation, or a later staff edit."""
 
     def test_enquiry_arrives_normal(self):
         self.assertEqual(_enquiry().priority, Lead.Priority.NORMAL)
@@ -65,28 +52,28 @@ class PriorityOnArrivalTests(TestCase):
     def test_explicit_priority_is_respected_on_creation(self):
         self.assertEqual(_enquiry(priority=Lead.Priority.HIGH).priority, Lead.Priority.HIGH)
 
-    def test_staff_can_lower_a_rate_lock_and_it_sticks(self):
-        lock = _rate_lock()
-        lock.priority = Lead.Priority.LOW
-        lock.save()
-        lock.refresh_from_db()
-        self.assertEqual(lock.priority, Lead.Priority.LOW)
+    def test_staff_can_lower_an_urgent_lead_and_it_sticks(self):
+        lead = _enquiry(priority=Lead.Priority.URGENT)
+        lead.priority = Lead.Priority.LOW
+        lead.save()
+        lead.refresh_from_db()
+        self.assertEqual(lead.priority, Lead.Priority.LOW)
 
     def test_later_saves_never_re_raise_priority(self):
         # The regression that matters: staff demote a lead, then any
         # unrelated edit must not silently promote it back to Urgent.
-        lock = _rate_lock()
-        lock.priority = Lead.Priority.NORMAL
-        lock.save()
-        lock.status = Lead.Status.CONTACTED
-        lock.save()
-        lock.refresh_from_db()
-        self.assertEqual(lock.priority, Lead.Priority.NORMAL)
+        lead = _enquiry(priority=Lead.Priority.URGENT)
+        lead.priority = Lead.Priority.NORMAL
+        lead.save()
+        lead.status = Lead.Status.CONTACTED
+        lead.save()
+        lead.refresh_from_db()
+        self.assertEqual(lead.priority, Lead.Priority.NORMAL)
 
 
 class PriorityOrderingTests(TestCase):
     def test_urgent_sorts_above_newer_normal_leads(self):
-        _rate_lock(phone='9876500001')                      # urgent, oldest
+        _enquiry(phone='9876500001', priority=Lead.Priority.URGENT)  # urgent, oldest
         _enquiry(phone='9876500002')                        # normal, newer
         _enquiry(phone='9876500003')                        # normal, newest
         order = [lead.priority for lead in Lead.objects.all()]
@@ -102,22 +89,22 @@ class PriorityOrderingTests(TestCase):
 
 class OverdueTests(TestCase):
     def test_untouched_urgent_lead_becomes_overdue_after_an_hour(self):
-        lock = _rate_lock()
-        self.assertFalse(lock.is_overdue, 'just-arrived lead is not overdue')
+        lead = _enquiry(priority=Lead.Priority.URGENT)
+        self.assertFalse(lead.is_overdue, 'just-arrived lead is not overdue')
 
-        Lead.objects.filter(pk=lock.pk).update(
-            created_at=lock.created_at - timedelta(hours=2)
+        Lead.objects.filter(pk=lead.pk).update(
+            created_at=lead.created_at - timedelta(hours=2)
         )
-        lock.refresh_from_db()
-        self.assertTrue(lock.is_overdue)
+        lead.refresh_from_db()
+        self.assertTrue(lead.is_overdue)
 
     def test_a_handled_lead_is_never_overdue(self):
-        lock = _rate_lock(status=Lead.Status.CONTACTED)
-        Lead.objects.filter(pk=lock.pk).update(
-            created_at=lock.created_at - timedelta(hours=5)
+        lead = _enquiry(priority=Lead.Priority.URGENT, status=Lead.Status.CONTACTED)
+        Lead.objects.filter(pk=lead.pk).update(
+            created_at=lead.created_at - timedelta(hours=5)
         )
-        lock.refresh_from_db()
-        self.assertFalse(lock.is_overdue)
+        lead.refresh_from_db()
+        self.assertFalse(lead.is_overdue)
 
     def test_low_priority_leads_do_not_shout(self):
         lead = _enquiry(priority=Lead.Priority.LOW)
@@ -254,16 +241,6 @@ class LeadSubmissionStillWorksTests(TestCase):
         self.assertEqual(res.status_code, 201)
         self.assertEqual(Enquiry.objects.get().priority, Lead.Priority.NORMAL)
 
-    def test_rate_lock_submission_arrives_urgent(self):
-        _make_usd()
-        res = self.client.post(reverse('rate-lock-create'), {
-            'name': 'Deborah Beck', 'phone': '9876543210', 'email': 'd@example.com',
-            'from_currency': 'USD', 'to_currency': 'INR',
-            'amount': '100', 'quoted_rate': '84.0000', 'converted_amount': '8400.00',
-        })
-        self.assertEqual(res.status_code, 201)
-        self.assertEqual(RateLock.objects.get().priority, Lead.Priority.URGENT)
-
     def test_priority_is_not_settable_from_the_public_api(self):
         # A customer must not be able to promote their own lead.
         self.client.post(reverse('enquiry-create'), {
@@ -319,7 +296,94 @@ class CallbackRequestTests(TestCase):
         self.client.post(reverse('callback-create'), {'name': 'Deborah Beck', 'phone': '9876543210'})
         self.assertFalse(Enquiry.objects.exists())
         self.assertFalse(QuoteRequest.objects.exists())
-        self.assertFalse(RateLock.objects.exists())
+
+
+class LandlineValidatorTests(TestCase):
+    def test_accepts_a_real_looking_landline(self):
+        validate_landline('044-24353596')  # must not raise
+
+    def test_rejects_letters(self):
+        with self.assertRaises(Exception):
+            validate_landline('044-ABCDE')
+
+    def test_rejects_too_short(self):
+        with self.assertRaises(Exception):
+            validate_landline('123')
+
+    def test_tel_strips_dashes_and_leading_trunk_zero(self):
+        self.assertEqual(landline_tel('044-24353596'), '+914424353596')
+
+    def test_tel_is_none_for_blank(self):
+        self.assertIsNone(landline_tel(''))
+
+
+class SiteSettingContactInfoTests(TestCase):
+    """Company contact info (address/phones/socials) — shared by the header,
+    footer, Contact page and WhatsApp messages. See CompanyInfoContext.jsx on
+    the frontend for how a blank/unreachable API falls back to company.js."""
+
+    def test_defaults_match_the_real_published_numbers(self):
+        # These defaults exist so a fresh install shows the real business
+        # facts already published on the live site, not a placeholder —
+        # same "never invent a fact" discipline as CLAUDE.md's content rule.
+        setting = SiteSetting.load()
+        self.assertEqual(setting.mobiles[0]['display'], '+91 99414 56261')
+        self.assertEqual(setting.contact_email, 'reddyforex@gmail.com')
+
+    def test_mobiles_drops_blank_optional_numbers(self):
+        setting = SiteSetting.load()
+        setting.mobile_2 = ''
+        setting.mobile_3 = ''
+        setting.save()
+        self.assertEqual(len(setting.mobiles), 1)
+        self.assertEqual(setting.mobiles[0]['tel'], '+919941456261')
+
+    def test_mobile_is_normalized_on_save(self):
+        setting = SiteSetting.load()
+        setting.mobile_1 = '+91 99414-56261'
+        setting.save()
+        setting.refresh_from_db()
+        self.assertEqual(setting.mobile_1, '9941456261')
+
+    def test_landlines_drops_blank_optional_numbers(self):
+        setting = SiteSetting.load()
+        setting.landline_2 = ''
+        setting.save()
+        self.assertEqual(len(setting.landlines), 1)
+
+    def test_address_lines_splits_on_newline_and_drops_blanks(self):
+        setting = SiteSetting.load()
+        setting.address = 'Line one,\n\nLine two,\n  '
+        setting.save()
+        self.assertEqual(setting.address_lines, ['Line one,', 'Line two,'])
+
+    def test_address_one_line_does_not_double_commas(self):
+        setting = SiteSetting.load()
+        setting.address = 'Shop No 1,\nMain Road,'
+        setting.address_note = '(Landmark)'
+        setting.save()
+        self.assertEqual(setting.address_one_line, 'Shop No 1, Main Road (Landmark)')
+
+    def test_socials_drops_platforms_left_blank(self):
+        setting = SiteSetting.load()
+        setting.x_url = ''
+        setting.save()
+        icons = [s['icon'] for s in setting.socials]
+        self.assertEqual(icons, ['facebook', 'youtube'])
+
+    def test_public_api_exposes_contact_and_socials(self):
+        client = APIClient()
+        res = client.get(reverse('site-settings'))
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('contact', res.data)
+        self.assertIn('socials', res.data)
+        self.assertEqual(res.data['contact']['email'], 'reddyforex@gmail.com')
+        self.assertEqual(len(res.data['contact']['mobiles']), 3)
+
+    def test_public_api_is_read_only(self):
+        client = APIClient()
+        res = client.post(reverse('site-settings'), {'contact_email': 'hacked@example.com'})
+        self.assertEqual(res.status_code, 405)
 
 
 def _generated_image(size=(120, 80), fmt='JPEG', name='photo.jpg'):
@@ -434,6 +498,21 @@ class SiteImageApiTests(TestCase):
         # ever happen through the authenticated Django admin.
         res = self.client.post(reverse('site-image-list'), {'slot': 'home_why_us'})
         self.assertEqual(res.status_code, 405)
+
+
+@PLAIN_STATIC
+class SiteSettingAdminTests(TestCase):
+    def setUp(self):
+        self.staff = User.objects.create_superuser('admin', 'admin@example.com', 'password')
+        self.client = APIClient()
+        self.client.force_login(self.staff)
+
+    def test_change_form_renders_with_new_contact_fields(self):
+        setting = SiteSetting.load()
+        res = self.client.get(reverse('admin:content_sitesetting_change', args=[setting.pk]))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, 'id_mobile_1')
+        self.assertContains(res, 'id_address')
 
 
 @PLAIN_STATIC

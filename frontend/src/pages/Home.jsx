@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useFx } from '../context/FxContext';
 import { useFeatureFlag } from '../context/FeatureFlagsContext';
 import { HERO_TRUST, STATS, SERVICES, REASONS, fmt } from '../data';
-import { COMPANY, CONTACT } from '../company';
+import { COMPANY } from '../company';
 import { c, fonts, wrap, eyebrow, h2Style } from '../tokens';
 import FaqAccordion from '../components/FaqAccordion';
 import CallbackForm from '../components/CallbackForm';
@@ -10,6 +10,7 @@ import Seo from '../components/Seo';
 import SitePhoto from '../components/SitePhoto';
 import useApi from '../hooks/useApi';
 import { fetchTestimonials, fetchFaqs, fetchCurrencies, toRatesMap } from '../api';
+import { useCompanyInfo } from '../context/CompanyInfoContext';
 
 const LIVE_BOARD_GRID = '2fr 1fr 1fr 1fr 1fr 1fr';
 
@@ -51,7 +52,7 @@ export default function Home() {
   const navigate = useNavigate();
   const fx = useFx();
   const liveBoardOn = useFeatureFlag('live_board');
-  const rateLockPageOn = useFeatureFlag('rate_lock_page');
+  const { contact } = useCompanyInfo();
   const { data: testimonials } = useApi(loadTestimonials, []);
   const { data: faqs } = useApi(loadHomepageFaqs, []);
   const { data: forexCardRates } = useApi(loadForexCardRates, {});
@@ -87,8 +88,7 @@ export default function Home() {
               {COMPANY.legalName} is {COMPANY.regulator.toLowerCase()}, providing comprehensive forex services to international travellers — money exchange, money transfer and money remittance, from our shop in T. Nagar.
             </p>
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 40 }}>
-              {rateLockPageOn && <Btn onClick={() => navigate('/lock-rate')}>Lock a rate</Btn>}
-              <Btn variant="outline" onClick={() => navigate('/quote')}>Get a free quote</Btn>
+              <Btn onClick={() => navigate('/quote')}>Get a free quote</Btn>
             </div>
             <div style={{ display: 'flex', gap: 34, flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,.12)', paddingTop: 26 }}>
               {HERO_TRUST.map((t) => (
@@ -317,11 +317,11 @@ export default function Home() {
           <div>
             <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: 'clamp(30px,3.2vw,44px)', lineHeight: 1.1, color: '#fff', margin: '0 0 12px' }}>Call us to get quotes</h2>
             <p style={{ fontSize: 17, lineHeight: 1.6, color: '#FCE4D8', margin: 0, maxWidth: 560 }}>
-              Tell us the currency and amount and we will quote you the rate. Walk in to {CONTACT.addressNote.replace(/[()]/g, '')} — Challa Mall, T. Nagar.
+              Tell us the currency and amount and we will quote you the rate. Walk in to {contact.addressNote.replace(/[()]/g, '')} — Challa Mall, T. Nagar.
             </p>
           </div>
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-            {CONTACT.mobiles.slice(0, 2).map((m) => (
+            {contact.mobiles.slice(0, 2).map((m) => (
               <a key={m.tel} href={`tel:${m.tel}`} style={{ background: c.navy, color: '#fff', padding: '16px 28px', borderRadius: 9, fontSize: 15.5, fontWeight: 600, fontFamily: fonts.mono, whiteSpace: 'nowrap' }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = c.navyLight)} onMouseLeave={(e) => (e.currentTarget.style.background = c.navy)}
               >{m.display}</a>

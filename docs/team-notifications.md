@@ -2,28 +2,24 @@
 
 ## The problem this solves
 
-A customer on the website locks a rate, asks for a quote, or sends an enquiry, and leaves
-their mobile number. **Those details are for the dealers, not for the customer.** Nobody is
-buying anything online — the entire point is to get a real person at the T. Nagar counter to
-ring that customer back.
+A customer on the website asks for a quote, sends an enquiry, or requests a callback, and
+leaves their mobile number. **Those details are for the dealers, not for the customer.**
+Nobody is buying anything online — the entire point is to get a real person at the T. Nagar
+counter to ring that customer back.
 
 So the thing being optimised is not the confirmation screen. It is:
 
 ```
-customer locks a rate  →  desk is alerted  →  dealer calls the customer back
-                       └──────── minimise this ────────┘
+customer submits a lead  →  desk is alerted  →  dealer calls the customer back
+                         └──────── minimise this ────────┘
 ```
 
-Two independent clocks make this urgent:
-
-1. **The rate lock itself expires.** `SiteSetting.rate_lock_hours` (default 4) is a promise
-   with a deadline. Call after it lapses and the conversation starts with an apology.
-2. **Speed-to-lead decides who wins the customer.** The widely-cited MIT/InsideSales lead
-   response study found responding within 5 minutes makes a lead ~21× more likely to
-   qualify than waiting 30; a Harvard Business Review analysis of 15,000 leads found the
-   odds drop sharply again between 5 and 10 minutes, and ~78% of customers buy from
-   whoever responds first. Reddy Forex competes with larger chains on rate *and* on who
-   picks up the phone first — the second one is winnable without touching margin.
+**Speed-to-lead decides who wins the customer.** The widely-cited MIT/InsideSales lead
+response study found responding within 5 minutes makes a lead ~21× more likely to
+qualify than waiting 30; a Harvard Business Review analysis of 15,000 leads found the
+odds drop sharply again between 5 and 10 minutes, and ~78% of customers buy from
+whoever responds first. Reddy Forex competes with larger chains on rate *and* on who
+picks up the phone first — the second one is winnable without touching margin.
 
 That is the justification for building anything here at all. A lead sitting unseen in an
 inbox for two hours is, commercially, a lost lead.
@@ -33,10 +29,9 @@ inbox for two hours is, commercially, a lost lead.
 | Piece | Where | Status |
 |---|---|---|
 | Email to the desk on every lead | `content/notifications.py` → `notify_team()` | **Live on `main`** |
-| Per-lead-type recipient overrides | Admin → Site settings (`notify_enquiries`/`notify_quotes`/`notify_rate_locks`) | **Live on `main`** |
+| Per-lead-type recipient overrides | Admin → Site settings (`notify_enquiries`/`notify_quotes`) | **Live on `main`** |
 | Lead inbox with one-tap call / WhatsApp reply links | `content/admin.py` (`BaseLeadAdmin.reply_links`) | **Live on `main`** |
 | Red "untouched and older than an hour" timestamp | `content/admin.py` (`BaseLeadAdmin.received`) | **Live on `main`** |
-| Rate-lock expiry countdown in the admin list | `Lead.expires_in` | **Live on `main`** |
 | Telegram alert to admin-approved staff, per-send delivery log | `telegram_alerts/` app — see `docs/telegram-bot.md` | **Built** |
 | Chrome push to staff browsers, per-send delivery log | `team_alerts/` app | **PR #16, not yet merged** |
 
@@ -157,10 +152,8 @@ several times, and BSP platform fees vary widely.
 
 - Anything new goes **alongside** `notify_team()`, not inside it — one channel failing must
   not stop another.
-- Connect signals to the **proxy** models (`Enquiry`, `RateLock`), never to `Lead` itself,
+- Connect signals to the **proxy** models (`Enquiry`, `QuoteRequest`), never to `Lead` itself,
   or every kind of lead triggers every alert. See `team_alerts/signals.py`.
-- Rate locks are the only lead type with a deadline; they earn `Urgent` priority and skip
-  the quiet-period limit. Quote requests deliberately do not.
 - Customer PII (name, phone, email) leaving the database to a third-party messenger is a
   DPDP Act 2023 consideration. Worth a retention and lawful-basis note before adding a
   channel that copies leads off-platform at scale.

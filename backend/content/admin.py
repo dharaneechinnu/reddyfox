@@ -339,16 +339,21 @@ class SiteImageAdmin(admin.ModelAdmin):
 class SiteSettingAdmin(admin.ModelAdmin):
     """Singleton — one row, auto-created, never deleted."""
 
-    list_display = ('__str__', 'whatsapp_number', 'whatsapp_enabled', 'rate_lock_hours', 'updated_at')
+    list_display = ('__str__', 'whatsapp_number', 'whatsapp_enabled', 'updated_at')
     readonly_fields = ('updated_at', 'preview_link')
     fieldsets = (
-        ('Rate lock', {
-            'fields': ('rate_lock_hours',),
-            'description': 'How long a locked rate stays valid. The customer is told the exact expiry time, '
-                           'and the Rate locks list shows a live countdown.',
+        ('Company contact info — header, footer, Contact page & WhatsApp', {
+            'fields': (
+                'contact_email', 'address', 'address_note',
+                'mobile_1', 'mobile_2', 'mobile_3',
+                'landline_1', 'landline_2',
+                'facebook_url', 'x_url', 'youtube_url',
+            ),
+            'description': 'The same values shown everywhere on the site — one edit here updates the header top '
+                           'bar, the footer, the Contact page and every "call us" prompt at once.',
         }),
         ('Who gets alerted', {
-            'fields': ('notify_enquiries', 'notify_quotes', 'notify_rate_locks'),
+            'fields': ('notify_enquiries', 'notify_quotes'),
             'description': 'Comma-separated email addresses per request type. Leave a field blank to fall back to '
                            'the default from the environment — a blank field never means nobody is told.',
         }),

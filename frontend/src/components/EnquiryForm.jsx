@@ -5,7 +5,7 @@ import { submitEnquiry } from '../api';
 import useLeadForm from '../hooks/useLeadForm';
 import { ConsentCheck, ErrorSummary, Field, Honeypot, SubmitButton, formCard } from './FormBits';
 import LeadSuccess from './LeadSuccess';
-import { PRIMARY_PHONE } from '../company';
+import { useCompanyInfo } from '../context/CompanyInfoContext';
 
 const ID = 'enq';
 
@@ -25,6 +25,7 @@ const INITIAL = {
 };
 
 export default function EnquiryForm() {
+  const { primaryPhone } = useCompanyInfo();
   const f = useLeadForm({
     initial: INITIAL,
     validators: VALIDATORS,
@@ -96,7 +97,7 @@ export default function EnquiryForm() {
 
       <SubmitButton sending={f.sending}>Send now</SubmitButton>
       <p style={{ margin: '14px 0 0', fontSize: 11.8, lineHeight: 1.55, color: c.textFainter, textAlign: 'center' }}>
-        We reply on the phone number or email you give us. Prefer to talk? Call {PRIMARY_PHONE.display}.
+        We reply on the phone number or email you give us. Prefer to talk? Call {primaryPhone.display}.
       </p>
     </form>
   );

@@ -1,7 +1,7 @@
 import { SERVICES } from '../data';
 import { useFx } from '../context/FxContext';
 import { c } from '../tokens';
-import { PRIMARY_PHONE } from '../company';
+import { useCompanyInfo } from '../context/CompanyInfoContext';
 import { validateEmail, validatePhone, validateRequired } from '../validation';
 import { submitQuoteRequest } from '../api';
 import useLeadForm from '../hooks/useLeadForm';
@@ -29,6 +29,7 @@ const VALIDATORS = {
 
 export default function QuoteForm() {
   const fx = useFx();
+  const { primaryPhone } = useCompanyInfo();
 
   const f = useLeadForm({
     initial: {
@@ -137,7 +138,7 @@ export default function QuoteForm() {
 
       <SubmitButton sending={f.sending} sendingLabel="Requesting…">Get my quote</SubmitButton>
       <p style={{ margin: '14px 0 0', fontSize: 11.8, lineHeight: 1.55, color: c.textFainter, textAlign: 'center' }}>
-        A dealer will quote you a price. Prefer to talk? Call {PRIMARY_PHONE.display}.
+        A dealer will quote you a price. Prefer to talk? Call {primaryPhone.display}.
       </p>
     </form>
   );

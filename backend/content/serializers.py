@@ -5,7 +5,7 @@ from urllib.parse import quote
 from rest_framework import serializers
 
 from .models import (
-    CallbackRequest, Enquiry, Faq, FaqCategory, Lead, QuoteRequest, RateLock, SiteImage, SiteSetting, Testimonial,
+    CallbackRequest, Enquiry, Faq, FaqCategory, Lead, QuoteRequest, SiteImage, SiteSetting, Testimonial,
 )
 from .validators import looks_like_spam, normalize_phone, validate_amount, validate_currency_code
 
@@ -175,43 +175,6 @@ class CallbackRequestCreateSerializer(BaseLeadSerializer):
         return validate_amount(value) if value is not None else value
 
 
-class RateLockCreateSerializer(BaseLeadSerializer):
-    """"Lock this rate" from the converter. Captures exactly what the customer
-    saw, so the desk can honour it or explain a change."""
-
-    kind = Lead.Kind.RATE_LOCK
-
-    class Meta(BaseLeadSerializer.Meta):
-        model = RateLock
-        fields = BaseLeadSerializer.Meta.fields + [
-            'from_currency', 'to_currency', 'amount',
-            'quoted_rate', 'converted_amount', 'message',
-        ]
-        extra_kwargs = {
-            'from_currency': {'required': True, 'allow_blank': False},
-            'to_currency': {'required': True, 'allow_blank': False},
-            'amount': {'required': True},
-            'quoted_rate': {'required': True},
-        }
-
-    def validate_from_currency(self, value):
-        return validate_currency_code(value)
-
-    def validate_to_currency(self, value):
-        return validate_currency_code(value)
-
-    def validate_amount(self, value):
-        return validate_amount(value)
-
-    def validate(self, attrs):
-        attrs = super().validate(attrs)
-        if attrs.get('from_currency') == attrs.get('to_currency'):
-            raise serializers.ValidationError(
-                {'to_currency': 'Choose two different currencies to lock a rate.'}
-            )
-        return attrs
-
-
 class SiteImageSerializer(serializers.ModelSerializer):
     """Keyed by `slot` on the frontend (see fetchSiteImages in api.js) so a
     page can look up "is there a photo for this spot" with one dict access.
@@ -236,14 +199,24 @@ class SiteImageSerializer(serializers.ModelSerializer):
 
 class SiteSettingSerializer(serializers.ModelSerializer):
     """Public contact options. The wa.me URL is built here so the frontend never
-    has to reimplement number formatting or message encoding."""
+    has to reimplement number formatting or message encoding.
+
+    `contact` and `socials` mirror the shape of the CONTACT/SOCIALS objects in
+    frontend/src/company.js exactly (addressLines, addressNote, mobiles,
+    landlines, ...) — CompanyInfoContext.jsx uses those same values as its
+    fallback default, so keeping the field names identical means it can
+    merge a real response straight over the static defaults with no
+    reshaping in between.
+    """
 
     whatsapp_url = serializers.SerializerMethodField()
     whatsapp_display = serializers.SerializerMethodField()
+    contact = serializers.SerializerMethodField()
+    socials = serializers.SerializerMethodField()
 
     class Meta:
         model = SiteSetting
-        fields = ['whatsapp_enabled', 'whatsapp_display', 'whatsapp_label', 'whatsapp_url']
+        fields = ['whatsapp_enabled', 'whatsapp_display', 'whatsapp_label', 'whatsapp_url', 'contact', 'socials']
 
     def get_whatsapp_display(self, obj):
         n = obj.whatsapp_number or ''
@@ -257,3 +230,16 @@ class SiteSettingSerializer(serializers.ModelSerializer):
         if obj.whatsapp_greeting:
             url += f'?text={quote(obj.whatsapp_greeting)}'
         return url
+
+    def get_contact(self, obj):
+        return {
+            'addressLines': obj.address_lines,
+            'addressNote': obj.address_note,
+            'addressOneLine': obj.address_one_line,
+            'email': obj.contact_email,
+            'mobiles': obj.mobiles,
+            'landlines': obj.landlines,
+        }
+
+    def get_socials(self, obj):
+        return obj.socials

@@ -1,4 +1,3 @@
-from django.utils import timezone
 from rest_framework import generics, status, viewsets
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
@@ -9,8 +8,7 @@ from .models import Faq, FaqCategory, SiteImage, SiteSetting, Testimonial
 from .notifications import notify_team
 from .serializers import (
     CallbackRequestCreateSerializer, EnquiryCreateSerializer, FaqCategorySerializer, FaqSerializer,
-    QuoteRequestCreateSerializer, RateLockCreateSerializer,
-    SiteImageSerializer, SiteSettingSerializer, TestimonialSerializer,
+    QuoteRequestCreateSerializer, SiteImageSerializer, SiteSettingSerializer, TestimonialSerializer,
 )
 
 
@@ -106,23 +104,6 @@ class CallbackRequestCreateView(BaseLeadCreateView):
     """Quick "get your best price" capture from the homepage converter widget."""
     serializer_class = CallbackRequestCreateSerializer
     success_message = "Thanks — we've got your details. Our team will call you back shortly with the best price."
-
-
-class RateLockCreateView(BaseLeadCreateView):
-    """"Lock this rate" from the converter."""
-    serializer_class = RateLockCreateSerializer
-
-    def response_payload(self):
-        # Tell the customer exactly when the lock runs out, so the promise on
-        # screen matches what the desk sees in the admin.
-        expires = self.lead.lock_expires_at
-        return {
-            'detail': 'Your rate is reserved. Our dealer will confirm it shortly.',
-            'expires_at': expires.isoformat() if expires else None,
-            'expires_at_display': (
-                timezone.localtime(expires).strftime('%d %b %Y, %H:%M') + ' IST' if expires else None
-            ),
-        }
 
 
 class SiteSettingView(generics.RetrieveAPIView):

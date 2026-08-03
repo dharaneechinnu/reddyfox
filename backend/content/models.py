@@ -1,9 +1,13 @@
-from datetime import timedelta
-
 from django.db import models
 from django.utils import timezone
 
-from .validators import normalize_phone, validate_image_upload, validate_indian_phone
+from .validators import (
+    landline_tel,
+    normalize_phone,
+    validate_image_upload,
+    validate_indian_phone,
+    validate_landline,
+)
 
 
 class VisibleOrderedQuerySet(models.QuerySet):
@@ -123,11 +127,11 @@ class LeadQuerySet(models.QuerySet):
 class Lead(models.Model):
     """A customer request from the website.
 
-    One table backs three request types, discriminated by `kind`:
+    One table backs multiple request types, discriminated by `kind`:
 
       enquiry    — the general contact form
       quote      — "Get a free quote"
-      rate_lock  — "Lock this rate" from the converter
+      callback   — quick "get your best price" from the homepage converter
 
     They share ~80% of their fields (who the customer is, workflow state, audit
     trail), so a single table keeps validation, spam protection, notification and
@@ -141,7 +145,6 @@ class Lead(models.Model):
     class Kind(models.TextChoices):
         ENQUIRY = 'enquiry', 'Enquiry'
         QUOTE = 'quote', 'Quote request'
-        RATE_LOCK = 'rate_lock', 'Rate lock'
         CALLBACK = 'callback', 'Callback request'
 
     class Status(models.TextChoices):
@@ -166,8 +169,8 @@ class Lead(models.Model):
         LOW = 4, 'Low'
 
     #: Priority a brand-new lead of this kind gets, unless the caller asked
-    #: for something else. Overridden on the proxies below — a rate lock is
-    #: the one type with a deadline, so it arrives Urgent.
+    #: for something else. Every kind currently arrives Normal; a proxy can
+    #: override this if a future lead type needs to arrive pre-flagged.
     default_priority = Priority.NORMAL
 
     kind = models.CharField(
@@ -184,26 +187,13 @@ class Lead(models.Model):
     # --- quote + enquiry ---
     service = models.CharField(max_length=120, blank=True, help_text='Which service they selected.')
 
-    # --- quote + rate lock ---
+    # --- quote + callback ---
     from_currency = models.CharField(max_length=3, blank=True)
     to_currency = models.CharField(max_length=3, blank=True)
     amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
 
     # --- quote only ---
     needed_by = models.DateField(null=True, blank=True, help_text='When the customer needs the currency.')
-
-    # --- rate lock only ---
-    quoted_rate = models.DecimalField(
-        max_digits=12, decimal_places=4, null=True, blank=True,
-        help_text='The rate the customer saw when they locked it.',
-    )
-    converted_amount = models.DecimalField(
-        max_digits=16, decimal_places=2, null=True, blank=True,
-        help_text='What the converter showed they would receive.',
-    )
-    lock_expires_at = models.DateTimeField(
-        null=True, blank=True, help_text='Set automatically from the lock window in Site settings.',
-    )
 
     # --- workflow (the only fields staff edit) ---
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.NEW, db_index=True)
@@ -215,8 +205,8 @@ class Lead(models.Model):
     )
     priority = models.PositiveSmallIntegerField(
         choices=Priority.choices, default=Priority.NORMAL, db_index=True,
-        help_text='Which end of the list this sits at. Set automatically when the lead arrives '
-                  '(rate locks come in Urgent because they expire); change it here any time.',
+        help_text='Which end of the list this sits at. Set automatically when the lead arrives; '
+                  'change it here any time.',
     )
     assigned_to = models.ForeignKey(
         'auth.User', null=True, blank=True, on_delete=models.SET_NULL,
@@ -234,8 +224,7 @@ class Lead(models.Model):
     objects = LeadQuerySet.as_manager()
 
     class Meta:
-        # Most urgent first, then newest — so the desk works top-down and a
-        # rate lock about to expire never sits below a day-old enquiry.
+        # Most urgent first, then newest — so the desk always works top-down.
         ordering = ['priority', '-created_at']
         verbose_name = 'lead'
         verbose_name_plural = 'all leads'
@@ -285,7 +274,6 @@ class Lead(models.Model):
             return None
         first = self.name.split()[0] if self.name.split() else 'there'
         subject = {
-            self.Kind.RATE_LOCK: f'your {self.from_currency}/{self.to_currency} rate lock',
             self.Kind.QUOTE: f'your quote request for {self.service or "forex"}',
         }.get(self.kind, f'your enquiry about {self.service or "our services"}')
         return f'https://wa.me/91{d}?text={quote(f"Hello {first}, thank you for {subject} with Reddy Forex.")}'
@@ -294,24 +282,6 @@ class Lead(models.Model):
     def tel_url(self):
         d = self._digits
         return f'tel:+91{d}' if len(d) == 10 else None
-
-    # --- rate lock helpers ---
-    @property
-    def is_expired(self):
-        return bool(self.lock_expires_at and timezone.now() > self.lock_expires_at)
-
-    @property
-    def expires_in(self):
-        """Human countdown, or None when this lead has no lock window."""
-        if not self.lock_expires_at:
-            return None
-        delta = self.lock_expires_at - timezone.now()
-        mins = int(delta.total_seconds() // 60)
-        if mins < 0:
-            return 'expired'
-        if mins < 60:
-            return f'{mins} min left'
-        return f'{mins // 60} hr {mins % 60} min left'
 
 
 class KindManager(models.Manager):
@@ -372,33 +342,61 @@ class CallbackRequest(Lead):
         super().save(*args, **kwargs)
 
 
-class RateLock(Lead):
-    """Proxy: "Lock this rate" from the converter. Own admin list and own
-    permissions, and the only type with an expiry window."""
-
-    objects = KindManager(Lead.Kind.RATE_LOCK)
-
-    # The only lead type with a deadline attached: the customer has been
-    # promised a rate that lapses, so these arrive at the top of the desk's
-    # list. Staff can still lower it.
-    default_priority = Lead.Priority.URGENT
-
-    class Meta:
-        proxy = True
-        verbose_name = 'rate lock'
-        verbose_name_plural = 'rate locks'
-
-    def save(self, *args, **kwargs):
-        self.kind = Lead.Kind.RATE_LOCK
-        if not self.lock_expires_at:
-            hours = SiteSetting.load().rate_lock_hours
-            self.lock_expires_at = timezone.now() + timedelta(hours=hours)
-        super().save(*args, **kwargs)
+def _mobile_pair(digits):
+    """'9941456261' -> {'display': '+91 99414 56261', 'tel': '+919941456261'}."""
+    return {'display': f'+91 {digits[:5]} {digits[5:]}', 'tel': f'+91{digits}'}
 
 
 class SiteSetting(models.Model):
     """Singleton row for contact options the business wants to change without a
-    deploy. Currently the WhatsApp number offered after an enquiry is sent."""
+    deploy: the company's own address/phone/email/socials (shown in the
+    header, footer, Contact page and WhatsApp messages — one edit here
+    updates every one of them), plus WhatsApp and notification settings.
+
+    Frontend defaults live in frontend/src/company.js and are used only as
+    the fallback while this loads or if the API is unreachable — the same
+    fail-open rule as feature_flags. They are NOT the source of truth once
+    this row has been edited in the admin.
+    """
+
+    # --- company contact info (header, footer, Contact page, WhatsApp) ---
+    contact_email = models.EmailField(
+        default='reddyforex@gmail.com',
+        help_text='Public "contact us" email shown on the site. Different from the notify_* '
+                  'addresses below, which are where staff get alerted internally.',
+    )
+    address = models.TextField(
+        default='Shop No 105, Challa Mall,\n17, Thyagaraya Road, T. Nagar,\nChennai, Tamil Nadu 600017',
+        help_text='One address line per line — each becomes its own line on the site.',
+    )
+    address_note = models.CharField(
+        max_length=100, blank=True, default='(Opposite Globus)',
+        help_text='Optional landmark note shown after the address, e.g. "(Opposite Globus)".',
+    )
+    mobile_1 = models.CharField(
+        max_length=20, default='9941456261', validators=[validate_indian_phone],
+        verbose_name='Primary mobile',
+        help_text='Shown first everywhere on the site. 10 digits; +91, spaces and dashes are fine and get stripped.',
+    )
+    mobile_2 = models.CharField(
+        max_length=20, blank=True, default='9551699221', validators=[validate_indian_phone],
+        verbose_name='Second mobile (optional)',
+    )
+    mobile_3 = models.CharField(
+        max_length=20, blank=True, default='9551699055', validators=[validate_indian_phone],
+        verbose_name='Third mobile (optional)',
+    )
+    landline_1 = models.CharField(
+        max_length=20, blank=True, default='044-24353596', validators=[validate_landline],
+        verbose_name='Landline 1 (optional)', help_text='Shown as entered, e.g. "044-24353596".',
+    )
+    landline_2 = models.CharField(
+        max_length=20, blank=True, default='044-24353604', validators=[validate_landline],
+        verbose_name='Landline 2 (optional)',
+    )
+    facebook_url = models.URLField(blank=True, default='https://www.facebook.com/Reddy-Forex-Private-Limited-100909432036543')
+    x_url = models.URLField(blank=True, default='https://x.com/ReddyForex', verbose_name='X (Twitter) URL')
+    youtube_url = models.URLField(blank=True, default='https://www.youtube.com/channel/UCrFuWjK4Yfma9A6RMbywE5g')
 
     whatsapp_enabled = models.BooleanField(
         default=True,
@@ -424,13 +422,6 @@ class SiteSetting(models.Model):
         help_text='Message pre-filled in the customer’s WhatsApp. '
                   'Leave blank to open an empty chat.',
     )
-    # --- rate lock ---
-    rate_lock_hours = models.PositiveSmallIntegerField(
-        default=4,
-        verbose_name='Rate lock validity (hours)',
-        help_text='How long a locked rate stays valid. The customer is told the exact expiry time.',
-    )
-
     # --- per-type notification recipients ---
     notify_enquiries = models.CharField(
         max_length=255, blank=True,
@@ -440,12 +431,41 @@ class SiteSetting(models.Model):
         max_length=255, blank=True,
         help_text='Comma-separated emails for quote requests. Blank = use the default.',
     )
-    notify_rate_locks = models.CharField(
-        max_length=255, blank=True,
-        help_text='Comma-separated emails for rate locks. Blank = use the default.',
-    )
 
     updated_at = models.DateTimeField(auto_now=True)
+
+    # --- contact info, shaped for the frontend (see SiteSettingSerializer) ---
+    @property
+    def address_lines(self):
+        return [line.strip() for line in self.address.splitlines() if line.strip()]
+
+    @property
+    def address_one_line(self):
+        # Each line commonly ends with its own trailing comma (for the
+        # multi-line display) — strip it first so joining doesn't double up.
+        line = ', '.join(l.rstrip(',').strip() for l in self.address_lines)
+        return f'{line} {self.address_note}'.strip() if self.address_note else line
+
+    @property
+    def mobiles(self):
+        """{display, tel} pairs, blank optional numbers dropped. Every site
+        phone link (header, footer, forms, LeadSuccess) uses this shape."""
+        return [_mobile_pair(n) for n in (self.mobile_1, self.mobile_2, self.mobile_3) if n]
+
+    @property
+    def landlines(self):
+        return [{'display': n, 'tel': landline_tel(n)} for n in (self.landline_1, self.landline_2) if n]
+
+    @property
+    def socials(self):
+        """Only the platforms staff have actually filled in — same
+        blank-means-hidden rule as whatsapp_url below, not a broken link."""
+        options = [
+            ('facebook', 'Facebook', self.facebook_url),
+            ('x', 'X (formerly Twitter)', self.x_url),
+            ('youtube', 'YouTube', self.youtube_url),
+        ]
+        return [{'icon': icon, 'label': label, 'url': url} for icon, label, url in options if url]
 
     def recipients_for(self, kind):
         """Emails to alert for a given Lead.kind, falling back to the project
@@ -454,7 +474,6 @@ class SiteSetting(models.Model):
         raw = {
             'enquiry': self.notify_enquiries,
             'quote': self.notify_quotes,
-            'rate_lock': self.notify_rate_locks,
         }.get(kind, '')
         addrs = [a.strip() for a in (raw or '').split(',') if a.strip()]
         return addrs or list(getattr(settings, 'ENQUIRY_NOTIFY_EMAILS', []) or [])
@@ -469,6 +488,9 @@ class SiteSetting(models.Model):
     def save(self, *args, **kwargs):
         self.pk = 1  # enforce singleton
         self.whatsapp_number = normalize_phone(self.whatsapp_number) or self.whatsapp_number
+        self.mobile_1 = normalize_phone(self.mobile_1) or self.mobile_1
+        self.mobile_2 = normalize_phone(self.mobile_2) or self.mobile_2
+        self.mobile_3 = normalize_phone(self.mobile_3) or self.mobile_3
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):

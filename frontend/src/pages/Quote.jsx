@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom';
-import { CONTACT } from '../company';
 import { c, fonts, wrap } from '../tokens';
 import QuoteForm from '../components/QuoteForm';
 import Seo from '../components/Seo';
+import { useCompanyInfo } from '../context/CompanyInfoContext';
 
 export default function Quote() {
+  const { contact } = useCompanyInfo();
   return (
     <div>
       <Seo
@@ -42,12 +43,12 @@ export default function Quote() {
 
             <div style={{ borderTop: '1px solid rgba(255,255,255,.14)', marginTop: 26, paddingTop: 22 }}>
               <div style={{ fontSize: 12.5, color: c.navyMuted2, marginBottom: 8 }}>Rather ask us directly?</div>
-              {CONTACT.mobiles.slice(0, 2).map((m) => (
+              {contact.mobiles.slice(0, 2).map((m) => (
                 <a key={m.tel} href={`tel:${m.tel}`} style={{ display: 'block', fontFamily: fonts.mono, fontSize: 16, color: '#fff', marginBottom: 6 }}>
                   {m.display}
                 </a>
               ))}
-              <a href={`mailto:${CONTACT.email}`} style={{ fontSize: 14.5 }}>{CONTACT.email}</a>
+              <a href={`mailto:${contact.email}`} style={{ fontSize: 14.5 }}>{contact.email}</a>
             </div>
 
             <p style={{ fontSize: 12.5, lineHeight: 1.6, color: c.navyMuted2, margin: '22px 0 0' }}>

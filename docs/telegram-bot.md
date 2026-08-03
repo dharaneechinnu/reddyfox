@@ -1,6 +1,6 @@
 # Telegram staff alerts: setup and how it works
 
-Every new lead (enquiry, quote request, callback, rate lock) already emails the desk
+Every new lead (enquiry, quote request, callback) already emails the desk
 (`content/notifications.py`). This adds a second, faster channel: an instant Telegram
 message to whichever staff the admin has explicitly approved. See `docs/team-notifications.md`
 for why speed-to-lead matters commercially — this doc is just the how-to.
@@ -167,8 +167,8 @@ Converting: 500.00 USD → INR
 Call: tel:+919876543210
 ```
 
-Only what a dealer needs to call back. Full detail (message text, service selected, rate-lock
-expiry, etc.) is still in the email and in `/admin/`.
+Only what a dealer needs to call back. Full detail (message text, service selected, etc.) is
+still in the email and in `/admin/`.
 
 ## Which lead kinds actually reach Telegram — the `alert_routing` checklist
 
@@ -186,7 +186,6 @@ Default state (seeded by `alert_routing/migrations/0002_seed_rules.py`):
 |---|---|
 | Enquiry | **Off** — the general contact form generates more Telegram noise than it's worth relative to a quote or a callback |
 | Quote request | On |
-| Rate lock | On |
 | Callback request ("Get best price") | On |
 
 This lives in its own app, `alert_routing`, deliberately separate from `telegram_alerts`:

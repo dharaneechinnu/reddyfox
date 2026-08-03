@@ -220,7 +220,7 @@ class CallbackTriggersTelegramAlertTests(TestCase):
         lead_arg = telegram_notify.call_args[0][0]
         self.assertEqual(lead_arg.name, 'Deborah Beck')
 
-    def test_rate_lock_submission_also_calls_notify_team_telegram(self):
+    def test_quote_submission_also_calls_notify_team_telegram(self):
         """Every lead kind gets a Telegram alert, same as email — not just the homepage callback.
         perform_create() has no branch on lead.kind, so this just confirms a second kind wires up
         the same way rather than re-testing the sending logic itself."""
@@ -234,10 +234,9 @@ class CallbackTriggersTelegramAlertTests(TestCase):
         )
         client = APIClient()
         with patch('content.views.notify_team_telegram') as telegram_notify:
-            res = client.post(reverse('rate-lock-create'), {
+            res = client.post(reverse('quote-create'), {
                 'name': 'Ravi Kumar', 'phone': '9876543210', 'email': 'r@example.com',
-                'from_currency': 'USD', 'to_currency': 'INR', 'amount': '500',
-                'quoted_rate': '84.0', 'converted_amount': '42000',
+                'from_currency': 'USD', 'amount': '500',
             })
 
         self.assertEqual(res.status_code, 201, res.data)
