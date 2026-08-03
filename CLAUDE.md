@@ -60,7 +60,7 @@ npm run lint      # oxlint — the only linter configured; there is no separate 
 
 There is no frontend test runner configured (no Jest/Vitest) — `npm run lint` and `npm run build` are the only automated checks. Verify UI changes by running the dev server.
 
-**Testing on a phone:** set `VITE_API_BASE_URL` (frontend `.env`) to the machine's LAN IP, not `localhost` — on a phone that resolves to the phone itself. Add that IP to `ALLOWED_HOSTS` and the frontend origin to `CORS_ALLOWED_ORIGINS` in the backend `.env`.
+**Testing on a phone:** just open `http://<this machine's LAN IP>:5173` on the phone — nothing to configure. `frontend/src/api.js` derives the API's address from whatever host the browser used (assuming the backend runs on the same machine at port 8000), and `backend/config/settings.py` allows any host/origin whenever `DEBUG=True`, since local dev isn't internet-facing and the LAN IP changes with every network switch anyway. Set `VITE_API_BASE_URL` explicitly only if the backend is on a different machine or port.
 
 ## Architecture
 
