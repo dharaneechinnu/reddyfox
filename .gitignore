@@ -31,6 +31,7 @@ backend/**/migrations/__pycache__
 backend/.env
 backend/db.sqlite3
 backend/staticfiles
+backend/media
 
 # Frontend env (frontend/.env.example documents the shape)
 frontend/.env

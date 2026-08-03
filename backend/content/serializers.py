@@ -4,7 +4,9 @@ from urllib.parse import quote
 
 from rest_framework import serializers
 
-from .models import CallbackRequest, Enquiry, Faq, FaqCategory, Lead, QuoteRequest, RateLock, SiteSetting, Testimonial
+from .models import (
+    CallbackRequest, Enquiry, Faq, FaqCategory, Lead, QuoteRequest, RateLock, SiteImage, SiteSetting, Testimonial,
+)
 from .validators import looks_like_spam, normalize_phone, validate_amount, validate_currency_code
 
 
@@ -208,6 +210,28 @@ class RateLockCreateSerializer(BaseLeadSerializer):
                 {'to_currency': 'Choose two different currencies to lock a rate.'}
             )
         return attrs
+
+
+class SiteImageSerializer(serializers.ModelSerializer):
+    """Keyed by `slot` on the frontend (see fetchSiteImages in api.js) so a
+    page can look up "is there a photo for this spot" with one dict access.
+    `url` is built absolute — the API host and the site host are the same,
+    but the media path isn't under /api, so a bare relative path from
+    ImageField wouldn't resolve correctly against the frontend's own origin.
+    """
+
+    url = serializers.SerializerMethodField()
+    alt_text = serializers.CharField(source='resolved_alt_text', read_only=True)
+
+    class Meta:
+        model = SiteImage
+        fields = ['slot', 'url', 'alt_text']
+
+    def get_url(self, obj):
+        request = self.context.get('request')
+        if not obj.image:
+            return None
+        return request.build_absolute_uri(obj.image.url) if request else obj.image.url
 
 
 class SiteSettingSerializer(serializers.ModelSerializer):

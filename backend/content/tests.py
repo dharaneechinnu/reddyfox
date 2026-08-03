@@ -1,12 +1,20 @@
+import io
+import shutil
+import tempfile
 from datetime import timedelta
 
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.exceptions import ValidationError
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from PIL import Image
 from rest_framework.test import APIClient
 
 from rates.models import Currency
-from .models import CallbackRequest, Enquiry, Lead, QuoteRequest, RateLock
+from .models import CallbackRequest, Enquiry, Lead, QuoteRequest, RateLock, SiteImage
+from .validators import validate_image_upload
 
 # Rendering an admin page needs a staticfiles manifest, which only exists
 # after `collectstatic`. Production builds one; the test runner shouldn't
@@ -312,3 +320,181 @@ class CallbackRequestTests(TestCase):
         self.assertFalse(Enquiry.objects.exists())
         self.assertFalse(QuoteRequest.objects.exists())
         self.assertFalse(RateLock.objects.exists())
+
+
+def _generated_image(size=(120, 80), fmt='JPEG', name='photo.jpg'):
+    """An in-memory image Pillow will happily open — no fixture file needed."""
+    buf = io.BytesIO()
+    Image.new('RGB', size, color=(200, 40, 10)).save(buf, format=fmt)
+    buf.seek(0)
+    content_type = 'image/jpeg' if fmt == 'JPEG' else f'image/{fmt.lower()}'
+    return SimpleUploadedFile(name, buf.read(), content_type=content_type)
+
+
+# SiteImage writes real files (ImageField + the resize-on-save Pillow step),
+# so every test in this section gets its own throwaway MEDIA_ROOT — never
+# touch the developer's real backend/media/ folder, and nothing to clean up
+# by hand afterwards.
+_TEST_MEDIA_ROOT = tempfile.mkdtemp(prefix='reddyfox-test-media-')
+
+
+@override_settings(MEDIA_ROOT=_TEST_MEDIA_ROOT)
+class SiteImageValidatorTests(TestCase):
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(_TEST_MEDIA_ROOT, ignore_errors=True)
+
+    def test_accepts_a_real_jpeg(self):
+        validate_image_upload(_generated_image())  # must not raise
+
+    def test_rejects_a_file_that_is_not_actually_an_image(self):
+        fake = SimpleUploadedFile('not-a-photo.jpg', b'this is definitely not image bytes', content_type='image/jpeg')
+        with self.assertRaises(ValidationError):
+            validate_image_upload(fake)
+
+    def test_rejects_oversized_upload(self):
+        oversized = _generated_image()
+        oversized.size = 9 * 1024 * 1024  # pretend it's 9MB without generating one
+        with self.assertRaises(ValidationError):
+            validate_image_upload(oversized)
+
+    def test_rejects_unsupported_format(self):
+        with self.assertRaises(ValidationError):
+            validate_image_upload(_generated_image(fmt='BMP', name='photo.bmp'))
+
+
+@override_settings(MEDIA_ROOT=_TEST_MEDIA_ROOT)
+class SiteImageModelTests(TestCase):
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(_TEST_MEDIA_ROOT, ignore_errors=True)
+
+    def test_slot_is_unique(self):
+        SiteImage.objects.create(slot=SiteImage.Slot.HOME_WHY_US, image=_generated_image())
+        with self.assertRaises(Exception):
+            SiteImage.objects.create(slot=SiteImage.Slot.HOME_WHY_US, image=_generated_image())
+
+    def test_oversized_image_is_downscaled_on_save(self):
+        big = _generated_image(size=(2400, 1200))
+        obj = SiteImage.objects.create(slot=SiteImage.Slot.ABOUT_COUNTER, image=big)
+        with Image.open(obj.image.path) as saved:
+            self.assertLessEqual(max(saved.size), 1600)
+            self.assertEqual(saved.size[0] / saved.size[1], 2)  # aspect ratio preserved
+
+    def test_small_image_is_left_alone(self):
+        small = _generated_image(size=(120, 80))
+        obj = SiteImage.objects.create(slot=SiteImage.Slot.ABOUT_TEAM, image=small)
+        with Image.open(obj.image.path) as saved:
+            self.assertEqual(saved.size, (120, 80))
+
+    def test_resolved_alt_text_falls_back_to_slot_label(self):
+        obj = SiteImage.objects.create(slot=SiteImage.Slot.HOME_WHY_US, image=_generated_image(), alt_text='')
+        self.assertEqual(obj.resolved_alt_text, obj.get_slot_display())
+
+    def test_toggling_visibility_does_not_touch_the_file(self):
+        obj = SiteImage.objects.create(slot=SiteImage.Slot.HOME_WHY_US, image=_generated_image())
+        original_path = obj.image.path
+        obj.is_visible = False
+        obj.save(update_fields=['is_visible', 'updated_at'])
+        obj.refresh_from_db()
+        self.assertEqual(obj.image.path, original_path)
+
+
+@override_settings(MEDIA_ROOT=_TEST_MEDIA_ROOT)
+class SiteImageApiTests(TestCase):
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(_TEST_MEDIA_ROOT, ignore_errors=True)
+
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_visible_image_is_served_with_absolute_url_and_alt_text(self):
+        SiteImage.objects.create(
+            slot=SiteImage.Slot.HOME_WHY_US, image=_generated_image(), alt_text='Counter at the T. Nagar shop',
+        )
+        res = self.client.get(reverse('site-image-list'))
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(len(res.data), 1)
+        row = res.data[0]
+        self.assertEqual(row['slot'], 'home_why_us')
+        self.assertEqual(row['alt_text'], 'Counter at the T. Nagar shop')
+        self.assertTrue(row['url'].startswith('http'))
+
+    def test_hidden_image_is_not_served(self):
+        SiteImage.objects.create(slot=SiteImage.Slot.HOME_WHY_US, image=_generated_image(), is_visible=False)
+        res = self.client.get(reverse('site-image-list'))
+        self.assertEqual(res.data, [])
+
+    def test_no_write_endpoint_exists(self):
+        # Read-only, like every other public content endpoint — uploads only
+        # ever happen through the authenticated Django admin.
+        res = self.client.post(reverse('site-image-list'), {'slot': 'home_why_us'})
+        self.assertEqual(res.status_code, 405)
+
+
+@PLAIN_STATIC
+@override_settings(MEDIA_ROOT=_TEST_MEDIA_ROOT)
+class SiteImageAdminTests(TestCase):
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(_TEST_MEDIA_ROOT, ignore_errors=True)
+
+    def setUp(self):
+        self.staff = User.objects.create_superuser('admin', 'admin@example.com', 'password')
+        self.client = APIClient()
+        self.client.force_login(self.staff)
+
+    def test_changelist_renders(self):
+        SiteImage.objects.create(slot=SiteImage.Slot.HOME_WHY_US, image=_generated_image())
+        res = self.client.get(reverse('admin:content_siteimage_changelist'))
+        self.assertEqual(res.status_code, 200)
+
+    def test_add_form_renders(self):
+        res = self.client.get(reverse('admin:content_siteimage_add'))
+        self.assertEqual(res.status_code, 200)
+
+
+@override_settings(MEDIA_ROOT=_TEST_MEDIA_ROOT)
+class SeedSiteImagesTests(TestCase):
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(_TEST_MEDIA_ROOT, ignore_errors=True)
+
+    def test_creates_one_row_per_slot(self):
+        call_command('seed_site_images', stdout=io.StringIO())
+        self.assertEqual(SiteImage.objects.count(), len(SiteImage.Slot.choices))
+        for slot, _label in SiteImage.Slot.choices:
+            self.assertTrue(SiteImage.objects.filter(slot=slot).exists())
+
+    def test_generated_images_are_real_decodable_images(self):
+        call_command('seed_site_images', stdout=io.StringIO())
+        for obj in SiteImage.objects.all():
+            with Image.open(obj.image.path) as img:
+                img.verify()
+
+    def test_never_overwrites_an_existing_slot(self):
+        # A staff-uploaded photo already sits in this slot — re-running the
+        # seed command (e.g. on every deploy) must leave it untouched.
+        real_upload = SiteImage.objects.create(
+            slot=SiteImage.Slot.HOME_WHY_US, image=_generated_image(), alt_text='The real shop',
+        )
+        original_name = real_upload.image.name
+
+        call_command('seed_site_images', stdout=io.StringIO())
+
+        real_upload.refresh_from_db()
+        self.assertEqual(real_upload.image.name, original_name)
+        self.assertEqual(real_upload.alt_text, 'The real shop')
+        # Every other slot should still have been seeded.
+        self.assertEqual(SiteImage.objects.count(), len(SiteImage.Slot.choices))
+
+    def test_is_idempotent(self):
+        call_command('seed_site_images', stdout=io.StringIO())
+        call_command('seed_site_images', stdout=io.StringIO())  # must not error or duplicate
+        self.assertEqual(SiteImage.objects.count(), len(SiteImage.Slot.choices))

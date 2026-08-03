@@ -7,6 +7,7 @@ import { c, fonts, wrap, eyebrow, h2Style } from '../tokens';
 import FaqAccordion from '../components/FaqAccordion';
 import CallbackForm from '../components/CallbackForm';
 import Seo from '../components/Seo';
+import SitePhoto from '../components/SitePhoto';
 import useApi from '../hooks/useApi';
 import { fetchTestimonials, fetchFaqs, fetchCurrencies, toRatesMap } from '../api';
 
@@ -255,9 +256,11 @@ export default function Home() {
 
       <section style={{ background: c.sand, padding: '96px 0' }}>
         <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(360px,100%),1fr))', gap: 64, alignItems: 'center' }}>
-          <div style={{ background: `repeating-linear-gradient(135deg,${c.swatch} 0 10px,${c.swatch2} 10px 20px)`, border: `1px solid ${c.sandBorder4}`, borderRadius: 16, minHeight: 460, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ font: `400 11px/1.7 ${fonts.mono}`, letterSpacing: '.14em', color: c.swatchText, textAlign: 'center' }}>PHOTOGRAPHY<br />Counter service, T. Nagar branch</span>
-          </div>
+          <SitePhoto
+            slot="home_why_us"
+            placeholderLabel={<>PHOTOGRAPHY<br />Counter service, T. Nagar branch</>}
+            style={{ minHeight: 460 }}
+          />
           <div>
             <p style={eyebrow}>Why us?</p>
             <h2 style={{ ...h2Style, fontSize: 'clamp(32px,3.4vw,46px)', lineHeight: 1.1, marginBottom: 36 }}>The margin you see is the margin you pay</h2>

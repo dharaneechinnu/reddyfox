@@ -182,6 +182,14 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Staff-uploaded photos (content.models.SiteImage) — plain local disk, no
+# third-party object storage. MEDIA_ROOT is configurable because Render (the
+# deploy target) needs it pointed at a mounted persistent disk, not the
+# container's own ephemeral filesystem, or every upload is lost on the next
+# deploy/restart. Locally it just defaults to a folder next to manage.py.
+MEDIA_URL = config('MEDIA_URL', default='/media/')
+MEDIA_ROOT = config('MEDIA_ROOT', default=str(BASE_DIR / 'media'))
+
 STORAGES = {
     'default': {
         'BACKEND': 'django.core.files.storage.FileSystemStorage',

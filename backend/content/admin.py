@@ -2,7 +2,7 @@ from django.contrib import admin, messages
 from django.utils import timezone
 from django.utils.html import format_html
 
-from .models import CallbackRequest, Enquiry, Faq, FaqCategory, Lead, SiteSetting, Testimonial
+from .models import CallbackRequest, Enquiry, Faq, FaqCategory, Lead, SiteImage, SiteSetting, Testimonial
 
 
 @admin.register(Testimonial)
@@ -293,6 +293,45 @@ class CallbackRequestAdmin(BaseLeadAdmin):
         return format_html(
             '<span style="font-family:monospace">{} {} → {}</span>',
             f'{obj.amount:,.2f}', obj.from_currency, obj.to_currency or '?',
+        )
+
+
+@admin.register(SiteImage)
+class SiteImageAdmin(admin.ModelAdmin):
+    """One row per fixed slot on the site — see SiteImage's docstring for what
+    a slot is. Staff pick an unused slot, upload a photo, and it appears on
+    the next page load; no deploy needed."""
+
+    list_display = ('slot_label', 'thumbnail', 'is_visible', 'updated_at')
+    list_editable = ('is_visible',)
+    list_filter = ('is_visible',)
+    fieldsets = (
+        (None, {'fields': ('slot', 'image', 'preview', 'alt_text')}),
+        ('Visibility', {'fields': ('is_visible',)}),
+    )
+    readonly_fields = ('preview',)
+
+    @admin.display(description='Slot')
+    def slot_label(self, obj):
+        return obj.get_slot_display()
+
+    @admin.display(description='Photo')
+    def thumbnail(self, obj):
+        if not obj.image:
+            return '—'
+        return format_html(
+            '<img src="{}" style="height:40px;width:60px;object-fit:cover;border-radius:4px" />',
+            obj.image.url,
+        )
+
+    @admin.display(description='Current photo')
+    def preview(self, obj):
+        if not obj or not obj.image:
+            return 'Upload a photo and save to see a preview here.'
+        return format_html(
+            '<img src="{}" style="max-width:360px;max-height:240px;object-fit:cover;'
+            'border-radius:10px;display:block" />',
+            obj.image.url,
         )
 
 

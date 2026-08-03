@@ -93,6 +93,20 @@ export async function fetchFaqCategories() {
   return res.json();
 }
 
+/**
+ * Staff-uploaded photos, one per fixed slot (Django admin -> Content -> Site
+ * images). Returns {slot: {url, alt_text}} rather than the raw array so a
+ * page can do `images['home_why_us']` and just fall back to its existing
+ * placeholder swatch when that key is missing — no upload yet is a normal,
+ * unbroken state, same as every other optional content block on this site.
+ */
+export async function fetchSiteImages() {
+  const res = await fetch(`${API_BASE}/site-images/`);
+  if (!res.ok) throw new Error(`Failed to load site images (${res.status})`);
+  const list = await res.json();
+  return list.reduce((map, img) => { map[img.slot] = img; return map; }, {});
+}
+
 // Converts the Django API shape into the {code: {n, cc, b, s, d, r}} map
 // used throughout the frontend, and adds INR as the identity base currency.
 export function toRatesMap(list) {
