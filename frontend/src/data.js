@@ -34,15 +34,13 @@ export const SERVICES = [
   },
   {
     id: 'money-transfer', tag: '02', title: 'Money Transfer',
-    short: 'Western Union, MoneyGram, Xpress Money, RIA',
+    short: 'Western Union, MoneyGram',
     // site copy (Western Union section)
     body: 'We provide a secure way to send and receive money to and from your loved ones worldwide. We offer a quick, convenient and easy way to transfer your money worldwide.',
-    hero: 'Send and receive money worldwide through Western Union, MoneyGram, Xpress Money and RIA.',
+    hero: 'Send and receive money worldwide through Western Union and MoneyGram.',
     benefits: [
       ['Western Union', 'Receive money from anywhere with the Western Union transfer service.'],
       ['MoneyGram', 'Send and receive international transfers through MoneyGram.'],
-      ['Xpress Money', 'Xpress Money transfers handled at our counter.'],
-      ['RIA Money Transfer', 'RIA Money Transfer available for inward and outward transfers.'],
     ],
     process: [
       ['Choose your service', 'Tell us which network the sender used, or which you want to send by.'],

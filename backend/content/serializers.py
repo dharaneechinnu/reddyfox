@@ -107,32 +107,19 @@ class BaseLeadSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class EnquiryCreateSerializer(BaseLeadSerializer):
-    """Contact form. A message is the whole point here, so it is required."""
-
-    kind = Lead.Kind.ENQUIRY
-
-    class Meta(BaseLeadSerializer.Meta):
-        model = Enquiry
-        fields = BaseLeadSerializer.Meta.fields + ['service', 'message']
-
-    def validate_message(self, value):
-        value = super().validate_message(value)
-        if len(value) < 5:
-            raise serializers.ValidationError('Please tell us a little more about what you need.')
-        return value
+# A service value matched against Lead.service — kept as a plain string (not a
+# choices field) because SERVICES lives in the frontend's data.js, not the DB.
+MONEY_TRANSFER_SERVICE = 'Money Transfer'
 
 
-class QuoteRequestCreateSerializer(BaseLeadSerializer):
-    """"Get a free quote" — we need to know what to price, so currency and
-    amount are required; the free-text message is optional."""
-
-    kind = Lead.Kind.QUOTE
+class RequestLeadSerializer(BaseLeadSerializer):
+    """Shared shape for "get a quote" and the contact-form enquiry — the two collect
+    identical information: currency and amount always, plus (for Money Transfer only)
+    who's receiving the money and the sender's relationship to them."""
 
     class Meta(BaseLeadSerializer.Meta):
-        model = QuoteRequest
         fields = BaseLeadSerializer.Meta.fields + [
-            'service', 'from_currency', 'amount', 'needed_by', 'message',
+            'service', 'recipient_name', 'relationship', 'from_currency', 'amount', 'message',
         ]
         extra_kwargs = {
             'from_currency': {'required': True, 'allow_blank': False},
@@ -144,6 +131,36 @@ class QuoteRequestCreateSerializer(BaseLeadSerializer):
 
     def validate_amount(self, value):
         return validate_amount(value)
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        errors = {}
+        if attrs.get('service') == MONEY_TRANSFER_SERVICE:
+            if not (attrs.get('recipient_name') or '').strip():
+                errors['recipient_name'] = "Please enter the receiver's name."
+            if not (attrs.get('relationship') or '').strip():
+                errors['relationship'] = 'Please tell us your relationship to the receiver.'
+        if errors:
+            raise serializers.ValidationError(errors)
+        return attrs
+
+
+class EnquiryCreateSerializer(RequestLeadSerializer):
+    """Contact form. Same field set and rules as "get a quote"."""
+
+    kind = Lead.Kind.ENQUIRY
+
+    class Meta(RequestLeadSerializer.Meta):
+        model = Enquiry
+
+
+class QuoteRequestCreateSerializer(RequestLeadSerializer):
+    """"Get a free quote" — same field set and rules as the contact form."""
+
+    kind = Lead.Kind.QUOTE
+
+    class Meta(RequestLeadSerializer.Meta):
+        model = QuoteRequest
 
 
 class CallbackRequestCreateSerializer(BaseLeadSerializer):

@@ -1,6 +1,6 @@
 # Reddy Forex Private Limited
 
-> RBI-authorised money changer in T. Nagar, Chennai, serving private and corporate clients since 2000. Buys and sells foreign currency, arranges Western Union / MoneyGram / Xpress Money / RIA transfers, outward forex remittance, prepaid multi-currency travel cards, wire transfers (TT/SWIFT) and student remittances.
+> RBI-authorised money changer in T. Nagar, Chennai, serving private and corporate clients since 2000. Buys and sells foreign currency, arranges Western Union / MoneyGram transfers, outward forex remittance, prepaid multi-currency travel cards, wire transfers (TT/SWIFT) and student remittances.
 
 This file follows the llms.txt convention (https://llmstxt.org) — a curated,
 plain-text summary intended for AI assistants such as ChatGPT, Claude and

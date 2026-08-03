@@ -2,7 +2,7 @@ from django.contrib import admin, messages
 from django.utils import timezone
 from django.utils.html import format_html
 
-from .models import CallbackRequest, Enquiry, Faq, FaqCategory, Lead, SiteImage, SiteSetting, Testimonial
+from .models import CallbackRequest, Enquiry, Faq, FaqCategory, Lead, QuoteRequest, SiteImage, SiteSetting, Testimonial
 
 
 @admin.register(Testimonial)
@@ -237,23 +237,39 @@ class BaseLeadAdmin(admin.ModelAdmin):
     def lower_priority(self, request, queryset):
         self._shift_priority(request, queryset, +1, 'down')
 
+    @admin.display(description='Wants')
+    def wants(self, obj):
+        if obj.recipient_name:
+            # Money Transfer: no currency conversion, just who it's going to.
+            suffix = f' ({obj.relationship})' if obj.relationship else ''
+            return format_html('To {}{}', obj.recipient_name, suffix)
+        if obj.amount is None or not obj.from_currency:
+            return '—'
+        return format_html(
+            '<span style="font-family:monospace">{} {}</span>',
+            f'{obj.amount:,.2f}', obj.from_currency,
+        )
 
-@admin.register(Enquiry)
-class EnquiryAdmin(BaseLeadAdmin):
-    """Front office inbox — general contact-form enquiries.
 
-    Resolved enquiries drop out of the default list — this is the working queue, not a full
+class QuoteLikeLeadAdmin(BaseLeadAdmin):
+    """Shared shape for Enquiry and QuoteRequest: since "get a quote" and the contact form
+    now collect the same information: for Money Transfer, who's sending, who's receiving and
+    their relationship; for every other service, currency and amount. List/detail views are
+    identical bar the resolved-queue behaviour.
+
+    Resolved rows drop out of the default list — this is the working queue, not a full
     archive. Nothing is hidden permanently: clicking the "Resolved" (or "All") option under the
     "Is resolved" filter in the sidebar shows them again, same as `is_visible` elsewhere in this
     codebase never actually deletes a row.
     """
 
-    list_display = ('priority_badge', 'status_badge', 'resolved_badge', 'received', 'name', 'phone_links', 'email', 'service', 'priority', 'assigned_to')
-    list_filter = ('is_resolved', 'priority', 'status', 'service', 'assigned_to', 'created_at')
+    list_display = ('priority_badge', 'status_badge', 'resolved_badge', 'received', 'name', 'phone_links', 'service', 'wants', 'priority', 'assigned_to')
+    list_filter = ('is_resolved', 'priority', 'status', 'service', 'from_currency', 'assigned_to', 'created_at')
     actions = BaseLeadAdmin.actions + ('mark_resolved', 'mark_unresolved')
-    customer_fields = ('name', 'phone', 'email', 'service', 'message')
+    customer_fields = ('name', 'phone', 'email', 'service', 'recipient_name', 'relationship', 'from_currency', 'amount', 'message')
     fieldsets = (
-        ('Customer enquiry', {'fields': ('name', 'phone', 'email', 'service', 'message', 'reply_links')}),
+        ('Customer', {'fields': ('name', 'phone', 'email', 'service', 'recipient_name', 'relationship', 'reply_links')}),
+        ('What they need', {'fields': ('from_currency', 'amount', 'message')}),
         ('Handling', {'fields': ('priority', 'status', 'is_resolved', 'assigned_to', 'internal_note')}),
         ('Audit', {'classes': ('collapse',),
                    'fields': ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
@@ -267,6 +283,16 @@ class EnquiryAdmin(BaseLeadAdmin):
         if 'is_resolved__exact' not in request.GET:
             qs = qs.filter(is_resolved=False)
         return qs
+
+
+@admin.register(Enquiry)
+class EnquiryAdmin(QuoteLikeLeadAdmin):
+    """Front office inbox — general contact-form enquiries."""
+
+
+@admin.register(QuoteRequest)
+class QuoteRequestAdmin(QuoteLikeLeadAdmin):
+    """Quotes desk inbox — "get a free quote" requests."""
 
 
 @admin.register(CallbackRequest)

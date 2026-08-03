@@ -1,12 +1,14 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { COMPANY, CONTACT } from '../company';
 import { c, fonts, wrap } from '../tokens';
-import EnquiryForm from '../components/EnquiryForm';
+import RequestForm from '../components/RequestForm';
 import Seo from '../components/Seo';
 import { useCompanyInfo } from '../context/CompanyInfoContext';
 
 export default function Contact() {
   const { contact } = useCompanyInfo();
+  const [searchParams] = useSearchParams();
+  const initialService = searchParams.get('service') || undefined;
   // Built here, not at module scope like the old static CONTACT import
   // allowed, because contact.addressOneLine now depends on the async/
   // fail-open backend value — see CompanyInfoContext.jsx.
@@ -32,7 +34,7 @@ export default function Contact() {
 
       <section style={{ background: c.sand, padding: '64px 0 96px' }}>
         <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 24, alignItems: 'start' }}>
-          <EnquiryForm />
+          <RequestForm kind="enquiry" initialService={initialService} />
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div style={{ background: c.navy, borderRadius: 16, padding: 32, color: '#fff' }}>

@@ -36,8 +36,10 @@ export default function ServiceDetail() {
               <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: 'clamp(34px,4vw,54px)', lineHeight: 1.06, color: '#fff', margin: '0 0 18px' }}>{active.title}</h1>
               <p style={{ fontSize: 18, lineHeight: 1.6, color: c.onNavyText, margin: '0 0 32px', maxWidth: 520 }}>{active.hero}</p>
               <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-                <span onClick={() => navigate('/contact')} style={{ background: c.orange, color: '#fff', padding: '15px 26px', borderRadius: 9, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>Request a quote</span>
-                <span onClick={() => navigate('/rates')} style={{ border: '1px solid rgba(255,255,255,.26)', color: '#fff', padding: '15px 26px', borderRadius: 9, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>See today's rates</span>
+                <span onClick={() => navigate(`/contact?service=${encodeURIComponent(active.title)}`)} style={{ background: c.orange, color: '#fff', padding: '15px 26px', borderRadius: 9, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>Request a quote</span>
+                {active.id === 'forex-card' && (
+                  <span onClick={() => navigate(`/quote?service=${encodeURIComponent(active.title)}`)} style={{ border: '1px solid rgba(255,255,255,.26)', color: '#fff', padding: '15px 26px', borderRadius: 9, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>Get best price</span>
+                )}
               </div>
             </div>
             <SitePhoto

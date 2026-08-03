@@ -106,35 +106,12 @@ export default function Home() {
               <span style={{ font: `500 10.5px/1.4 ${fonts.mono}`, letterSpacing: '.12em', color: c.green, background: c.greenBg, padding: '6px 10px', borderRadius: 5, whiteSpace: 'nowrap' }}>TODAY'S COUNTER RATE</span>
             </div>
 
-            <label style={{ display: 'block', fontSize: 12.5, fontWeight: 500, color: c.textMuted, marginBottom: 8 }}>You send</label>
+            <label style={{ display: 'block', fontSize: 12.5, fontWeight: 500, color: c.textMuted, marginBottom: 8 }}>You Requirement</label>
             <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
               <input value={fx.amount} onChange={(e) => fx.setAmount(e.target.value)} inputMode="decimal" style={{ flex: 1, minWidth: 0, border: `1px solid ${c.softLine}`, borderRadius: 10, padding: '15px 16px', fontSize: 20, fontFamily: fonts.mono, color: c.navy, outline: 'none' }} />
               <select value={fx.from} onChange={(e) => fx.setFrom(e.target.value)} style={{ border: `1px solid ${c.softLine}`, borderRadius: 10, padding: '15px 12px', fontSize: 15, fontWeight: 600, color: c.navy, background: c.sand, outline: 'none', cursor: 'pointer' }}>
                 {fx.currencyList.map((cur) => <option key={cur.code} value={cur.code}>{cur.label}</option>)}
               </select>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14, margin: '6px 0 12px' }}>
-              <div style={{ flex: 1, height: 1, background: c.sandLine2 }} />
-              <span
-                onClick={fx.swap}
-                style={{ width: 38, height: 38, borderRadius: '50%', border: `1px solid ${c.softLine}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: '#fff', fontSize: 15, color: c.orange, transition: 'transform .25s,border-color .18s' }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'rotate(180deg)'; e.currentTarget.style.borderColor = c.orange; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = c.softLine; }}
-              >⇅</span>
-              <div style={{ flex: 1, height: 1, background: c.sandLine2 }} />
-            </div>
-
-            <label style={{ display: 'block', fontSize: 12.5, fontWeight: 500, color: c.textMuted, marginBottom: 8 }}>They receive (approx.)</label>
-            <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-              <div style={{ flex: 1, minWidth: 0, border: `1px solid ${c.sandLine2}`, background: c.sand, borderRadius: 10, padding: '15px 16px', fontSize: 20, fontFamily: fonts.mono, color: c.navy, overflow: 'hidden', textOverflow: 'ellipsis' }}>≈ {fx.calc.converted}</div>
-              <select value={fx.to} onChange={(e) => fx.setTo(e.target.value)} style={{ border: `1px solid ${c.softLine}`, borderRadius: 10, padding: '15px 12px', fontSize: 15, fontWeight: 600, color: c.navy, background: c.sand, outline: 'none', cursor: 'pointer' }}>
-                {fx.currencyList.map((cur) => <option key={cur.code} value={cur.code}>{cur.label}</option>)}
-              </select>
-            </div>
-
-            <div style={{ borderTop: `1px dashed ${c.sandBorder}`, paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 9, fontSize: 13.5, color: c.textMuted }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Exchange rate (approx.)</span><span style={{ fontFamily: fonts.mono, color: c.navy }}>{fx.calc.rateLine}</span></div>
             </div>
 
             <div style={{ marginTop: 20, borderTop: `1px solid ${c.sandLine2}`, paddingTop: 20 }}>

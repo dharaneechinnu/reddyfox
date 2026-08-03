@@ -186,13 +186,22 @@ class Lead(models.Model):
 
     # --- quote + enquiry ---
     service = models.CharField(max_length=120, blank=True, help_text='Which service they selected.')
+    recipient_name = models.CharField(
+        max_length=150, blank=True,
+        help_text='Who the money is for — e.g. the recipient of a money transfer or remittance. '
+                  'Required for Money Transfer requests.',
+    )
+    relationship = models.CharField(
+        max_length=100, blank=True,
+        help_text="Sender's relationship to the receiver. Required for Money Transfer requests.",
+    )
 
     # --- quote + callback ---
     from_currency = models.CharField(max_length=3, blank=True)
     to_currency = models.CharField(max_length=3, blank=True)
     amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
 
-    # --- quote only ---
+    # --- quote + enquiry ---
     needed_by = models.DateField(null=True, blank=True, help_text='When the customer needs the currency.')
 
     # --- workflow (the only fields staff edit) ---

@@ -42,7 +42,7 @@ class TelegramInviteAdmin(admin.ModelAdmin):
     @admin.display(description='Status')
     def status_display(self, obj):
         if obj.is_expired:
-            return format_html('<span style="color:#999">expired</span>')
+            return format_html('<span style="color:#999">{}</span>', 'expired')
         color = {'pending': '#b3541e', 'claimed': '#2e7d32', 'revoked': '#999'}.get(obj.status, '#999')
         return format_html('<span style="color:{}">{}</span>', color, obj.get_status_display())
 
@@ -50,7 +50,9 @@ class TelegramInviteAdmin(admin.ModelAdmin):
     def deep_link_display(self, obj):
         link = obj.deep_link
         if not link:
-            return format_html('<span style="color:#a4322a">Set TELEGRAM_BOT_USERNAME to generate a link.</span>')
+            return format_html(
+                '<span style="color:#a4322a">{}</span>', 'Set TELEGRAM_BOT_USERNAME to generate a link.',
+            )
         return format_html('<a href="{}" target="_blank" rel="noreferrer">{}</a>', link, link)
 
     @admin.display(description='QR code')

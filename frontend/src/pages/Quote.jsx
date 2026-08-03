@@ -1,11 +1,13 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { c, fonts, wrap } from '../tokens';
-import QuoteForm from '../components/QuoteForm';
+import RequestForm from '../components/RequestForm';
 import Seo from '../components/Seo';
 import { useCompanyInfo } from '../context/CompanyInfoContext';
 
 export default function Quote() {
   const { contact } = useCompanyInfo();
+  const [searchParams] = useSearchParams();
+  const initialService = searchParams.get('service') || undefined;
   return (
     <div>
       <Seo
@@ -29,7 +31,7 @@ export default function Quote() {
 
       <section style={{ background: c.sand, padding: '64px 0 96px' }}>
         <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 24, alignItems: 'start' }}>
-          <QuoteForm />
+          <RequestForm kind="quote" initialService={initialService} />
 
           <div style={{ background: c.navy, borderRadius: 16, padding: 32, color: '#fff' }}>
             <p style={{ font: `500 11px/1.4 ${fonts.mono}`, letterSpacing: '.16em', color: c.accent, margin: '0 0 22px' }}>

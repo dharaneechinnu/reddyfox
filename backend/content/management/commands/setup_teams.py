@@ -18,7 +18,7 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 
-from content.models import CallbackRequest, Enquiry, Faq, FaqCategory, SiteSetting, Testimonial
+from content.models import CallbackRequest, Enquiry, Faq, FaqCategory, QuoteRequest, SiteSetting, Testimonial
 from rates.models import Currency
 
 # What each group may do. 'view'/'change' only — leads are created by the
@@ -26,22 +26,28 @@ from rates.models import Currency
 WORK_ON_LEADS = ('view', 'change')
 MANAGE = ('view', 'add', 'change', 'delete')
 
-# Quote requests and Rate locks are deliberately not registered in admin.py
-# (hidden from every user, including superusers) — so there is nothing to
-# grant a group here for either. If they come back, restore the "Rates desk"
-# / "Quotes desk" team entries that used to live here alongside their models.
+# Rate locks are deliberately not registered in admin.py (hidden from every
+# user, including superusers) — so there is nothing to grant a group here for
+# it. If it comes back, restore the "Rates desk" team entry that used to live
+# here alongside its model.
+#
+# Quote requests share a desk with Enquiries: the two forms now collect the
+# same information (currency, amount, recipient, service), so whoever works
+# the enquiry inbox works the quote inbox too.
 TEAMS = {
     'Front office': {
-        'description': 'Sees Enquiries and quick Callback requests.',
+        'description': 'Sees Enquiries, Quote requests and quick Callback requests.',
         'models': {
             Enquiry: WORK_ON_LEADS,
+            QuoteRequest: WORK_ON_LEADS,
             CallbackRequest: WORK_ON_LEADS,
         },
     },
     'Manager': {
-        'description': 'Sees Enquiries and Callback requests, plus rates and site content.',
+        'description': 'Sees Enquiries, Quote requests and Callback requests, plus rates and site content.',
         'models': {
             Enquiry: WORK_ON_LEADS,
+            QuoteRequest: WORK_ON_LEADS,
             CallbackRequest: WORK_ON_LEADS,
             Currency: MANAGE,
             Testimonial: MANAGE,

@@ -232,22 +232,65 @@ class LeadSubmissionStillWorksTests(TestCase):
     """Priority must not disturb the existing public create endpoints."""
 
     def setUp(self):
+        from django.core.cache import cache
+        cache.clear()  # DRF's per-IP lead throttle uses the cache, which isn't rolled back like the DB
         self.client = APIClient()
+        _make_usd()
 
     def test_enquiry_submission_unaffected(self):
         res = self.client.post(reverse('enquiry-create'), {
             'name': 'Deborah Beck', 'phone': '9876543210', 'email': 'd@example.com', 'message': 'Need USD',
+            'from_currency': 'USD', 'amount': '500',
         })
-        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.status_code, 201, res.data)
         self.assertEqual(Enquiry.objects.get().priority, Lead.Priority.NORMAL)
 
     def test_priority_is_not_settable_from_the_public_api(self):
         # A customer must not be able to promote their own lead.
-        self.client.post(reverse('enquiry-create'), {
+        res = self.client.post(reverse('enquiry-create'), {
             'name': 'Chancer', 'phone': '9876543211', 'email': 'c@example.com',
-            'message': 'Need USD', 'priority': 1,
+            'message': 'Need USD', 'from_currency': 'USD', 'amount': '500', 'priority': 1,
         })
+        self.assertEqual(res.status_code, 201, res.data)
         self.assertEqual(Enquiry.objects.get().priority, Lead.Priority.NORMAL)
+
+    def test_non_transfer_service_requires_currency_and_amount(self):
+        res = self.client.post(reverse('quote-create'), {
+            'name': 'Deborah Beck', 'phone': '9876543210', 'email': 'd@example.com',
+            'service': 'Foreign Currency Exchange',
+        })
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('from_currency', res.data)
+
+    def test_money_transfer_requires_currency_and_amount(self):
+        res = self.client.post(reverse('quote-create'), {
+            'name': 'Deborah Beck', 'phone': '9876543210', 'email': 'd@example.com',
+            'service': 'Money Transfer', 'recipient_name': 'John Doe', 'relationship': 'Brother',
+        })
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('from_currency', res.data)
+        self.assertIn('amount', res.data)
+
+    def test_money_transfer_requires_receiver_and_relationship(self):
+        res = self.client.post(reverse('quote-create'), {
+            'name': 'Deborah Beck', 'phone': '9876543210', 'email': 'd@example.com',
+            'service': 'Money Transfer', 'from_currency': 'USD', 'amount': '500',
+        })
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('recipient_name', res.data)
+        self.assertIn('relationship', res.data)
+
+    def test_money_transfer_submission_succeeds_with_all_fields(self):
+        res = self.client.post(reverse('quote-create'), {
+            'name': 'Deborah Beck', 'phone': '9876543210', 'email': 'd@example.com',
+            'service': 'Money Transfer', 'recipient_name': 'John Doe', 'relationship': 'Brother',
+            'from_currency': 'USD', 'amount': '500',
+        })
+        self.assertEqual(res.status_code, 201, res.data)
+        lead = QuoteRequest.objects.get()
+        self.assertEqual(lead.recipient_name, 'John Doe')
+        self.assertEqual(lead.relationship, 'Brother')
+        self.assertEqual(lead.from_currency, 'USD')
 
 
 class CallbackRequestTests(TestCase):
