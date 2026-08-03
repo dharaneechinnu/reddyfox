@@ -28,7 +28,7 @@ const COPY = {
   enquiry: {
     id: 'enq',
     heading: 'Send an enquiry',
-    submitLabel: 'Send now',
+    submitLabel: 'Get best price',
     submitFn: submitEnquiry,
     successHeading: (firstName) => `Thank you, ${firstName} — we have your enquiry`,
     successBody: () => 'It has reached our team and someone will get back to you. If it is urgent, please call us.',
