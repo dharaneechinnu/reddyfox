@@ -30,6 +30,8 @@ TEXT_MUTED = '#8A93A3'
 WIDTH, HEIGHT = 1600, 1000
 STRIPE = 70
 
+LOGO_SIZE = 512
+
 # Short on-image captions — get_slot_display() is a good admin dropdown label
 # ("Service page — Foreign Exchange") but too long/verbose to print on the
 # card itself.
@@ -78,19 +80,60 @@ def _generate_placeholder(caption):
     return img
 
 
+def _generate_logo():
+    """A square wordmark, transparent background, for the site_logo slot.
+
+    Unlike the wide photo cards below, this is meant to sit directly in the
+    header next to the nav — so it's square, transparent (no SAND fill), and
+    small enough to still read at header height.
+    """
+    img = Image.new('RGBA', (LOGO_SIZE, LOGO_SIZE), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    cx, cy, r = LOGO_SIZE // 2, LOGO_SIZE // 2 - 40, 70
+    draw.polygon([(cx, cy - r), (cx + r, cy), (cx, cy + r), (cx - r, cy)], fill=ORANGE)
+
+    wordmark_font = ImageFont.load_default(size=44)
+    sub_font = ImageFont.load_default(size=20)
+    y = cy + r + 30
+    y += _centered_text(draw, 'REDDY FOREX', cx, y, wordmark_font, NAVY) + 10
+    _centered_text(draw, 'PRIVATE LIMITED', cx, y, sub_font, TEXT_MUTED)
+
+    return img
+
+
+# Slots for a third party's own trademarked logo (Western Union, MoneyGram) —
+# unlike every other slot, a generated "REDDY FOREX" branded placeholder here
+# would be actively misleading, not just a stand-in. Left unseeded; staff
+# upload the official brand asset when they have one, and SitePhoto's plain
+# swatch placeholder covers the gap until then.
+NO_PLACEHOLDER = {
+    SiteImage.Slot.MONEY_TRANSFER_WESTERN_UNION,
+    SiteImage.Slot.MONEY_TRANSFER_MONEYGRAM,
+}
+
+
 class Command(BaseCommand):
     help = "Seed a branded placeholder photo for every SiteImage slot that doesn't have one yet."
 
     def handle(self, *args, **options):
         created = 0
         for slot, label in SiteImage.Slot.choices:
+            if slot in NO_PLACEHOLDER:
+                self.stdout.write(f'Skipped {slot} — third-party logo, no placeholder generated.')
+                continue
             if SiteImage.objects.filter(slot=slot).exists():
                 self.stdout.write(f'Skipped {slot} — already has an image.')
                 continue
 
             buf = io.BytesIO()
-            _generate_placeholder(_short_caption(slot, label)).save(buf, format='JPEG', quality=88)
-            SiteImage.objects.create(slot=slot, image=ContentFile(buf.getvalue(), name=f'{slot}.jpg'))
+            if slot == SiteImage.Slot.SITE_LOGO:
+                _generate_logo().save(buf, format='PNG')
+                filename = f'{slot}.png'
+            else:
+                _generate_placeholder(_short_caption(slot, label)).save(buf, format='JPEG', quality=88)
+                filename = f'{slot}.jpg'
+            SiteImage.objects.create(slot=slot, image=ContentFile(buf.getvalue(), name=filename))
             created += 1
             self.stdout.write(self.style.SUCCESS(f'Created placeholder for {slot}.'))
 

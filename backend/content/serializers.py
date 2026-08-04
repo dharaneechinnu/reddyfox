@@ -56,7 +56,7 @@ class BaseLeadSerializer(serializers.ModelSerializer):
     """Shared validation for every website form.
 
     Subclasses set `kind` and declare which extra fields they accept. Keeping
-    the phone/email/spam rules here means all three forms are protected
+    the phone/spam rules here means all three forms are protected
     identically — a new form cannot accidentally ship without them.
     """
 
@@ -69,7 +69,7 @@ class BaseLeadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Lead
-        fields = ['name', 'phone', 'email', 'enquiry_ref']
+        fields = ['name', 'phone', 'enquiry_ref']
 
     def validate_name(self, value):
         value = value.strip()
@@ -165,12 +165,10 @@ class QuoteRequestCreateSerializer(RequestLeadSerializer):
 
 class CallbackRequestCreateSerializer(BaseLeadSerializer):
     """Quick "get your best price" capture from the homepage converter widget.
-    Deliberately minimal — name and phone are all that's required. Email is
-    optional here, unlike every other lead form, because the whole point is
-    the lowest possible friction; from_currency/amount are carried along for
-    context but the customer never has to touch them directly."""
+    Deliberately minimal — name and phone are all that's required, the lowest
+    possible friction; from_currency/amount are carried along for context but
+    the customer never has to touch them directly."""
 
-    email = serializers.EmailField(required=False, allow_blank=True, default='')
     kind = Lead.Kind.CALLBACK
 
     class Meta(BaseLeadSerializer.Meta):

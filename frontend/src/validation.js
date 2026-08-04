@@ -13,9 +13,6 @@
 const PHONE_CLEAN = /[\s\-().]/g;
 const PHONE_RE = /^(?:\+?91|0)?([6-9]\d{9})$/;
 
-// Local part, @, domain with at least one dot and a 2+ char TLD.
-const EMAIL_RE = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
-
 export function cleanPhone(value) {
   return String(value || '').replace(PHONE_CLEAN, '');
 }
@@ -38,22 +35,6 @@ export function validatePhone(value, { required = true } = {}) {
     if (bare.length > 10) return 'That number is too long — Indian mobile numbers have 10 digits.';
     return 'Enter a valid Indian mobile number starting with 6, 7, 8 or 9.';
   }
-  return null;
-}
-
-export function validateEmail(value, { required = true } = {}) {
-  const raw = String(value || '').trim();
-  if (!raw) return required ? 'Please enter an email address.' : null;
-
-  if (/\s/.test(raw)) return 'Email address cannot contain spaces.';
-  if (!raw.includes('@')) return 'Email address must include an “@”.';
-  const parts = raw.split('@');
-  if (parts.length > 2) return 'Email address should contain only one “@”.';
-  if (raw.includes('..')) return 'Email address cannot contain two dots in a row.';
-
-  const [, domain = ''] = parts;
-  if (!domain.includes('.')) return 'Email domain looks incomplete — did you mean .com?';
-  if (!EMAIL_RE.test(raw)) return 'That email address does not look valid.';
   return null;
 }
 

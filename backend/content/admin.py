@@ -86,9 +86,9 @@ class BaseLeadAdmin(admin.ModelAdmin):
         'mark_contacted', 'mark_quoted', 'mark_closed', 'mark_spam',
         'raise_priority', 'lower_priority',
     )
-    search_fields = ('name', 'phone', 'email', 'message')
+    search_fields = ('name', 'phone', 'message')
 
-    customer_fields = ('name', 'phone', 'email', 'message')
+    customer_fields = ('name', 'phone', 'message')
     audit_fields = ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')
 
     def has_add_permission(self, request):
@@ -165,10 +165,6 @@ class BaseLeadAdmin(admin.ModelAdmin):
             ))
         if obj.tel_url:
             bits.append(format_html('<a class="button" href="{}">Call +91 {}</a>', obj.tel_url, obj.phone))
-        bits.append(format_html(
-            '<a class="button" href="mailto:{}?subject={}">Email reply</a>',
-            obj.email, 'Re: your request to Reddy Forex',
-        ))
         return format_html(
             '<div style="display:flex;gap:8px;flex-wrap:wrap">{}</div>',
             format_html(' '.join(['{}'] * len(bits)), *bits),
@@ -266,9 +262,9 @@ class QuoteLikeLeadAdmin(BaseLeadAdmin):
     list_display = ('priority_badge', 'status_badge', 'resolved_badge', 'received', 'name', 'phone_links', 'service', 'wants', 'priority', 'assigned_to')
     list_filter = ('is_resolved', 'priority', 'status', 'service', 'from_currency', 'assigned_to', 'created_at')
     actions = BaseLeadAdmin.actions + ('mark_resolved', 'mark_unresolved')
-    customer_fields = ('name', 'phone', 'email', 'service', 'recipient_name', 'relationship', 'from_currency', 'amount', 'message')
+    customer_fields = ('name', 'phone', 'service', 'recipient_name', 'relationship', 'from_currency', 'amount', 'message')
     fieldsets = (
-        ('Customer', {'fields': ('name', 'phone', 'email', 'service', 'recipient_name', 'relationship', 'reply_links')}),
+        ('Customer', {'fields': ('name', 'phone', 'service', 'recipient_name', 'relationship', 'reply_links')}),
         ('What they need', {'fields': ('from_currency', 'amount', 'message')}),
         ('Handling', {'fields': ('priority', 'status', 'is_resolved', 'assigned_to', 'internal_note')}),
         ('Audit', {'classes': ('collapse',),
@@ -298,14 +294,13 @@ class QuoteRequestAdmin(QuoteLikeLeadAdmin):
 @admin.register(CallbackRequest)
 class CallbackRequestAdmin(BaseLeadAdmin):
     """Quick "get your best price" requests from the homepage converter widget.
-    Email is genuinely optional here — the point of this form is minimum
-    friction, so don't be surprised to see it blank."""
+    Deliberately minimal — the point of this form is minimum friction."""
 
     list_display = ('priority_badge', 'status_badge', 'received', 'name', 'phone_links', 'wants', 'priority', 'assigned_to')
     list_filter = ('priority', 'status', 'from_currency', 'assigned_to', 'created_at')
-    customer_fields = ('name', 'phone', 'email', 'from_currency', 'to_currency', 'amount', 'message')
+    customer_fields = ('name', 'phone', 'from_currency', 'to_currency', 'amount', 'message')
     fieldsets = (
-        ('Customer', {'fields': ('name', 'phone', 'email', 'reply_links')}),
+        ('Customer', {'fields': ('name', 'phone', 'reply_links')}),
         ('What they were converting', {'fields': ('from_currency', 'to_currency', 'amount')}),
         ('Handling', {'fields': ('priority', 'status', 'assigned_to', 'internal_note')}),
         ('Audit', {'classes': ('collapse',),

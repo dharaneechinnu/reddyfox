@@ -39,8 +39,8 @@ export const SERVICES = [
     body: 'We provide a secure way to send and receive money to and from your loved ones worldwide. We offer a quick, convenient and easy way to transfer your money worldwide.',
     hero: 'Send and receive money worldwide through Western Union and MoneyGram.',
     benefits: [
-      ['Western Union', 'Receive money from anywhere with the Western Union transfer service.'],
-      ['MoneyGram', 'Send and receive international transfers through MoneyGram.'],
+      ['Western Union', 'Receive money from anywhere with the Western Union transfer service.', 'money-transfer_western-union'],
+      ['MoneyGram', 'Send and receive international transfers through MoneyGram.', 'money-transfer_moneygram'],
     ],
     process: [
       ['Choose your service', 'Tell us which network the sender used, or which you want to send by.'],

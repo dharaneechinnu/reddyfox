@@ -16,14 +16,14 @@ def _callback(**kw):
 
 
 def _enquiry(**kw):
-    d = dict(name='Deborah Beck', phone='9876543210', email='d@example.com', message='Need USD')
+    d = dict(name='Deborah Beck', phone='9876543210', message='Need USD')
     d.update(kw)
     return Enquiry.objects.create(**d)
 
 
 def _quote(**kw):
     d = dict(
-        name='Deborah Beck', phone='9876543210', email='d@example.com',
+        name='Deborah Beck', phone='9876543210',
         from_currency='USD', to_currency='INR', amount='500',
         service='Foreign Exchange', needed_by='2026-08-15',
     )

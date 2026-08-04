@@ -181,7 +181,6 @@ class Lead(models.Model):
     # --- who the customer is (all three types) ---
     name = models.CharField(max_length=120)
     phone = models.CharField(max_length=20, help_text='Normalised to 10 digits on save.')
-    email = models.EmailField()
     message = models.TextField(blank=True)
 
     # --- quote + enquiry ---
@@ -546,6 +545,7 @@ class SiteImage(models.Model):
     """
 
     class Slot(models.TextChoices):
+        SITE_LOGO = 'site_logo', 'Site — logo (header)'
         HOME_WHY_US = 'home_why_us', 'Homepage — "Why us" counter photo'
         ABOUT_COUNTER = 'about_counter', 'About us — counter photo'
         ABOUT_TEAM = 'about_team', 'About us — front office team photo'
@@ -555,6 +555,8 @@ class SiteImage(models.Model):
         SERVICE_FOREX_CARD = 'service_forex-card', 'Service page — Prepaid Forex Card'
         SERVICE_WIRE_TRANSFER = 'service_wire-transfer', 'Service page — Drafts / TT / Swift Transfer'
         SERVICE_STUDENT = 'service_student-services', 'Service page — Student Services'
+        MONEY_TRANSFER_WESTERN_UNION = 'money-transfer_western-union', 'Money Transfer — Western Union logo'
+        MONEY_TRANSFER_MONEYGRAM = 'money-transfer_moneygram', 'Money Transfer — MoneyGram logo'
 
     slot = models.CharField(
         max_length=40, choices=Slot.choices, unique=True,

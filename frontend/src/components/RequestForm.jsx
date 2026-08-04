@@ -2,7 +2,7 @@ import { SERVICES } from '../data';
 import { useFx } from '../context/FxContext';
 import { c } from '../tokens';
 import { useCompanyInfo } from '../context/CompanyInfoContext';
-import { validateEmail, validatePhone, validateRequired } from '../validation';
+import { validatePhone, validateRequired } from '../validation';
 import { submitEnquiry, submitQuoteRequest } from '../api';
 import useLeadForm from '../hooks/useLeadForm';
 import { ConsentCheck, ErrorSummary, Field, Honeypot, SubmitButton, formCard } from './FormBits';
@@ -60,7 +60,6 @@ export default function RequestForm({ kind, initialService }) {
   const VALIDATORS = {
     name: (v) => validateRequired(v, 'full name'),
     phone: (v) => validatePhone(v),
-    email: (v) => validateEmail(v),
     from_currency: (v) => (v ? null : 'Please choose a currency.'),
     amount: (v) => {
       const raw = String(v || '').trim();
@@ -78,7 +77,7 @@ export default function RequestForm({ kind, initialService }) {
 
   const f = useLeadForm({
     initial: {
-      name: '', phone: '', email: '',
+      name: '', phone: '',
       service: initialService || SERVICES[0]?.title || '',
       recipient_name: '',
       relationship: '',
@@ -95,7 +94,6 @@ export default function RequestForm({ kind, initialService }) {
       return copy.submitFn({
         name: v.name.trim(),
         phone: v.phone.trim(),
-        email: v.email.trim(),
         service: v.service,
         recipient_name: transfer ? v.recipient_name.trim() : '',
         relationship: transfer ? v.relationship.trim() : '',
@@ -140,11 +138,6 @@ export default function RequestForm({ kind, initialService }) {
           id={`${ID}-phone`} label="Phone" error={f.errorFor('phone')} type="tel" inputMode="tel"
           value={f.values.phone} onChange={(e) => f.setField('phone', e.target.value)}
           onBlur={() => f.handleBlur('phone')} placeholder="+91 99414 56261" autoComplete="tel"
-        />
-        <Field
-          id={`${ID}-email`} label="Email" error={f.errorFor('email')} type="email" inputMode="email"
-          value={f.values.email} onChange={(e) => f.setField('email', e.target.value)}
-          onBlur={() => f.handleBlur('email')} placeholder="name@email.com" autoComplete="email"
         />
         <Field
           id={`${ID}-service`} label="Service" as="select"
@@ -198,7 +191,7 @@ export default function RequestForm({ kind, initialService }) {
 
       <SubmitButton sending={f.sending} sendingLabel="Sending…">{copy.submitLabel}</SubmitButton>
       <p style={{ margin: '14px 0 0', fontSize: 11.8, lineHeight: 1.55, color: c.textFainter, textAlign: 'center' }}>
-        We reply on the phone number or email you give us. Prefer to talk? Call {primaryPhone.display}.
+        We reply on the phone number you give us. Prefer to talk? Call {primaryPhone.display}.
       </p>
     </form>
   );

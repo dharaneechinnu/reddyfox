@@ -5,9 +5,17 @@ import { COMPANY } from '../company';
 import { c, fonts, wrap } from '../tokens';
 import { useFeatureFlag } from '../context/FeatureFlagsContext';
 import { useCompanyInfo } from '../context/CompanyInfoContext';
+import useApi from '../hooks/useApi';
+import { fetchSiteImages } from '../api';
 import SocialIcon from './SocialIcon';
 import WhatsAppButton from './WhatsAppButton';
 import MobileBottomNav from './MobileBottomNav';
+
+// Module scope so useApi doesn't refetch this on every render — Header is
+// mounted once per page via Layout.
+const loadSiteImages = () => fetchSiteImages();
+
+const LOGO_SLOT = 'site_logo';
 
 function TopBar() {
   const { contact, primaryPhone } = useCompanyInfo();
@@ -91,18 +99,27 @@ function MegaMenu({ open, onClose }) {
   );
 }
 
+function LogoMark({ logo, size = 30 }) {
+  if (logo) {
+    return <img src={logo.url} alt={logo.alt_text} style={{ height: size + 14, width: 'auto', display: 'block' }} />;
+  }
+  return <span style={{ width: size, height: size, background: c.orange, transform: 'rotate(45deg)', borderRadius: 6, display: 'block' }} />;
+}
+
 function Header() {
   const [mega, setMega] = useState(false);
   const ratesPageOn = useFeatureFlag('exchange_rates_page');
   const nav = ratesPageOn ? NAV : NAV.filter(([, to]) => to !== '/rates');
+  const { data: images } = useApi(loadSiteImages, {});
+  const logo = images[LOGO_SLOT];
   return (
     <div style={{ position: 'sticky', top: 0, zIndex: 60, background: 'rgba(255,255,255,.94)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${c.sandLine}` }}>
       <div style={{ ...wrap, padding: '16px 32px', display: 'flex', alignItems: 'center', gap: 36 }}>
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 11, cursor: 'pointer', flex: 'none', textDecoration: 'none' }}>
-          <span style={{ width: 30, height: 30, background: c.orange, transform: 'rotate(45deg)', borderRadius: 6, display: 'block' }} />
+          <LogoMark logo={logo} />
           <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-            <span style={{ fontFamily: fonts.serif, fontSize: 21, letterSpacing: '.01em', color: c.navy }}>{COMPANY.wordmark}</span>
-            <span style={{ fontFamily: fonts.mono, fontSize: 9.5, letterSpacing: '.24em', color: c.textFainter, marginTop: 4 }}>{COMPANY.wordmarkSub}</span>
+            <span style={{ fontFamily: fonts.serif, fontSize: 27, letterSpacing: '.01em', color: c.navy }}>{COMPANY.wordmark}</span>
+            <span style={{ fontFamily: fonts.mono, fontSize: 9.5, letterSpacing: '.24em', color: c.textFainter, marginTop: 4 }}>PVT LTD</span>
           </span>
         </Link>
 
@@ -134,13 +151,21 @@ function Header() {
 function Footer() {
   const navigate = useNavigate();
   const { contact, socials, footer } = useCompanyInfo();
+  const { data: images } = useApi(loadSiteImages, {});
+  const logo = images[LOGO_SLOT];
   return (
     <footer style={{ background: c.navyDeep, color: c.navyMuted2, padding: '76px 0 0' }}>
       <div style={wrap}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(200px,100%),1fr))', gap: 44, paddingBottom: 52, borderBottom: '1px solid rgba(255,255,255,.1)' }}>
           <div style={{ gridColumn: 'span 1', minWidth: 220 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 18 }}>
-              <span style={{ width: 26, height: 26, background: c.orange, transform: 'rotate(45deg)', borderRadius: 5, display: 'block' }} />
+              {logo ? (
+                <span style={{ background: '#fff', borderRadius: 6, padding: '4px 6px', display: 'flex', alignItems: 'center' }}>
+                  <img src={logo.url} alt={logo.alt_text} style={{ height: 22, width: 'auto', display: 'block' }} />
+                </span>
+              ) : (
+                <span style={{ width: 26, height: 26, background: c.orange, transform: 'rotate(45deg)', borderRadius: 5, display: 'block' }} />
+              )}
               <span style={{ fontFamily: fonts.serif, fontSize: 20, color: '#fff' }}>{COMPANY.wordmark}</span>
             </div>
             <p style={{ fontSize: 14, lineHeight: 1.68, margin: '0 0 22px', maxWidth: 280 }}>

@@ -58,7 +58,7 @@ class LeadRateThrottle(AnonRateThrottle):
 
 class BaseLeadCreateView(generics.CreateAPIView):
     """CREATE ONLY, deliberately. None of these endpoints support GET, so
-    customer names, phones and emails can never be read back over the public
+    customer names and phones can never be read back over the public
     API. Staff read leads in the Django admin.
     """
 
