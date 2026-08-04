@@ -13,7 +13,7 @@ const loadSiteImages = () => fetchSiteImages();
  * placeholder swatch, unchanged, so a page never looks broken before staff
  * get around to uploading anything.
  */
-export default function SitePhoto({ slot, placeholderLabel, style }) {
+export default function SitePhoto({ slot, placeholderLabel, style, imgFit = 'cover' }) {
   const { data: images } = useApi(loadSiteImages, {});
   const image = images[slot];
 
@@ -30,7 +30,7 @@ export default function SitePhoto({ slot, placeholderLabel, style }) {
         <img
           src={image.url}
           alt={image.alt_text}
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          style={{ width: '100%', height: '100%', objectFit: imgFit, display: 'block' }}
         />
       </div>
     );

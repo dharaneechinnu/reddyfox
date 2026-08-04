@@ -13,8 +13,11 @@ from PIL import Image
 from rest_framework.test import APIClient
 
 from rates.models import Currency
+from .management.commands.seed_site_images import NO_PLACEHOLDER
 from .models import CallbackRequest, Enquiry, Lead, QuoteRequest, SiteImage, SiteSetting
 from .validators import landline_tel, validate_image_upload, validate_landline
+
+SEEDED_SLOT_COUNT = len(SiteImage.Slot.choices) - len(NO_PLACEHOLDER)
 
 # Rendering an admin page needs a staticfiles manifest, which only exists
 # after `collectstatic`. Production builds one; the test runner shouldn't
@@ -34,7 +37,7 @@ def _make_usd():
 
 
 def _enquiry(**kw):
-    d = dict(name='Deborah Beck', phone='9876543210', email='d@example.com', message='Need USD please')
+    d = dict(name='Deborah Beck', phone='9876543210', message='Need USD please')
     d.update(kw)
     return Enquiry.objects.create(**d)
 
@@ -47,7 +50,7 @@ class PriorityOnArrivalTests(TestCase):
         self.assertEqual(_enquiry().priority, Lead.Priority.NORMAL)
 
     def test_quote_request_arrives_normal(self):
-        quote = QuoteRequest.objects.create(name='X', phone='9876543210', email='x@example.com')
+        quote = QuoteRequest.objects.create(name='X', phone='9876543210')
         self.assertEqual(quote.priority, Lead.Priority.NORMAL)
 
     def test_explicit_priority_is_respected_on_creation(self):
@@ -240,7 +243,7 @@ class LeadSubmissionStillWorksTests(TestCase):
 
     def test_enquiry_submission_unaffected(self):
         res = self.client.post(reverse('enquiry-create'), {
-            'name': 'Deborah Beck', 'phone': '9876543210', 'email': 'd@example.com', 'message': 'Need USD',
+            'name': 'Deborah Beck', 'phone': '9876543210', 'message': 'Need USD',
             'from_currency': 'USD', 'amount': '500',
         })
         self.assertEqual(res.status_code, 201, res.data)
@@ -249,7 +252,7 @@ class LeadSubmissionStillWorksTests(TestCase):
     def test_priority_is_not_settable_from_the_public_api(self):
         # A customer must not be able to promote their own lead.
         res = self.client.post(reverse('enquiry-create'), {
-            'name': 'Chancer', 'phone': '9876543211', 'email': 'c@example.com',
+            'name': 'Chancer', 'phone': '9876543211',
             'message': 'Need USD', 'from_currency': 'USD', 'amount': '500', 'priority': 1,
         })
         self.assertEqual(res.status_code, 201, res.data)
@@ -257,7 +260,7 @@ class LeadSubmissionStillWorksTests(TestCase):
 
     def test_non_transfer_service_requires_currency_and_amount(self):
         res = self.client.post(reverse('quote-create'), {
-            'name': 'Deborah Beck', 'phone': '9876543210', 'email': 'd@example.com',
+            'name': 'Deborah Beck', 'phone': '9876543210',
             'service': 'Foreign Currency Exchange',
         })
         self.assertEqual(res.status_code, 400)
@@ -265,7 +268,7 @@ class LeadSubmissionStillWorksTests(TestCase):
 
     def test_money_transfer_requires_currency_and_amount(self):
         res = self.client.post(reverse('quote-create'), {
-            'name': 'Deborah Beck', 'phone': '9876543210', 'email': 'd@example.com',
+            'name': 'Deborah Beck', 'phone': '9876543210',
             'service': 'Money Transfer', 'recipient_name': 'John Doe', 'relationship': 'Brother',
         })
         self.assertEqual(res.status_code, 400)
@@ -274,7 +277,7 @@ class LeadSubmissionStillWorksTests(TestCase):
 
     def test_money_transfer_requires_receiver_and_relationship(self):
         res = self.client.post(reverse('quote-create'), {
-            'name': 'Deborah Beck', 'phone': '9876543210', 'email': 'd@example.com',
+            'name': 'Deborah Beck', 'phone': '9876543210',
             'service': 'Money Transfer', 'from_currency': 'USD', 'amount': '500',
         })
         self.assertEqual(res.status_code, 400)
@@ -283,7 +286,7 @@ class LeadSubmissionStillWorksTests(TestCase):
 
     def test_money_transfer_submission_succeeds_with_all_fields(self):
         res = self.client.post(reverse('quote-create'), {
-            'name': 'Deborah Beck', 'phone': '9876543210', 'email': 'd@example.com',
+            'name': 'Deborah Beck', 'phone': '9876543210',
             'service': 'Money Transfer', 'recipient_name': 'John Doe', 'relationship': 'Brother',
             'from_currency': 'USD', 'amount': '500',
         })
@@ -309,7 +312,6 @@ class CallbackRequestTests(TestCase):
         self.assertEqual(res.status_code, 201, res.data)
         lead = CallbackRequest.objects.get()
         self.assertEqual(lead.phone, '9876543210')
-        self.assertEqual(lead.email, '')
         self.assertEqual(lead.kind, Lead.Kind.CALLBACK)
 
     def test_amount_and_currency_are_carried_along_when_present(self):
@@ -591,9 +593,12 @@ class SeedSiteImagesTests(TestCase):
 
     def test_creates_one_row_per_slot(self):
         call_command('seed_site_images', stdout=io.StringIO())
-        self.assertEqual(SiteImage.objects.count(), len(SiteImage.Slot.choices))
+        self.assertEqual(SiteImage.objects.count(), SEEDED_SLOT_COUNT)
         for slot, _label in SiteImage.Slot.choices:
-            self.assertTrue(SiteImage.objects.filter(slot=slot).exists())
+            if slot in NO_PLACEHOLDER:
+                self.assertFalse(SiteImage.objects.filter(slot=slot).exists())
+            else:
+                self.assertTrue(SiteImage.objects.filter(slot=slot).exists())
 
     def test_generated_images_are_real_decodable_images(self):
         call_command('seed_site_images', stdout=io.StringIO())
@@ -615,12 +620,12 @@ class SeedSiteImagesTests(TestCase):
         self.assertEqual(real_upload.image.name, original_name)
         self.assertEqual(real_upload.alt_text, 'The real shop')
         # Every other slot should still have been seeded.
-        self.assertEqual(SiteImage.objects.count(), len(SiteImage.Slot.choices))
+        self.assertEqual(SiteImage.objects.count(), SEEDED_SLOT_COUNT)
 
     def test_is_idempotent(self):
         call_command('seed_site_images', stdout=io.StringIO())
         call_command('seed_site_images', stdout=io.StringIO())  # must not error or duplicate
-        self.assertEqual(SiteImage.objects.count(), len(SiteImage.Slot.choices))
+        self.assertEqual(SiteImage.objects.count(), SEEDED_SLOT_COUNT)
 
 
 class DebugModeHostAndCorsTests(TestCase):

@@ -34,7 +34,6 @@ def _body(lead):
         '',
         f'Name    : {lead.name}',
         f'Phone   : +91 {lead.phone}',
-        f'Email   : {lead.email}',
     ]
 
     if lead.kind == 'quote':
@@ -66,12 +65,11 @@ def _body(lead):
         lines.append(f'WhatsApp: {lead.whatsapp_url}')
     if lead.tel_url:
         lines.append(f'Call    : {lead.tel_url}')
-    lines.append(f'Email   : mailto:{lead.email}')
 
     base = getattr(settings, 'ADMIN_BASE_URL', '').rstrip('/')
     # Quote requests have no admin page (deliberately unregistered — see
     # content/admin.py), so there is nowhere to link for that kind. Reply
-    # via the WhatsApp/call/email lines above instead.
+    # via the WhatsApp/call lines above instead.
     proxy = {'enquiry': 'enquiry', 'callback': 'callbackrequest'}.get(lead.kind)
     if base and proxy:
         lines += ['', f'Open in admin: {base}/admin/content/{proxy}/{lead.pk}/change/']
