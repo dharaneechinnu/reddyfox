@@ -82,6 +82,7 @@ There is no frontend test runner configured (no Jest/Vitest) — `npm run lint` 
 - **`content`** — testimonials, FAQs, and the lead-capture system (see below). Also `SiteSetting`, a singleton row (`pk=1` enforced in `save()`) holding the customer-facing WhatsApp option and per-lead-type notification email overrides.
 - **`notifications`** — Chrome push alerts to *customers* about currency rate changes, via Firebase Cloud Messaging. Independent of `content`'s email alerts.
 - **`feature_flags`** — a standalone on/off switch registry (see below), deliberately not more booleans bolted onto `SiteSetting`.
+- **`theming`** — `ThemeSetting`, a singleton row holding the site's design tokens: twelve semantic colours (`brand`, `ink`, `surface`, `line`, `body_text`, …), three font stacks plus the webfont URL that loads them, a base font size and heading multiplier, and a corner radius. `GET /api/theme/` returns them as a flat `{--fx-name: value}` map, cached and invalidated on save. See "The design system" below — that section, not this one, is what to read before touching any styling.
 - **`alert_routing`** — `LeadAlertRule`, one row per `content.Lead.Kind`, each with a `telegram_enabled` checkbox: the config rule deciding whether that kind of lead pages the desk on Telegram. Seeded by a data migration (Enquiry off by default, everything else on), toggle-only in `/admin/` — add/delete are disabled since the three rows are the fixed set of lead kinds. `telegram_alerts.services.notify_team_telegram()` calls `alert_routing.services.is_telegram_enabled_for(lead.kind)` first and skips the send entirely (never touching `TelegramDelivery`) if the kind is switched off; the email alert and admin lead inbox are unaffected either way. Fails open: a kind with no seeded row, or a DB error resolving the rule, defaults to `True` rather than silently going dark. Kept as its own app — separate from `telegram_alerts` (owns *how* to send) and `content` (owns *what a lead is*) — so it stays free of any Telegram-specific knowledge and could gate a future channel the same way. See `docs/telegram-bot.md`.
 
 ### Who leads are *for* — the thing to keep in mind
@@ -105,6 +106,22 @@ Signals in other apps that need to react to *one specific* lead kind (not all `L
 ### Staff permissions: groups, not custom roles
 
 `content/management/commands/setup_teams.py` defines named groups (`Rates desk`, `Quotes desk`, `Front office`, `Manager`) and syncs Django model permissions onto them. There's no custom permission/dashboard code — Django admin already hides any model a user lacks permission for, so group membership alone produces a different admin per role. Re-running the command is safe and intended: it's the source of truth, so adding a model to a team means editing `TEAMS` in that file and re-running it.
+
+### The design system: never hardcode a colour or a font size
+
+Every colour, typeface and text size on the site resolves to a CSS custom property. There are three layers, and you almost always want the middle one:
+
+1. **`frontend/src/theme.css`** — the definition. Twelve core colours, three font stacks, a thirteen-step type scale, one radius. Everything else the design uses (every tint, border shade, on-dark text colour) is a `color-mix()` **derived from those core values**, so changing one core colour re-tints everything that should follow it. This is the file to edit to change the look permanently.
+2. **`frontend/src/tokens.js`** — the names components import: `c` for colour, `fs` for font size, `fonts`, `radius`, plus the shared `wrap`/`eyebrow`/`h2Style` objects. Every value is a `var(--fx-…)` reference, never a literal.
+3. **`theming.ThemeSetting`** (Django admin → Theme) — lets staff override the core values at runtime. `ThemeContext.jsx` writes them onto `:root` as inline custom properties, which outrank the stylesheet, and the derivations recompute automatically. **Fails open**: if that request fails, the site renders in its compiled-in default theme — a theme-API hiccup can leave the site looking last-season, never unstyled.
+
+Rules:
+
+- **Never put a hex or a raw pixel font size in a component.** There are currently zero of either in `frontend/src/`; keep it that way. Add a token to `theme.css` and name it in `tokens.js` instead.
+- **A size that isn't on the scale doesn't belong in a component.** `fs` has thirteen steps — nine fixed (`2xs`…`3xl`) and four fluid heading tiers (`h3`, `h2`, `h1`, `hero`). Before this existed the site had 27 distinct hardcoded sizes, including 14.5, 14.6 and 14.8 all doing the same job, and ten near-identical `clamp()` expressions for four real heading tiers.
+- **Derive, don't add.** A new shade that is "the brand colour but paler" belongs as a `color-mix()` of `--fx-brand`, not as a thirteenth core colour — otherwise it goes stale the first time someone changes the brand.
+- The defaults in `theme.css` and the computation in `ThemeSetting.css_variables` **must stay in step**; `theming/tests.py` asserts the scale reproduces the original pixel sizes exactly at the default base, which is what makes changing the base a safe, proportional resize.
+- Third-party brand colours (WhatsApp green) are deliberately fixed literals, not themeable — same reasoning as leaving the Western Union / MoneyGram image slots for real brand assets.
 
 ### The pattern every content model follows
 

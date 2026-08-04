@@ -1,6 +1,6 @@
 import useApi from '../hooks/useApi';
 import { fetchSiteImages } from '../api';
-import { c, fonts } from '../tokens';
+import { c, fs, fonts } from '../tokens';
 
 // Module scope so useApi doesn't refetch this on every render, and every
 // SitePhoto instance on a page shares one request instead of one each.
@@ -44,7 +44,7 @@ export default function SitePhoto({ slot, placeholderLabel, style, imgFit = 'cov
       justifyContent: 'center',
       ...boxStyle,
     }}>
-      <span style={{ font: `400 11px/1.7 ${fonts.mono}`, letterSpacing: '.14em', color: c.swatchText, textAlign: 'center' }}>
+      <span style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.xs, lineHeight: 1.7, letterSpacing: '.14em', color: c.swatchText, textAlign: 'center' }}>
         {placeholderLabel}
       </span>
     </div>

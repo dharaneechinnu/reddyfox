@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { c } from '../tokens';
+import { c, fs } from '../tokens';
 import { useFeatureFlag } from '../context/FeatureFlagsContext';
 
 function HomeIcon() {
@@ -51,7 +51,7 @@ function TabLink({ to, label, Icon, end }) {
       })}
     >
       <Icon />
-      <span style={{ fontSize: 10.5, fontWeight: 600, letterSpacing: '.01em' }}>{label}</span>
+      <span style={{ fontSize: fs['2xs'], fontWeight: 600, letterSpacing: '.01em' }}>{label}</span>
     </NavLink>
   );
 }

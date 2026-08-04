@@ -6,6 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!--
+      The webfont stylesheet lives here, with an id, rather than as an @import
+      in index.css: src/context/ThemeContext.jsx repoints its href when staff
+      change the fonts in the Django admin, and changing a font family without
+      also loading that font would silently fall back to a system face. This
+      href is the default, used until (and if) the theme API answers.
+    -->
+    <link
+      id="fx-fonts"
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    />
+
+    <!--
       This is a client-rendered SPA — everything in <head> is what a crawler
       sees if it does NOT execute JavaScript. src/components/Seo.jsx swaps in
       a per-page title/description/canonical after mount for crawlers that

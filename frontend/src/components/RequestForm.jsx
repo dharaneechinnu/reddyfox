@@ -1,6 +1,6 @@
 import { SERVICES } from '../data';
 import { useFx } from '../context/FxContext';
-import { c } from '../tokens';
+import { c, fs } from '../tokens';
 import { useCompanyInfo } from '../context/CompanyInfoContext';
 import { validatePhone, validateRequired } from '../validation';
 import { submitEnquiry, submitQuoteRequest } from '../api';
@@ -123,7 +123,7 @@ export default function RequestForm({ kind, initialService }) {
 
   return (
     <form noValidate onSubmit={f.handleSubmit} style={formCard}>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: c.navy, margin: '0 0 24px' }}>{copy.heading}</h2>
+      <h2 style={{ fontSize: fs['2xl'], fontWeight: 600, color: c.navy, margin: '0 0 24px' }}>{copy.heading}</h2>
 
       <Honeypot id={`${ID}-enquiry_ref`} value={f.values.enquiry_ref} onChange={(e) => f.setField('enquiry_ref', e.target.value)} />
       <ErrorSummary count={f.errorCount} serverError={f.serverError} />
@@ -190,7 +190,7 @@ export default function RequestForm({ kind, initialService }) {
       />
 
       <SubmitButton sending={f.sending} sendingLabel="Sending…">{copy.submitLabel}</SubmitButton>
-      <p style={{ margin: '14px 0 0', fontSize: 11.8, lineHeight: 1.55, color: c.textFainter, textAlign: 'center' }}>
+      <p style={{ margin: '14px 0 0', fontSize: fs.xs, lineHeight: 1.55, color: c.textFainter, textAlign: 'center' }}>
         We reply on the phone number you give us. Prefer to talk? Call {primaryPhone.display}.
       </p>
     </form>

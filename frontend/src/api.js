@@ -36,6 +36,18 @@ export async function fetchSiteSettings() {
 }
 
 /**
+ * The site's design tokens, managed in Django admin under Theme -> Theme.
+ * Returns {css_variables: {"--fx-brand": "#E2571F", ...}, fonts_url: "..."};
+ * ThemeContext writes those onto :root. A failure here should leave the site on
+ * its compiled-in default theme, never unstyled — see that file.
+ */
+export async function fetchTheme() {
+  const res = await fetch(`${API_BASE}/theme/`);
+  if (!res.ok) throw new Error(`Failed to load theme (${res.status})`);
+  return res.json();
+}
+
+/**
  * {key: boolean} map of every feature flag, managed in Django admin under
  * Feature flags. A key absent from the response (flag deleted, or the
  * request failed) should be treated as enabled by the caller — see

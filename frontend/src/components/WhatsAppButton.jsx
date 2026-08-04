@@ -24,7 +24,7 @@ export default function WhatsAppButton() {
       aria-label={site.whatsapp_label || 'Chat with us on WhatsApp'}
       title={site.whatsapp_label || 'Chat with us on WhatsApp'}
       style={{
-        width: 56, height: 56, borderRadius: '50%', background: '#25D366', color: '#fff',
+        width: 56, height: 56, borderRadius: '50%', background: c.whatsapp, color: c.surface,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         boxShadow: '0 18px 30px -14px rgba(11,27,51,.6)', transition: 'transform .18s',
         textDecoration: 'none', flex: 'none',

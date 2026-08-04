@@ -1,87 +1,165 @@
+/**
+ * The names components use for colours, type sizes and shared style objects.
+ *
+ * Every value here points at a CSS custom property defined in theme.css — which
+ * is where the actual colours and sizes live, and the only file to edit to
+ * change how the site looks. Staff can override the core ones from the Django
+ * admin at runtime (see context/ThemeContext.jsx); because these are `var()`
+ * references rather than literals, that works without a rebuild and without
+ * this file knowing anything about it.
+ *
+ * No fallbacks in the var() calls on purpose: theme.css is bundled into the
+ * same stylesheet as everything else, so it cannot fail to load independently
+ * of the code reading it, and a second copy of every hex here would be one more
+ * thing to keep in step.
+ *
+ * Adding a colour: add the token to theme.css (derived from a core value if it
+ * is a tint or shade of one), then name it here. Never put a hex in a component.
+ */
+
+const v = (name) => `var(--fx-${name})`;
+
 export const c = {
-  orange: '#E2571F',
-  orangeDark: '#C4460F',
-  orangeDarker: '#B8410F',
-  navy: '#0B1B33',
-  navyDeep: '#08152A',
-  navyLight: '#16294a',
-  navyMid: '#28374F',
-  ink: '#1A2A44',
-  text: '#435066',
-  textMuted: '#6B7688',
-  textFaint: '#7B8697',
-  textFainter: '#8A93A3',
-  navyMuted: '#7C889B',
-  navyMuted2: '#8E9AAD',
-  navyLine: 'rgba(255,255,255,.12)',
-  onNavyText: '#A9B4C6',
-  onNavyText2: '#D7DEE9',
-  onNavyText3: '#C6CFDC',
-  onNavyText4: '#9AA5B6',
-  accent: '#F0A07A',
-  sand: '#F8F7F5',
-  sandLine: '#E7E4DF',
-  sandLine2: '#EDEAE5',
-  sandLine3: '#F0EDE8',
-  sandCard: '#F4F2EF',
-  sandCard2: '#F1EEE9',
-  sandBorder: '#E4E0DA',
-  sandBorder2: '#DDD9D3',
-  sandBorder3: '#E0DCD5',
-  sandBorder4: '#E2DED7',
-  sandField: '#F1EEE9',
-  swatch: '#EFECE7',
-  swatch2: '#E7E3DC',
-  swatchText: '#918A7D',
-  green: '#2FA36B',
-  greenLight: '#5CC694',
-  greenBg: '#EAF6F0',
-  greenText: '#1C7A50',
-  greenText2: '#3F7A61',
-  greenBorder: '#BFE3D0',
-  greenBg2: '#F2FAF6',
-  red: '#C0492C',
-  redLight: '#E4826A',
-  redText: '#B4351F',
-  redText2: '#96543F',
-  redBg: '#FBEDE9',
-  redBorder: '#F2D3C7',
-  redBg2: '#FDF5F2',
-  gold: '#C9A227',
-  amberBg: '#FDF6E3',
-  amberText: '#8A6A11',
-  neutralBg: '#F1EEE9',
-  serviceIconBg: '#FDF1EA',
-  mapBg: '#EDEAE4',
-  mapBorder: '#E2DED7',
-  mapDot: '#8C8477',
-  cream: '#FBFAF8',
-  disabledBg: '#EFECE7',
-  disabledText: '#A9A296',
-  errorField: '#D9765C',
-  dashLine: '#D8D3CB',
-  softLine: '#DDD9D3',
+  // --- brand -------------------------------------------------------------
+  orange: v('brand'),
+  orangeDark: v('brand-dark'),
+  orangeDarker: v('brand-darker'),
+  accent: v('accent'),
+  serviceIconBg: v('brand-tint'),
+  onOrangeText: v('brand-pale'),
+
+  // --- ink / dark panels -------------------------------------------------
+  navy: v('ink'),
+  navyDeep: v('ink-deep'),
+  navyLight: v('ink-light'),
+  navyMid: v('ink-mid'),
+  ink: v('ink-light'),
+
+  // --- text on light -----------------------------------------------------
+  text: v('body-text'),
+  textMuted: v('muted-text'),
+  textFaint: v('text-faint'),
+  textFainter: v('text-fainter'),
+
+  // --- text on the dark ink panels ---------------------------------------
+  navyMuted: v('on-ink-faint'),
+  navyMuted2: v('on-ink-dim'),
+  onNavyText: v('on-ink'),
+  onNavyText2: v('on-ink-strong'),
+  onNavyText3: v('on-ink-mid'),
+  onNavyText4: v('on-ink-dim'),
+  onNavyLink: v('on-ink-link'),
+  navyLine: v('on-ink-line'),
+
+  // --- surfaces ----------------------------------------------------------
+  surface: v('surface'),
+  sand: v('surface-alt'),
+  cream: v('surface-2'),
+  sandCard: v('surface-3'),
+  sandCard2: v('surface-4'),
+  swatch: v('surface-4'),
+  swatch2: v('line-strong'),
+  disabledBg: v('surface-4'),
+  mapBg: v('surface-4'),
+
+  // --- borders -----------------------------------------------------------
+  sandLine: v('line'),
+  sandLine2: v('line-softer'),
+  sandLine3: v('line-soft'),
+  sandBorder: v('line-strong'),
+  sandBorder3: v('line-strong'),
+  sandBorder4: v('line-strong'),
+  mapBorder: v('line-strong'),
+  softLine: v('line-strongest'),
+
+  // --- decorative / disabled ---------------------------------------------
+  swatchText: v('swatch-text'),
+  disabledText: v('disabled-text'),
+  mapDot: v('swatch-text'),
+
+  // --- status: up / success ----------------------------------------------
+  green: v('success'),
+  greenLight: v('success-light'),
+  greenText: v('success-text'),
+  greenText2: v('success-text-2'),
+  greenBorder: v('success-border'),
+  greenBg: v('success-bg'),
+  greenBg2: v('success-bg-2'),
+
+  // --- status: down / danger ---------------------------------------------
+  red: v('danger'),
+  redLight: v('danger-light'),
+  redText: v('danger-text'),
+  redBorder: v('brand-border'),
+  redBg2: v('brand-bg'),
+  errorField: v('danger-field'),
+
+  // --- favourites --------------------------------------------------------
+  gold: v('favourite'),
+  goldOff: v('favourite-off'),
+
+  // --- third-party brand colours (fixed, never themed) --------------------
+  whatsapp: v('whatsapp'),
+};
+
+/**
+ * The type scale — `fs` for font size, alongside `c` for colour.
+ *
+ * These are the only text sizes on the site. A size that is not on this list
+ * does not belong in a component: before this existed there were 27 distinct
+ * hardcoded values, including 14.5, 14.6 and 14.8 all doing the same job, and
+ * ten near-identical clamp() expressions for four actual heading tiers.
+ *
+ * Every size is a fixed proportion of one base size set in the admin, so
+ * changing that scales the whole site together and keeps it in proportion. The
+ * heading tiers take a second multiplier of their own.
+ */
+export const fs = {
+  // Body and UI — fixed sizes.
+  '2xs': v('text-2xs'),  /* 10   — micro labels: PVT LTD, bottom-nav captions */
+  xs: v('text-xs'),      /* 11.5 — eyebrows, mono labels, badges */
+  sm: v('text-sm'),      /* 12.5 — captions, top bar, footnotes */
+  base: v('text-base'),  /* 14.5 — UI text, card body, form labels */
+  md: v('text-md'),      /* 15.5 — body copy, buttons, nav */
+  lg: v('text-lg'),      /* 16.5 — lead paragraphs */
+  xl: v('text-xl'),      /* 18   — card headings */
+  '2xl': v('text-2xl'),  /* 20   — section subheadings */
+  '3xl': v('text-3xl'),  /* 26   — large fixed headings */
+
+  // Headings — fluid, and scaled by the admin's heading multiplier.
+  h3: v('text-h3'),      /* sub-section heading */
+  h2: v('text-h2'),      /* section heading */
+  h1: v('text-h1'),      /* page heading */
+  hero: v('text-hero'),  /* homepage hero only */
 };
 
 export const fonts = {
-  serif: "'Instrument Serif', serif",
-  mono: "'IBM Plex Mono', monospace",
-  sans: "'Instrument Sans', system-ui, sans-serif",
+  serif: v('font-serif'),
+  mono: v('font-mono'),
+  sans: v('font-sans'),
 };
+
+export const radius = v('radius');
+export const shadowCard = v('shadow-card');
 
 export const wrap = { maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,4.5vw,32px)' };
 export const wrapNarrow = { maxWidth: 1000, margin: '0 auto', padding: '0 clamp(16px,4.5vw,32px)' };
+
 export const eyebrow = {
-  font: `500 11.5px/1.4 ${fonts.mono}`,
+  fontFamily: fonts.mono,
+  fontWeight: 500,
+  fontSize: fs.xs,
+  lineHeight: 1.4,
   letterSpacing: '.18em',
   textTransform: 'uppercase',
   color: c.orange,
   margin: '0 0 14px',
 };
+
 export const h2Style = {
   fontFamily: fonts.serif,
   fontWeight: 400,
-  fontSize: 'clamp(32px,3.4vw,48px)',
+  fontSize: fs.h2,
   lineHeight: 1.08,
   color: c.navy,
   margin: 0,
