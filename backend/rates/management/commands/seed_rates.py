@@ -35,6 +35,7 @@ class Command(BaseCommand):
                     'region': region,
                     'buy_rate': buy,
                     'sell_rate': sell,
+                    'change_pct': Currency.spread_pct(buy, sell),
                     'display_order': order,
                 },
             )

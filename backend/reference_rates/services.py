@@ -59,7 +59,8 @@ def refresh_reference_rates():
             market_rate = Decimal(str(results[currency.code][0]))
             currency.sell_rate = (market_rate + settings_obj.sell_margin).quantize(TWO_PLACES, rounding=ROUND_HALF_UP)
             currency.buy_rate = (market_rate + settings_obj.buy_margin).quantize(TWO_PLACES, rounding=ROUND_HALF_UP)
-            currency.save(update_fields=['buy_rate', 'sell_rate', 'updated_at'])
+            currency.change_pct = Currency.spread_pct(currency.buy_rate, currency.sell_rate)
+            currency.save(update_fields=['buy_rate', 'sell_rate', 'change_pct', 'updated_at'])
             applied += 1
 
     return {'ok': True, 'fetched': len(results), 'applied': applied, 'missing': missing}
