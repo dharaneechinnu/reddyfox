@@ -621,3 +621,34 @@ class SeedSiteImagesTests(TestCase):
         call_command('seed_site_images', stdout=io.StringIO())
         call_command('seed_site_images', stdout=io.StringIO())  # must not error or duplicate
         self.assertEqual(SiteImage.objects.count(), len(SiteImage.Slot.choices))
+
+
+class DebugModeHostAndCorsTests(TestCase):
+    """Local dev runs with DEBUG=True (settings.py's default) — reached from addresses that
+    change with every network switch (this machine, its LAN IP, a phone on the same WiFi) — so
+    settings.py's DEBUG-conditional block sets ALLOWED_HOSTS/CORS_ALLOW_ALL_ORIGINS wide open
+    rather than needing an .env edit per network.
+
+    Note: Django's test runner always forces settings.DEBUG back to False once tests start
+    (django.test.utils.setup_test_environment) — that's normal and doesn't affect these
+    settings, since ALLOWED_HOSTS/CORS_ALLOW_ALL_ORIGINS were already computed from the real
+    DEBUG=True (see .env.example) at settings-module import time, before that override runs.
+    So these assert the derived values directly rather than re-checking settings.DEBUG."""
+
+    def test_debug_mode_allows_any_host(self):
+        # Django's test runner appends 'testserver' to ALLOWED_HOSTS itself
+        # (for the test client's default SERVER_NAME) — assert '*' is present
+        # rather than an exact list match.
+        from django.conf import settings
+        self.assertIn('*', settings.ALLOWED_HOSTS)
+
+    def test_debug_mode_allows_any_cors_origin(self):
+        from django.conf import settings
+        self.assertTrue(settings.CORS_ALLOW_ALL_ORIGINS)
+
+    def test_arbitrary_host_header_is_not_rejected(self):
+        # A phone reaching the backend via a LAN IP sends exactly this kind of
+        # non-localhost Host header — must not 400 with DisallowedHost.
+        client = APIClient()
+        res = client.get(reverse('site-settings'), SERVER_NAME='192.168.1.42')
+        self.assertEqual(res.status_code, 200)

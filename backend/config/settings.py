@@ -31,12 +31,22 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-PLACEHOLDER-set-SECRE
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+if DEBUG:
+    # Local dev is reached from many addresses that change with every network
+    # switch — this machine, its LAN IP, a phone on the same WiFi, a different
+    # WiFi entirely. DEBUG-mode dev isn't internet-facing, so Host-header
+    # validation has nothing real to protect here; skip it rather than
+    # re-editing .env every time the network changes. See "Testing on a
+    # phone" in CLAUDE.md — the frontend's API base URL is auto-detected the
+    # same way, so neither side needs manual per-network configuration.
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
 
 # Render injects the service's own hostname. Adding it automatically means a
 # rename or a new instance never locks us out with a DisallowedHost error.
 RENDER_EXTERNAL_HOSTNAME = config('RENDER_EXTERNAL_HOSTNAME', default='')
-if RENDER_EXTERNAL_HOSTNAME:
+if RENDER_EXTERNAL_HOSTNAME and not DEBUG:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 
@@ -84,6 +94,12 @@ CORS_ALLOWED_ORIGINS = config(
     default='http://localhost:5173,http://127.0.0.1:5173',
     cast=Csv(),
 )
+
+# Same reasoning as ALLOWED_HOSTS above: local dev is reached from whatever
+# address the frontend's dev server happens to be on (this machine, its LAN
+# IP, a phone's browser), so allow any origin rather than an .env edit per
+# network. CORS_ALLOWED_ORIGINS above is still what applies in production.
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 
 # The admin is a cross-origin POST target once the site is on HTTPS, so Django
 # needs the scheme-qualified origins it should trust. Every HTTPS origin we
