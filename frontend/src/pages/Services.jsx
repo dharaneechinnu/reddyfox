@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { SERVICES } from '../data';
 import { c, fonts, wrap } from '../tokens';
 import Seo from '../components/Seo';
+import SitePhoto from '../components/SitePhoto';
 
 export default function Services() {
   const navigate = useNavigate();
@@ -27,14 +28,21 @@ export default function Services() {
             <div
               key={s.id}
               onClick={() => navigate(`/services/${s.id}`)}
-              style={{ border: `1px solid ${c.sandLine}`, borderRadius: 14, padding: 32, cursor: 'pointer', transition: 'box-shadow .22s,transform .22s' }}
+              style={{ border: `1px solid ${c.sandLine}`, borderRadius: 14, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow .22s,transform .22s' }}
               onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 24px 40px -28px rgba(11,27,51,.4)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
             >
-              <span style={{ width: 40, height: 40, borderRadius: 9, background: c.serviceIconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', font: `500 12px/1.4 ${fonts.mono}`, color: c.orange, marginBottom: 20 }}>{s.tag}</span>
-              <h3 style={{ fontSize: 20, fontWeight: 600, color: c.navy, margin: '0 0 10px' }}>{s.title}</h3>
-              <p style={{ fontSize: 14.8, lineHeight: 1.62, color: c.textMuted, margin: '0 0 18px' }}>{s.body}</p>
-              <span style={{ fontSize: 14, fontWeight: 600, color: c.orange }}>Open service page →</span>
+              <SitePhoto
+                slot={`service_${s.id}`}
+                placeholderLabel={s.title.toUpperCase()}
+                style={{ height: 160, border: 'none', borderRadius: 0 }}
+              />
+              <div style={{ padding: 32 }}>
+                <span style={{ width: 40, height: 40, borderRadius: 9, background: c.serviceIconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', font: `500 12px/1.4 ${fonts.mono}`, color: c.orange, marginBottom: 20 }}>{s.tag}</span>
+                <h3 style={{ fontSize: 20, fontWeight: 600, color: c.navy, margin: '0 0 10px' }}>{s.title}</h3>
+                <p style={{ fontSize: 14.8, lineHeight: 1.62, color: c.textMuted, margin: '0 0 18px' }}>{s.body}</p>
+                <span style={{ fontSize: 14, fontWeight: 600, color: c.orange }}>Open service page →</span>
+              </div>
             </div>
           ))}
         </div>
