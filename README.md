@@ -96,7 +96,7 @@ Everything is at **http://localhost:8000/admin/** :
 
 | Section | What you edit |
 |---|---|
-| Rates → Currencies | Buy/sell rate, 24h change, `is_popular`, `is_visible`, sort order |
+| Rates → Currencies | Buy/sell rate (24h change is computed from the buy/sell spread), `is_visible`, sort order |
 | Content → Testimonials | Customer quotes shown on the homepage |
 | Content → FAQs | Questions and answers (plain text; blank line = new paragraph) |
 | Content → FAQ categories | Sidebar groupings on the `/faq` page |

@@ -19,17 +19,18 @@ TWO_PLACES = Decimal('0.01')
 
 @admin.register(Currency)
 class CurrencyAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name', 'rate_type', 'region', 'buy_rate', 'sell_rate', 'change_pct', 'market_reference', 'is_popular', 'is_visible', 'display_order', 'updated_at')
-    list_editable = ('buy_rate', 'sell_rate', 'change_pct', 'is_popular', 'is_visible', 'display_order')
-    list_filter = ('rate_type', 'region', 'is_popular', 'is_visible')
+    list_display = ('code', 'name', 'rate_type', 'region', 'buy_rate', 'sell_rate', 'change_pct', 'market_reference', 'is_visible', 'display_order', 'updated_at')
+    list_editable = ('buy_rate', 'sell_rate', 'is_visible', 'display_order')
+    list_filter = ('rate_type', 'region', 'is_visible')
     search_fields = ('code', 'name')
     ordering = ('display_order', 'code')
     actions = ['fetch_reference_rates_now']
     change_list_template = 'admin/rates/currency/change_list.html'
+    readonly_fields = ('change_pct',)
     fields = (
         'code', 'name', 'country_code', 'region', 'rate_type',
         'buy_rate', 'sell_rate', 'change_pct',
-        'is_popular', 'is_visible', 'display_order',
+        'is_visible', 'display_order',
     )
 
     class Media:

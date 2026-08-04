@@ -8,5 +8,5 @@ class CurrencySerializer(serializers.ModelSerializer):
         fields = [
             'code', 'name', 'country_code', 'region', 'rate_type',
             'buy_rate', 'sell_rate', 'change_pct',
-            'is_popular', 'display_order', 'updated_at',
+            'display_order', 'updated_at',
         ]

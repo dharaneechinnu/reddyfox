@@ -151,9 +151,12 @@ export function latestUpdatedAt(list) {
   }) + ' IST';
 }
 
-export function popularCodes(list) {
+// Currencies no longer carry an is_popular flag — the homepage board/ticker just highlights
+// the first `limit` currencies in staff-set display_order (already how the API sorts them).
+export function popularCodes(list, limit = 8) {
   return list
-    .filter((c) => c.is_popular)
+    .slice()
     .sort((a, b) => a.display_order - b.display_order)
+    .slice(0, limit)
     .map((c) => c.code);
 }

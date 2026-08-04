@@ -78,7 +78,7 @@ There is no frontend test runner configured (no Jest/Vitest) — `npm run lint` 
 
 ### Backend: four Django apps
 
-- **`rates`** — `Currency` model: buy/sell rate, 24h change, region, `rate_type` (`cash` or `forex_card` — a currency can have one row of each, unique together), `is_popular`, `is_visible`, `display_order`. Read-only `CurrencyViewSet` at `/api/rates/`, filterable with `?rate_type=cash|forex_card`; a bare `code` lookup (no query param) defaults to the `cash` row so every pre-existing caller keeps working.
+- **`rates`** — `Currency` model: buy/sell rate, region, `rate_type` (`cash` or `forex_card` — a currency can have one row of each, unique together), `is_visible`, `display_order`. `change_pct` is not a stored field — it's a `@property` derived from the buy/sell spread (`(sell_rate - buy_rate) / buy_rate * 100`); there's no rate-history table, so it can't be a real 24h change. The homepage board/ticker highlight the first few currencies by `display_order` rather than a separate "popular" flag. Read-only `CurrencyViewSet` at `/api/rates/`, filterable with `?rate_type=cash|forex_card`; a bare `code` lookup (no query param) defaults to the `cash` row so every pre-existing caller keeps working.
 - **`content`** — testimonials, FAQs, and the lead-capture system (see below). Also `SiteSetting`, a singleton row (`pk=1` enforced in `save()`) holding the customer-facing WhatsApp option and per-lead-type notification email overrides.
 - **`notifications`** — Chrome push alerts to *customers* about currency rate changes, via Firebase Cloud Messaging. Independent of `content`'s email alerts.
 - **`feature_flags`** — a standalone on/off switch registry (see below), deliberately not more booleans bolted onto `SiteSetting`.
