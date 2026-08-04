@@ -171,13 +171,6 @@ export const FOOTER_COLS = [
       ['Contact', '/contact'],
     ],
   },
-  {
-    title: 'TOOLS',
-    links: [
-      ['Exchange rates', '/rates'],
-      ['Student services', '/services/student-services'],
-    ],
-  },
 ];
 
 // The only compliance claim the business publishes.
