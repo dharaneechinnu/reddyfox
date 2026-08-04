@@ -217,14 +217,21 @@ export default function Home() {
               <div
                 key={s.id}
                 onClick={() => navigate(`/services/${s.id}`)}
-                style={{ background: '#fff', border: `1px solid ${c.sandLine}`, borderRadius: 14, padding: 30, cursor: 'pointer', transition: 'box-shadow .22s,transform .22s,border-color .22s' }}
+                style={{ background: '#fff', border: `1px solid ${c.sandLine}`, borderRadius: 14, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow .22s,transform .22s,border-color .22s' }}
                 onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 24px 40px -28px rgba(11,27,51,.4)'; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.borderColor = '#DAD5CD'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = c.sandLine; }}
               >
-                <span style={{ width: 40, height: 40, borderRadius: 9, background: c.serviceIconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', font: `500 12px/1.4 ${fonts.mono}`, color: c.orange, marginBottom: 20 }}>{s.tag}</span>
-                <h3 style={{ fontSize: 19, fontWeight: 600, color: c.navy, margin: '0 0 10px' }}>{s.title}</h3>
-                <p style={{ fontSize: 14.5, lineHeight: 1.62, color: c.textMuted, margin: '0 0 18px' }}>{s.short}</p>
-                <span style={{ fontSize: 14, fontWeight: 600, color: c.orange }}>Learn more →</span>
+                <SitePhoto
+                  slot={`service_${s.id}`}
+                  placeholderLabel={s.title.toUpperCase()}
+                  style={{ height: 160, border: 'none', borderRadius: 0 }}
+                />
+                <div style={{ padding: 30 }}>
+                  <span style={{ width: 40, height: 40, borderRadius: 9, background: c.serviceIconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', font: `500 12px/1.4 ${fonts.mono}`, color: c.orange, marginBottom: 20 }}>{s.tag}</span>
+                  <h3 style={{ fontSize: 19, fontWeight: 600, color: c.navy, margin: '0 0 10px' }}>{s.title}</h3>
+                  <p style={{ fontSize: 14.5, lineHeight: 1.62, color: c.textMuted, margin: '0 0 18px' }}>{s.short}</p>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: c.orange }}>Learn more →</span>
+                </div>
               </div>
             ))}
           </div>
