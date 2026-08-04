@@ -1,5 +1,6 @@
 import useApi from '../hooks/useApi';
 import { fetchSiteSettings } from '../api';
+import { c } from '../tokens';
 import SocialIcon from './SocialIcon';
 
 // Module scope so useApi does not refetch on every render.
