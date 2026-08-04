@@ -1,4 +1,19 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+/**
+ * Where the Django API lives. `VITE_API_BASE_URL` is the explicit override —
+ * always set it for a production build, since frontend and backend are
+ * deployed as separate origins there.
+ *
+ * Locally, with no override set, the backend address is derived from
+ * whatever host the browser used to load this page, on the assumption the
+ * backend is running on the same machine at port 8000 (`manage.py runserver`'s
+ * default). That covers `localhost`, `127.0.0.1`, this machine's LAN IP, and
+ * a phone on the same WiFi identically — none of them need a hardcoded IP in
+ * `.env` that breaks the moment you switch networks. See "Testing on a
+ * phone" in CLAUDE.md.
+ */
+const API_BASE = import.meta.env.VITE_API_BASE_URL || (
+  import.meta.env.DEV ? `${window.location.protocol}//${window.location.hostname}:8000/api` : '/api'
+);
 
 // rateType defaults to 'cash' — the rate used everywhere except the Forex
 // Card toggle on the rates table, so every existing caller keeps working
