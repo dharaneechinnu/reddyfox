@@ -21,6 +21,7 @@ urlpatterns = [
     path('api/', include('content.urls')),
     path('api/', include('feature_flags.urls')),
     path('api/', include('telegram_alerts.urls')),
+    path('api/', include('theming.urls')),
     path(
         f"{settings.MEDIA_URL.lstrip('/')}<path:path>",
         serve,

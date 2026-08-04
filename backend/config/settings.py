@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'reference_rates',
     'alert_routing',
     'telegram_alerts',
+    'theming',
 
     # Third party
     'rest_framework',

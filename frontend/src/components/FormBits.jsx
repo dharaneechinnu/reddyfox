@@ -1,4 +1,4 @@
-import { c } from '../tokens';
+import { c, fs } from '../tokens';
 
 /**
  * Shared field primitives for the three website forms.
@@ -11,19 +11,19 @@ export const baseInput = {
   border: `1px solid ${c.softLine}`,
   borderRadius: 9,
   padding: '13px 14px',
-  fontSize: 14.5,
+  fontSize: fs.base,
   outline: 'none',
   color: c.navy,
   transition: 'border-color .15s',
-  background: '#fff',
+  background: c.surface,
 };
 
-const labelStyle = { display: 'block', fontSize: 12.5, fontWeight: 500, color: c.textMuted, marginBottom: 7 };
+const labelStyle = { display: 'block', fontSize: fs.sm, fontWeight: 500, color: c.textMuted, marginBottom: 7 };
 
 export function FieldError({ id, message }) {
   if (!message) return null;
   return (
-    <div id={id} role="alert" style={{ fontSize: 12.5, lineHeight: 1.45, color: c.redText, marginTop: 6 }}>
+    <div id={id} role="alert" style={{ fontSize: fs.sm, lineHeight: 1.45, color: c.redText, marginTop: 6 }}>
       {message}
     </div>
   );
@@ -57,7 +57,7 @@ export function Field({
         {children}
       </Tag>
       {hint && !error && (
-        <div id={`${id}-hint`} style={{ fontSize: 12, lineHeight: 1.45, color: c.textFainter, marginTop: 6 }}>
+        <div id={`${id}-hint`} style={{ fontSize: fs.xs, lineHeight: 1.45, color: c.textFainter, marginTop: 6 }}>
           {hint}
         </div>
       )}
@@ -70,7 +70,7 @@ export function Field({
 export function ErrorSummary({ count, serverError }) {
   if (!count && !serverError) return null;
   return (
-    <div role="alert" style={{ border: `1px solid ${c.redBorder}`, background: c.redBg2, borderRadius: 11, padding: '12px 16px', marginBottom: 20, fontSize: 13.5, lineHeight: 1.5, color: c.redText }}>
+    <div role="alert" style={{ border: `1px solid ${c.redBorder}`, background: c.redBg2, borderRadius: 11, padding: '12px 16px', marginBottom: 20, fontSize: fs.base, lineHeight: 1.5, color: c.redText }}>
       {serverError || (count === 1
         ? 'Please fix the highlighted field.'
         : `Please fix the ${count} highlighted fields.`)}
@@ -106,7 +106,7 @@ export function ConsentCheck({ id, checked, onChange, onBlur, error }) {
           aria-describedby={error ? `${id}-error` : undefined}
           style={{ marginTop: 3, accentColor: c.orange, width: 16, height: 16, flex: 'none' }}
         />
-        <label htmlFor={id} style={{ fontSize: 13, lineHeight: 1.55, color: c.textMuted, cursor: 'pointer' }}>
+        <label htmlFor={id} style={{ fontSize: fs.sm, lineHeight: 1.55, color: c.textMuted, cursor: 'pointer' }}>
           I consent to being contacted about this request.
         </label>
       </div>
@@ -122,8 +122,8 @@ export function SubmitButton({ sending, children, sendingLabel = 'Sending…' })
       disabled={sending}
       style={{
         marginTop: 22, display: 'block', width: '100%', textAlign: 'center',
-        background: sending ? c.disabledBg : c.orange, color: sending ? c.disabledText : '#fff',
-        padding: 15, borderRadius: 9, fontSize: 15, fontWeight: 600,
+        background: sending ? c.disabledBg : c.orange, color: sending ? c.disabledText : c.surface,
+        padding: 15, borderRadius: 9, fontSize: fs.md, fontWeight: 600,
         transition: 'background .18s', cursor: sending ? 'default' : 'pointer',
       }}
       onMouseEnter={(e) => { if (!sending) e.currentTarget.style.background = c.orangeDark; }}
@@ -135,7 +135,7 @@ export function SubmitButton({ sending, children, sendingLabel = 'Sending…' })
 }
 
 export const formCard = {
-  background: '#fff',
+  background: c.surface,
   border: `1px solid ${c.sandLine}`,
   borderRadius: 16,
   padding: 34,

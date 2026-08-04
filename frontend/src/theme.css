@@ -1,0 +1,134 @@
+/* ---------------------------------------------------------------------------
+   The single definition of what this site looks like.
+
+   Twelve core colours, three typefaces, one type scale, one corner radius.
+   Everything else the design uses — every tint, border shade and on-dark text
+   colour — is MIXED FROM THOSE HERE, so changing a core value re-tints
+   everything that should follow it instead of leaving stale shades behind.
+
+   The values below are the defaults. Staff override the core ones from the
+   Django admin (Theme -> Theme); context/ThemeContext.jsx writes those onto
+   :root as inline custom properties, which beat this stylesheet, and the
+   color-mix() derivations below recompute from them automatically.
+
+   So: to change a colour permanently, edit the core value here. To try one
+   out, or to let staff change it without a deploy, edit it in the admin.
+   Never hardcode a hex in a component — add a token here instead.
+--------------------------------------------------------------------------- */
+
+:root {
+  /* == Core: the twelve knobs, mirrored by theming.models.ThemeSetting ======
+     "Deep Teal + Gold" — chosen over the original Navy + Ember for a regulated
+     money changer: teal reads as institutional trust, gold signals value, and
+     the parchment surface avoids the glare of a pure #FFFFFF background. See
+     ThemeSetting's field comments for the fuller rationale, including why
+     brand isn't a brighter gold (white button text needs to stay readable). */
+  --fx-brand: #A87B2C;        /* buttons, links, eyebrows, active underlines */
+  --fx-brand-dark: #8C6624;   /* hover/pressed state for the above */
+  --fx-accent: #DCB35F;       /* lighter brand tone, for eyebrows on dark panels */
+  --fx-ink: #0E3B3E;          /* headings, and dark hero section backgrounds */
+  --fx-ink-deep: #072A2C;     /* footer */
+  --fx-surface: #F7F2E7;      /* page and card background */
+  --fx-surface-alt: #EDE3CC;  /* alternating sections, form fields */
+  --fx-line: #DDD2B4;         /* default border on light backgrounds */
+  --fx-body-text: #3D4A4B;    /* paragraphs */
+  --fx-muted-text: #6B7877;   /* captions, help text, card descriptions */
+  --fx-success: #2E8B62;      /* rate up, submitted, WhatsApp */
+  --fx-danger: #B5482E;       /* rate down, validation errors */
+
+  /* == Typography ========================================================== */
+  --fx-font-sans: 'Instrument Sans', system-ui, sans-serif;
+  --fx-font-serif: 'Instrument Serif', serif;
+  --fx-font-mono: 'IBM Plex Mono', monospace;
+
+  /* One base size, everything else a fixed proportion of it — see
+     theming.models.ThemeSetting.css_variables, which is what actually computes
+     these in production. Kept in step by hand here as the pre-API default. */
+  --fx-text-2xs: 10px;     /* micro labels: PVT LTD, bottom-nav captions */
+  --fx-text-xs: 11.5px;    /* eyebrows, mono labels, badges */
+  --fx-text-sm: 12.5px;    /* captions, top bar, footnotes */
+  --fx-text-base: 14.5px;  /* UI text, card body, form labels */
+  --fx-text-md: 15.5px;    /* body copy, buttons, nav */
+  --fx-text-lg: 16.5px;    /* lead paragraphs */
+  --fx-text-xl: 18px;      /* card headings */
+  --fx-text-2xl: 20px;     /* section subheadings */
+  --fx-text-3xl: 26px;     /* large fixed headings */
+  --fx-text-h3: clamp(28px, 3vw, 42px);     /* sub-section heading */
+  --fx-text-h2: clamp(32px, 3.4vw, 48px);   /* section heading */
+  --fx-text-h1: clamp(34px, 4vw, 56px);     /* page heading */
+  --fx-text-hero: clamp(42px, 4.6vw, 68px); /* homepage hero only */
+
+  /* == Shape =============================================================== */
+  --fx-radius: 14px;
+
+  /* == Derived: mixed from the core above, never set independently ========= */
+
+  /* Brand family */
+  --fx-brand-darker: color-mix(in srgb, var(--fx-brand-dark) 94%, #000);
+  --fx-brand-tint: color-mix(in srgb, var(--fx-accent) 16%, var(--fx-surface));
+  --fx-brand-pale: color-mix(in srgb, var(--fx-accent) 28%, var(--fx-surface));
+  --fx-brand-border: color-mix(in srgb, var(--fx-brand) 22%, var(--fx-surface-alt));
+  --fx-brand-bg: color-mix(in srgb, var(--fx-brand) 6%, var(--fx-surface));
+
+  /* Ink family — headings and dark panels, warmed toward the body text colour */
+  --fx-ink-light: color-mix(in srgb, var(--fx-ink) 70%, var(--fx-body-text));
+  --fx-ink-mid: color-mix(in srgb, var(--fx-ink) 46%, var(--fx-body-text));
+
+  /* Text on light backgrounds, progressively fainter */
+  --fx-text-faint: color-mix(in srgb, var(--fx-surface) 12%, var(--fx-muted-text));
+  --fx-text-fainter: color-mix(in srgb, var(--fx-surface) 22%, var(--fx-muted-text));
+
+  /* Text on the dark ink panels, progressively brighter */
+  --fx-on-ink-faint: color-mix(in srgb, var(--fx-surface) 26%, var(--fx-muted-text));
+  --fx-on-ink-dim: color-mix(in srgb, var(--fx-surface) 34%, var(--fx-muted-text));
+  --fx-on-ink: color-mix(in srgb, var(--fx-surface) 46%, var(--fx-muted-text));
+  --fx-on-ink-mid: color-mix(in srgb, var(--fx-surface) 66%, var(--fx-muted-text));
+  --fx-on-ink-strong: color-mix(in srgb, var(--fx-surface) 76%, var(--fx-muted-text));
+  --fx-on-ink-link: color-mix(in srgb, var(--fx-surface) 90%, var(--fx-body-text));
+
+  /* Surfaces between white and the section tint */
+  --fx-surface-2: color-mix(in srgb, var(--fx-surface) 34%, var(--fx-surface-alt));
+  --fx-surface-3: color-mix(in srgb, var(--fx-surface-alt) 74%, var(--fx-line));
+  --fx-surface-4: color-mix(in srgb, var(--fx-surface-alt) 50%, var(--fx-line));
+
+  /* Borders, lighter and heavier than the default line */
+  --fx-line-soft: color-mix(in srgb, var(--fx-surface-alt) 46%, var(--fx-line));
+  --fx-line-softer: color-mix(in srgb, var(--fx-surface-alt) 30%, var(--fx-line));
+  --fx-line-strong: color-mix(in srgb, var(--fx-line) 96%, #000);
+  --fx-line-strongest: color-mix(in srgb, var(--fx-line) 90%, #000);
+
+  /* Decorative placeholder swatch (SitePhoto's empty state) */
+  --fx-swatch-text: color-mix(in srgb, var(--fx-line) 60%, #000);
+  --fx-disabled-text: color-mix(in srgb, var(--fx-line) 70%, #000);
+
+  /* Status: success */
+  --fx-success-light: color-mix(in srgb, var(--fx-surface) 26%, var(--fx-success));
+  --fx-success-text: color-mix(in srgb, var(--fx-success) 74%, #000);
+  --fx-success-text-2: color-mix(in srgb, var(--fx-body-text) 50%, var(--fx-success));
+  --fx-success-border: color-mix(in srgb, var(--fx-surface) 68%, var(--fx-success));
+  --fx-success-bg: color-mix(in srgb, var(--fx-surface) 90%, var(--fx-success));
+  --fx-success-bg-2: color-mix(in srgb, var(--fx-surface) 94%, var(--fx-success));
+
+  /* Status: danger */
+  --fx-danger-light: color-mix(in srgb, var(--fx-accent) 72%, var(--fx-danger));
+  --fx-danger-text: color-mix(in srgb, var(--fx-danger) 88%, #000);
+  --fx-danger-field: color-mix(in srgb, var(--fx-accent) 56%, var(--fx-danger));
+
+  /* Favourited (the star on the rates table). Its own colour rather than a
+     brand tint: it has to stay legible as "starred" even if the brand colour
+     moves somewhere gold-adjacent. */
+  --fx-favourite: #C9A227;
+  --fx-favourite-off: color-mix(in srgb, var(--fx-surface) 60%, var(--fx-muted-text));
+
+  /* WhatsApp's own brand green. Fixed, and deliberately not themeable: it is
+     someone else's trademark and the button is recognised by that exact colour.
+     Same reasoning as leaving the Western Union / MoneyGram logo slots for real
+     brand assets rather than generating placeholders for them. */
+  --fx-whatsapp: #25D366;
+
+  /* Translucent overlays. Not derived — these sit on top of whatever is behind
+     them, so they are alpha values rather than colours, and mixing a theme
+     colour in would defeat the point. */
+  --fx-on-ink-line: rgba(255, 255, 255, .12);
+  --fx-shadow-card: 0 24px 40px -28px rgba(11, 27, 51, .4);
+}

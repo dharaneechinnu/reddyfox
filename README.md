@@ -102,6 +102,17 @@ Everything is at **http://localhost:8000/admin/** :
 | Content → FAQ categories | Sidebar groupings on the `/faq` page |
 | Content → Enquiries | The team's inbox of website enquiries (see below) |
 | Content → Site settings | The WhatsApp number offered after an enquiry is sent |
+| Theme → Theme | The site's colours, fonts and text sizes — see below |
+
+### Theme — colours, fonts and text sizes
+
+One page controls how the whole site looks, with no deploy needed.
+
+- **Colours** — twelve of them, each with a colour picker. Every other shade the design uses is mixed from these automatically, so changing the brand colour also re-tints the pale orange behind the service icons, the button hover, and everything else that should follow it. A preview of the saved palette sits at the top of the section. Check contrast after a change: text has to stay readable on its background.
+- **Typefaces** — a font stack each for body, headings and the mono labels, plus the webfont URL that loads them. Pick fonts at [fonts.google.com](https://fonts.google.com), copy the URL out of its `@import` snippet, and set both together — naming a font without loading it silently falls back to a system face.
+- **Text size** — one base size scales every text size on the site together, and a separate heading multiplier makes headings bigger or smaller without touching body text. The section shows the resulting sizes rendered at their own size, so you can see what you're getting before you save.
+
+If this page is ever unreachable the site falls back to the design shipped in the code, so a mistake here can make the site look wrong but can never leave it unstyled.
 
 ### Enquiries — the team's inbox
 

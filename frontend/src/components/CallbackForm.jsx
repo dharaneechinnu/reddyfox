@@ -1,5 +1,5 @@
 import { useFx } from '../context/FxContext';
-import { c } from '../tokens';
+import { c, fs } from '../tokens';
 import { validatePhone, validateRequired } from '../validation';
 import { submitCallbackRequest } from '../api';
 import useLeadForm from '../hooks/useLeadForm';
@@ -68,7 +68,7 @@ export default function CallbackForm() {
       </div>
 
       <SubmitButton sending={f.sending} sendingLabel="Sending…">Get best price</SubmitButton>
-      <p style={{ margin: '10px 0 0', fontSize: 11.5, lineHeight: 1.5, color: c.textFainter, textAlign: 'center' }}>
+      <p style={{ margin: '10px 0 0', fontSize: fs.xs, lineHeight: 1.5, color: c.textFainter, textAlign: 'center' }}>
         Figures shown are approximate — we'll call with the exact price.
       </p>
     </form>

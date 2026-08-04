@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { c, fonts, wrap } from '../tokens';
+import { c, fs, fonts, wrap } from '../tokens';
 import useApi from '../hooks/useApi';
 import { fetchFaqs, fetchFaqCategories } from '../api';
 import FaqAccordion from '../components/FaqAccordion';
@@ -43,9 +43,9 @@ export default function Faq() {
   const catStyle = (isActive) => ({
     padding: '11px 15px',
     borderRadius: 9,
-    fontSize: 14.5,
+    fontSize: fs.base,
     fontWeight: 500,
-    color: isActive ? '#fff' : c.text,
+    color: isActive ? c.surface : c.text,
     background: isActive ? c.navy : 'transparent',
     cursor: 'pointer',
     transition: 'background .18s',
@@ -62,11 +62,11 @@ export default function Faq() {
       />
       <section style={{ background: c.navy, padding: '60px 0 72px' }}>
         <div style={wrap}>
-          <div style={{ font: `400 12.5px/1.4 ${fonts.mono}`, color: c.navyMuted, marginBottom: 22 }}>
+          <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.navyMuted, marginBottom: 22 }}>
             <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / FAQ
           </div>
-          <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: 'clamp(34px,4vw,54px)', lineHeight: 1.05, color: '#fff', margin: '0 0 14px' }}>Frequently asked questions</h1>
-          <p style={{ fontSize: 16.5, lineHeight: 1.6, color: c.onNavyText, margin: 0, maxWidth: 560 }}>Documents, limits, timings and buy-back — answered plainly.</p>
+          <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h1, lineHeight: 1.05, color: c.surface, margin: '0 0 14px' }}>Frequently asked questions</h1>
+          <p style={{ fontSize: fs.lg, lineHeight: 1.6, color: c.onNavyText, margin: 0, maxWidth: 560 }}>Documents, limits, timings and buy-back — answered plainly.</p>
         </div>
       </section>
       <section style={{ background: c.sand, padding: '64px 0 96px' }}>
@@ -95,12 +95,12 @@ export default function Faq() {
 
           <div>
             {loading && (
-              <div style={{ background: '#fff', border: `1px solid ${c.sandLine}`, borderRadius: 14, padding: 40, textAlign: 'center', color: c.textMuted }}>
+              <div style={{ background: c.surface, border: `1px solid ${c.sandLine}`, borderRadius: 14, padding: 40, textAlign: 'center', color: c.textMuted }}>
                 Loading questions…
               </div>
             )}
             {error && (
-              <div style={{ background: '#fff', border: `1px solid ${c.redBorder}`, borderRadius: 14, padding: 40, textAlign: 'center', color: c.redText }}>
+              <div style={{ background: c.surface, border: `1px solid ${c.redBorder}`, borderRadius: 14, padding: 40, textAlign: 'center', color: c.redText }}>
                 Couldn't load the questions: {error}
               </div>
             )}
@@ -114,8 +114,8 @@ export default function Faq() {
                   answerPadding="0 30px 26px"
                 />
                 <div style={{ background: c.cream, border: `1px solid ${c.sandLine}`, borderTop: 'none', borderRadius: '0 0 14px 14px', padding: 30, display: 'flex', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <span style={{ fontSize: 15, color: c.text }}>Still unanswered? The branch team replies within an hour.</span>
-                  <span onClick={() => navigate('/contact')} style={{ background: c.navy, color: '#fff', padding: '13px 22px', borderRadius: 9, fontSize: 14.5, fontWeight: 600, cursor: 'pointer' }}>Contact us</span>
+                  <span style={{ fontSize: fs.md, color: c.text }}>Still unanswered? The branch team replies within an hour.</span>
+                  <span onClick={() => navigate('/contact')} style={{ background: c.navy, color: c.surface, padding: '13px 22px', borderRadius: 9, fontSize: fs.base, fontWeight: 600, cursor: 'pointer' }}>Contact us</span>
                 </div>
               </>
             )}
