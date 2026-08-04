@@ -558,6 +558,31 @@ class SiteImage(models.Model):
         MONEY_TRANSFER_WESTERN_UNION = 'money-transfer_western-union', 'Money Transfer — Western Union logo'
         MONEY_TRANSFER_MONEYGRAM = 'money-transfer_moneygram', 'Money Transfer — MoneyGram logo'
 
+        # Service page "What you get" benefit cards. Money Transfer's two benefits already had
+        # slots above (real third-party logos, so no generated placeholder — see
+        # seed_site_images.NO_PLACEHOLDER); these give every other service's benefit cards the
+        # same per-card photo, seeded like every other slot.
+        BENEFIT_EXCHANGE_1 = 'benefit_exchange-1', 'Service page — Foreign Exchange — Buy and sell'
+        BENEFIT_EXCHANGE_2 = 'benefit_exchange-2', 'Service page — Foreign Exchange — As per RBI guidelines'
+        BENEFIT_EXCHANGE_3 = 'benefit_exchange-3', 'Service page — Foreign Exchange — Competitive rates'
+        BENEFIT_EXCHANGE_4 = 'benefit_exchange-4', 'Service page — Foreign Exchange — Cash limit'
+        BENEFIT_REMITTANCE_1 = 'benefit_remittance-1', 'Service page — Money Remittance — Outward remittance'
+        BENEFIT_REMITTANCE_2 = 'benefit_remittance-2', 'Service page — Money Remittance — Bank partnerships'
+        BENEFIT_REMITTANCE_3 = 'benefit_remittance-3', 'Service page — Money Remittance — Purpose-based'
+        BENEFIT_REMITTANCE_4 = 'benefit_remittance-4', 'Service page — Money Remittance — LRS limit'
+        BENEFIT_FOREX_CARD_1 = 'benefit_forex-card-1', 'Service page — Prepaid Forex Card — 15 currencies on one card'
+        BENEFIT_FOREX_CARD_2 = 'benefit_forex-card-2', 'Service page — Prepaid Forex Card — Three year validity'
+        BENEFIT_FOREX_CARD_3 = 'benefit_forex-card-3', 'Service page — Prepaid Forex Card — Where it works'
+        BENEFIT_FOREX_CARD_4 = 'benefit_forex-card-4', 'Service page — Prepaid Forex Card — Encash the balance'
+        BENEFIT_WIRE_TRANSFER_1 = 'benefit_wire-transfer-1', 'Service page — Drafts / TT / Swift Transfer — SWIFT transfer'
+        BENEFIT_WIRE_TRANSFER_2 = 'benefit_wire-transfer-2', 'Service page — Drafts / TT / Swift Transfer — Demand drafts'
+        BENEFIT_WIRE_TRANSFER_3 = 'benefit_wire-transfer-3', 'Service page — Drafts / TT / Swift Transfer — Handled at the counter'
+        BENEFIT_WIRE_TRANSFER_4 = 'benefit_wire-transfer-4', 'Service page — Drafts / TT / Swift Transfer — Payment modes'
+        BENEFIT_STUDENT_1 = 'benefit_student-services-1', 'Service page — Student Services — University tuition fees'
+        BENEFIT_STUDENT_2 = 'benefit_student-services-2', 'Service page — Student Services — Students maintenance'
+        BENEFIT_STUDENT_3 = 'benefit_student-services-3', 'Service page — Student Services — Accommodation fees'
+        BENEFIT_STUDENT_4 = 'benefit_student-services-4', 'Service page — Student Services — Under LRS'
+
     slot = models.CharField(
         max_length=40, choices=Slot.choices, unique=True,
         help_text='Which spot on the site this photo fills. Each slot can only be used once — '

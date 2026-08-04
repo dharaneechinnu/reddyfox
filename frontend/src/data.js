@@ -21,10 +21,10 @@ export const SERVICES = [
     body: 'We buy and sell foreign currencies and travelers cheques at competitive rates. It is the right place for both encashing and purchasing of foreign currencies and travelers cheques.',
     hero: 'Buy and sell foreign currency and travellers cheques at competitive rates.',
     benefits: [
-      ['Buy and sell', 'We handle both encashing and purchasing of foreign currencies and travellers cheques.'],
-      ['As per RBI guidelines', 'We undertake to buy and sell foreign currencies and en-cash travellers cheques as per RBI guidelines.'],
-      ['Competitive rates', 'Our rates are considered to be among the most competitive in the market.'],
-      ['Cash limit', 'You can buy forex up to ₹49,999 by cash. Above ₹50,000 must be paid by crossed cheque, demand draft or bank transfer (RTGS/NEFT).'],
+      ['Buy and sell', 'We handle both encashing and purchasing of foreign currencies and travellers cheques.', 'benefit_exchange-1'],
+      ['As per RBI guidelines', 'We undertake to buy and sell foreign currencies and en-cash travellers cheques as per RBI guidelines.', 'benefit_exchange-2'],
+      ['Competitive rates', 'Our rates are considered to be among the most competitive in the market.', 'benefit_exchange-3'],
+      ['Cash limit', 'You can buy forex up to ₹49,999 by cash. Above ₹50,000 must be paid by crossed cheque, demand draft or bank transfer (RTGS/NEFT).', 'benefit_exchange-4'],
     ],
     process: [
       ['Call for a quote', 'Ring the shop for the day’s rate on the currency you need.'],
@@ -55,10 +55,10 @@ export const SERVICES = [
     body: 'We specialize in providing the Money Remittance Services are Fast, Easy and Reliable money transfer services to our valuable customers. We offer complete outward forex remittance service in Chennai.',
     hero: 'Complete outward forex remittance service in Chennai.',
     benefits: [
-      ['Outward remittance', 'Complete outward forex remittance service handled in Chennai.'],
-      ['Bank partnerships', 'Delivered in partnership with banks and various exchange companies.'],
-      ['Purpose-based', 'Overseas education, family maintenance, immigration, medical treatment, conferences, seminars and trade fairs.'],
-      ['LRS limit', 'Up to USD 2,50,000 or equivalent per person per calendar year under the Liberalised Remittance Scheme.'],
+      ['Outward remittance', 'Complete outward forex remittance service handled in Chennai.', 'benefit_remittance-1'],
+      ['Bank partnerships', 'Delivered in partnership with banks and various exchange companies.', 'benefit_remittance-2'],
+      ['Purpose-based', 'Overseas education, family maintenance, immigration, medical treatment, conferences, seminars and trade fairs.', 'benefit_remittance-3'],
+      ['LRS limit', 'Up to USD 2,50,000 or equivalent per person per calendar year under the Liberalised Remittance Scheme.', 'benefit_remittance-4'],
     ],
     process: [
       ['Tell us the purpose', 'Education, family maintenance, medical treatment, immigration or business travel.'],
@@ -72,10 +72,10 @@ export const SERVICES = [
     body: 'A multi-currency travel card is a prepaid card in which you can load multiple currencies on one single card — useful for travel, study and business trips.',
     hero: 'One prepaid card, up to 15 currencies loaded together.',
     benefits: [
-      ['15 currencies on one card', 'You can load 15 currencies on your multi-currency travel card.'],
-      ['Three year validity', 'The validity period of the card is 3 years (subject to the card issued).'],
-      ['Where it works', 'The card is not valid in India, Nepal and Bhutan — it is for use abroad.'],
-      ['Encash the balance', 'Unused currency purchased through us can be encashed at the market rate on the day of exchange.'],
+      ['15 currencies on one card', 'You can load 15 currencies on your multi-currency travel card.', 'benefit_forex-card-1'],
+      ['Three year validity', 'The validity period of the card is 3 years (subject to the card issued).', 'benefit_forex-card-2'],
+      ['Where it works', 'The card is not valid in India, Nepal and Bhutan — it is for use abroad.', 'benefit_forex-card-3'],
+      ['Encash the balance', 'Unused currency purchased through us can be encashed at the market rate on the day of exchange.', 'benefit_forex-card-4'],
     ],
     process: [
       ['Apply at the shop', 'Bring your passport and travel documents.'],
@@ -90,10 +90,10 @@ export const SERVICES = [
     body: 'A wire transfer is an electronic funds transfer made from one individual or entity to another, through your bank online, at your local branch or through a forex dealer nearby.',
     hero: 'Wire transfers, telegraphic transfers, demand drafts and SWIFT.',
     benefits: [
-      ['SWIFT transfer', 'Electronic funds transfer to overseas beneficiaries.'],
-      ['Demand drafts', 'Demand drafts and telegraphic transfers arranged.'],
-      ['Handled at the counter', 'Arranged through a forex dealer rather than requiring you to deal with your bank directly.'],
-      ['Payment modes', 'Amounts above ₹50,000 by cheque, demand draft or bank transfer (RTGS/NEFT), per RBI rules.'],
+      ['SWIFT transfer', 'Electronic funds transfer to overseas beneficiaries.', 'benefit_wire-transfer-1'],
+      ['Demand drafts', 'Demand drafts and telegraphic transfers arranged.', 'benefit_wire-transfer-2'],
+      ['Handled at the counter', 'Arranged through a forex dealer rather than requiring you to deal with your bank directly.', 'benefit_wire-transfer-3'],
+      ['Payment modes', 'Amounts above ₹50,000 by cheque, demand draft or bank transfer (RTGS/NEFT), per RBI rules.', 'benefit_wire-transfer-4'],
     ],
     process: [
       ['Share beneficiary details', 'Bank name, account and SWIFT code of the receiving bank.'],
@@ -107,10 +107,10 @@ export const SERVICES = [
     body: 'Foreign university tuition fee payments, students maintenance and students accommodation fees — remitted for students going abroad and those already studying overseas.',
     hero: 'University fees, living costs and accommodation, remitted for students abroad.',
     benefits: [
-      ['University tuition fees', 'Foreign university tuition fee payments remitted directly.'],
-      ['Students maintenance', 'Recurring maintenance remittances for students studying overseas.'],
-      ['Accommodation fees', 'Students accommodation fees paid to the institution or landlord abroad.'],
-      ['Under LRS', 'Education remittances fall under the Liberalised Remittance Scheme annual limit.'],
+      ['University tuition fees', 'Foreign university tuition fee payments remitted directly.', 'benefit_student-services-1'],
+      ['Students maintenance', 'Recurring maintenance remittances for students studying overseas.', 'benefit_student-services-2'],
+      ['Accommodation fees', 'Students accommodation fees paid to the institution or landlord abroad.', 'benefit_student-services-3'],
+      ['Under LRS', 'Education remittances fall under the Liberalised Remittance Scheme annual limit.', 'benefit_student-services-4'],
     ],
     process: [
       ['Bring the invoice', 'University fee invoice or accommodation demand.'],
