@@ -17,19 +17,24 @@
 --------------------------------------------------------------------------- */
 
 :root {
-  /* == Core: the twelve knobs, mirrored by theming.models.ThemeSetting ====== */
-  --fx-brand: #E2571F;        /* buttons, links, eyebrows, active underlines */
-  --fx-brand-dark: #C4460F;   /* hover/pressed state for the above */
-  --fx-accent: #F0A07A;       /* lighter brand tone, for eyebrows on dark panels */
-  --fx-ink: #0B1B33;          /* headings, and dark hero section backgrounds */
-  --fx-ink-deep: #08152A;     /* footer */
-  --fx-surface: #FFFFFF;      /* page and card background */
-  --fx-surface-alt: #F8F7F5;  /* alternating sections, form fields */
-  --fx-line: #E7E4DF;         /* default border on light backgrounds */
-  --fx-body-text: #435066;    /* paragraphs */
-  --fx-muted-text: #6B7688;   /* captions, help text, card descriptions */
-  --fx-success: #2FA36B;      /* rate up, submitted, WhatsApp */
-  --fx-danger: #C0492C;       /* rate down, validation errors */
+  /* == Core: the twelve knobs, mirrored by theming.models.ThemeSetting ======
+     "Deep Teal + Gold" — chosen over the original Navy + Ember for a regulated
+     money changer: teal reads as institutional trust, gold signals value, and
+     the parchment surface avoids the glare of a pure #FFFFFF background. See
+     ThemeSetting's field comments for the fuller rationale, including why
+     brand isn't a brighter gold (white button text needs to stay readable). */
+  --fx-brand: #A87B2C;        /* buttons, links, eyebrows, active underlines */
+  --fx-brand-dark: #8C6624;   /* hover/pressed state for the above */
+  --fx-accent: #DCB35F;       /* lighter brand tone, for eyebrows on dark panels */
+  --fx-ink: #0E3B3E;          /* headings, and dark hero section backgrounds */
+  --fx-ink-deep: #072A2C;     /* footer */
+  --fx-surface: #F7F2E7;      /* page and card background */
+  --fx-surface-alt: #EDE3CC;  /* alternating sections, form fields */
+  --fx-line: #DDD2B4;         /* default border on light backgrounds */
+  --fx-body-text: #3D4A4B;    /* paragraphs */
+  --fx-muted-text: #6B7877;   /* captions, help text, card descriptions */
+  --fx-success: #2E8B62;      /* rate up, submitted, WhatsApp */
+  --fx-danger: #B5482E;       /* rate down, validation errors */
 
   /* == Typography ========================================================== */
   --fx-font-sans: 'Instrument Sans', system-ui, sans-serif;

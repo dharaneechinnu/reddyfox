@@ -40,52 +40,60 @@ class ThemeSetting(models.Model):
     """Singleton — one row, auto-created, never deleted."""
 
     # --- core palette ----------------------------------------------------
+    # "Deep Teal + Gold" — a heritage-bank palette chosen over the original Navy + Ember for a
+    # regulated money changer: teal reads as institutional trust, the gold accent signals value
+    # without looking gimmicky, and the parchment surface avoids the stark, screen-glare white
+    # of a pure #FFFFFF background. brand/brand_dark were picked so white button text clears
+    # ~3.8:1 contrast — matching the original orange's own real-world contrast rather than
+    # chasing textbook AA on a small bold label, since strict AA (4.5:1) pushed the gold into a
+    # dull brown. See docs/ (or the PR that introduced this) for the fuller rationale and the
+    # two alternatives that were not picked.
     brand = models.CharField(
-        max_length=7, default='#E2571F', validators=[HEX_COLOR],
+        max_length=7, default='#A87B2C', validators=[HEX_COLOR],
         help_text='Primary accent: buttons, links, eyebrow labels, active underlines.',
     )
     brand_dark = models.CharField(
-        max_length=7, default='#C4460F', validators=[HEX_COLOR],
+        max_length=7, default='#8C6624', validators=[HEX_COLOR],
         help_text='Hover/pressed state for anything using the brand colour. Should be a shade darker than it.',
     )
     accent = models.CharField(
-        max_length=7, default='#F0A07A', validators=[HEX_COLOR],
+        max_length=7, default='#DCB35F', validators=[HEX_COLOR],
         help_text='Lighter brand tone, used for eyebrow text on dark navy panels where the brand colour is too dim.',
     )
     ink = models.CharField(
-        max_length=7, default='#0B1B33', validators=[HEX_COLOR],
+        max_length=7, default='#0E3B3E', validators=[HEX_COLOR],
         help_text='Headings, and the background of the dark page-hero sections.',
     )
     ink_deep = models.CharField(
-        max_length=7, default='#08152A', validators=[HEX_COLOR],
+        max_length=7, default='#072A2C', validators=[HEX_COLOR],
         help_text='The footer background — a touch darker than the heading colour.',
     )
     surface = models.CharField(
-        max_length=7, default='#FFFFFF', validators=[HEX_COLOR],
+        max_length=7, default='#F7F2E7', validators=[HEX_COLOR],
         help_text='Page background and card background.',
     )
     surface_alt = models.CharField(
-        max_length=7, default='#F8F7F5', validators=[HEX_COLOR],
+        max_length=7, default='#EDE3CC', validators=[HEX_COLOR],
         help_text='The warm off-white used for alternating page sections and form fields.',
     )
     line = models.CharField(
-        max_length=7, default='#E7E4DF', validators=[HEX_COLOR],
+        max_length=7, default='#DDD2B4', validators=[HEX_COLOR],
         help_text='Default border/divider colour on light backgrounds.',
     )
     body_text = models.CharField(
-        max_length=7, default='#435066', validators=[HEX_COLOR],
+        max_length=7, default='#3D4A4B', validators=[HEX_COLOR],
         help_text='Paragraph text.',
     )
     muted_text = models.CharField(
-        max_length=7, default='#6B7688', validators=[HEX_COLOR],
+        max_length=7, default='#6B7877', validators=[HEX_COLOR],
         help_text='Secondary text: captions, help text, card descriptions.',
     )
     success = models.CharField(
-        max_length=7, default='#2FA36B', validators=[HEX_COLOR],
+        max_length=7, default='#2E8B62', validators=[HEX_COLOR],
         help_text='Rate moved up, form submitted, WhatsApp panel.',
     )
     danger = models.CharField(
-        max_length=7, default='#C0492C', validators=[HEX_COLOR],
+        max_length=7, default='#B5482E', validators=[HEX_COLOR],
         help_text='Rate moved down, validation errors.',
     )
 

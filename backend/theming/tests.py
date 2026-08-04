@@ -19,7 +19,7 @@ class SingletonTests(TestCase):
     def test_load_creates_the_one_row_with_defaults(self):
         theme = ThemeSetting.load()
         self.assertEqual(theme.pk, 1)
-        self.assertEqual(theme.brand, '#E2571F')
+        self.assertEqual(theme.brand, '#A87B2C')
         self.assertEqual(ThemeSetting.objects.count(), 1)
 
     def test_save_always_pins_pk_to_one(self):
@@ -35,13 +35,13 @@ class SingletonTests(TestCase):
 
 class HexValidationTests(TestCase):
     def test_six_and_three_digit_hex_are_both_accepted(self):
-        for value in ('#E2571F', '#e2571f', '#E51'):
+        for value in ('#A87B2C', '#a87b2c', '#E51'):
             ThemeSetting(brand=value).full_clean()  # must not raise
 
     def test_a_colour_that_is_not_a_hex_is_rejected(self):
         # These values are interpolated straight into a stylesheet, so anything the browser
         # would choke on has to fail here rather than silently producing an unstyled page.
-        for value in ('E2571F', 'orange', '#12345', 'rgb(1,2,3)', '#GGGGGG', ''):
+        for value in ('A87B2C', 'orange', '#12345', 'rgb(1,2,3)', '#GGGGGG', ''):
             with self.assertRaises(ValidationError, msg=f'{value!r} should have been rejected'):
                 ThemeSetting(brand=value).full_clean()
 
@@ -112,7 +112,7 @@ class ThemeApiTests(TestCase):
     def test_returns_variables_and_the_fonts_url(self):
         response = self.client.get(reverse('site-theme'))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['css_variables']['--fx-brand'], '#E2571F')
+        self.assertEqual(response.data['css_variables']['--fx-brand'], '#A87B2C')
         self.assertIn('Instrument+Sans', response.data['fonts_url'])
 
     def test_works_before_anyone_has_opened_the_admin(self):
@@ -121,7 +121,7 @@ class ThemeApiTests(TestCase):
         ThemeSetting.objects.all().delete()
         response = self.client.get(reverse('site-theme'))
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data['css_variables']['--fx-brand'], '#E2571F')
+        self.assertEqual(response.data['css_variables']['--fx-brand'], '#A87B2C')
 
     def test_an_admin_edit_shows_up_on_the_next_request(self):
         self.client.get(reverse('site-theme'))  # prime the cache
@@ -136,7 +136,7 @@ class ThemeApiTests(TestCase):
         # Written straight to the DB, so no post_save signal fires and no cache drop happens.
         ThemeSetting.objects.filter(pk=1).update(brand='#00FF00')
         response = self.client.get(reverse('site-theme'))
-        self.assertEqual(response.data['css_variables']['--fx-brand'], '#E2571F')
+        self.assertEqual(response.data['css_variables']['--fx-brand'], '#A87B2C')
 
 
 @PLAIN_STATIC
