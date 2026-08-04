@@ -90,17 +90,18 @@ export default function ServiceDetail() {
           <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: 'clamp(30px,3.2vw,44px)', lineHeight: 1.1, color: c.navy, margin: '0 0 40px' }}>What you get</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(280px,100%),1fr))', gap: 20 }}>
             {active.benefits.map(([title, body, logoSlot]) => (
-              <div key={title} style={{ border: `1px solid ${c.sandLine}`, borderRadius: 14, padding: 28 }}>
+              <div key={title} style={{ border: `1px solid ${c.sandLine}`, borderRadius: 14, overflow: 'hidden', padding: logoSlot ? 0 : 28 }}>
                 {logoSlot && (
                   <SitePhoto
                     slot={logoSlot}
                     placeholderLabel={title.toUpperCase()}
-                    style={{ width: 96, height: 48, marginBottom: 16, borderRadius: 8 }}
-                    imgFit="contain"
+                    style={{ height: 160, border: 'none', borderRadius: 0 }}
                   />
                 )}
-                <h3 style={{ fontSize: 17.5, fontWeight: 600, color: c.navy, margin: '0 0 10px' }}>{title}</h3>
-                <p style={{ fontSize: 14.8, lineHeight: 1.62, color: c.textMuted, margin: 0 }}>{body}</p>
+                <div style={logoSlot ? { padding: 28 } : undefined}>
+                  <h3 style={{ fontSize: 17.5, fontWeight: 600, color: c.navy, margin: '0 0 10px' }}>{title}</h3>
+                  <p style={{ fontSize: 14.8, lineHeight: 1.62, color: c.textMuted, margin: 0 }}>{body}</p>
+                </div>
               </div>
             ))}
           </div>
