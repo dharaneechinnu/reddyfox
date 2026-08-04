@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { NAV, SERVICES, FOOTER_COLS } from '../data';
 import { COMPANY } from '../company';
@@ -99,6 +99,24 @@ function MegaMenu({ open, onClose }) {
   );
 }
 
+// The static /favicon.svg in index.html is the fallback for crawlers/browsers that grab it
+// before any JS runs, and for as long as staff haven't uploaded a logo. Once the site_logo
+// SiteImage loads, the tab icon should match the header logo rather than staying stuck on the
+// old placeholder — same "the on-site upload wins as soon as it exists" rule as LogoMark below.
+function useFaviconFromLogo(logo) {
+  useEffect(() => {
+    if (!logo) return;
+    let el = document.head.querySelector('link[rel="icon"]');
+    if (!el) {
+      el = document.createElement('link');
+      el.setAttribute('rel', 'icon');
+      document.head.appendChild(el);
+    }
+    el.removeAttribute('type'); // the fallback declares image/svg+xml; an upload is JPEG/PNG/WebP
+    el.setAttribute('href', logo.url);
+  }, [logo]);
+}
+
 function LogoMark({ logo, size = 30 }) {
   if (logo) {
     return <img src={logo.url} alt={logo.alt_text} style={{ height: size + 14, width: 'auto', display: 'block' }} />;
@@ -112,6 +130,7 @@ function Header() {
   const nav = ratesPageOn ? NAV : NAV.filter(([, to]) => to !== '/rates');
   const { data: images } = useApi(loadSiteImages, {});
   const logo = images[LOGO_SLOT];
+  useFaviconFromLogo(logo);
   return (
     <div style={{ position: 'sticky', top: 0, zIndex: 60, background: 'rgba(255,255,255,.94)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${c.sandLine}` }}>
       <div style={{ ...wrap, padding: '16px 32px', display: 'flex', alignItems: 'center', gap: 36 }}>
