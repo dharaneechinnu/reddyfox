@@ -27,8 +27,9 @@ PLAIN_STATIC = override_settings(STORAGES={
 
 
 def _make_usd():
-    return Currency.objects.get_or_create(
-        code='USD', defaults=dict(name='US Dollar', country_code='US', buy_rate='83.0', sell_rate='84.0'),
+    return Currency.objects.update_or_create(
+        code='USD',
+        defaults=dict(name='US Dollar', country_code='US', buy_rate='83.0', sell_rate='84.0', is_visible=True),
     )[0]
 
 

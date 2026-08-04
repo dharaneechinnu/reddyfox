@@ -229,8 +229,9 @@ class CallbackTriggersTelegramAlertTests(TestCase):
 
         from rates.models import Currency
 
-        Currency.objects.get_or_create(
-            code='USD', defaults=dict(name='US Dollar', country_code='US', buy_rate='83.0', sell_rate='84.0'),
+        Currency.objects.update_or_create(
+            code='USD',
+            defaults=dict(name='US Dollar', country_code='US', buy_rate='83.0', sell_rate='84.0', is_visible=True),
         )
         client = APIClient()
         with patch('content.views.notify_team_telegram') as telegram_notify:

@@ -34,3 +34,10 @@ class Currency(models.Model):
 
     def __str__(self):
         return f'{self.code} — {self.name} ({self.get_rate_type_display()})'
+
+    def save(self, *args, **kwargs):
+        # Codes are looked up uppercase everywhere (validate_currency_code, the API's code
+        # lookup) — a stray lowercase entry from the admin would silently fail those lookups
+        # even though the row exists and is visible.
+        self.code = self.code.upper()
+        super().save(*args, **kwargs)

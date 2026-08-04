@@ -127,7 +127,7 @@ def validate_currency_code(value):
     code = str(value or '').strip().upper()
     if code == 'INR':
         return code  # the base currency, always valid even though it has no row
-    if not Currency.objects.filter(code=code, is_visible=True).exists():
+    if not Currency.objects.filter(code__iexact=code, is_visible=True).exists():
         raise serializers.ValidationError('We do not deal in that currency. Please pick one from the list.')
     return code
 

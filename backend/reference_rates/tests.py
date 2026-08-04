@@ -20,10 +20,13 @@ from .services import refresh_reference_rates
 
 
 def _currency(code='USD', sell_rate='84.0000', buy_rate='83.0000', **extra):
-    return Currency.objects.create(
-        code=code, name=code, country_code='US', rate_type=RateType.CASH,
-        buy_rate=buy_rate, sell_rate=sell_rate, **extra,
-    )
+    # update_or_create, not create — rates.0009_seed_specific_currencies already seeds a hidden,
+    # zero-rate row for several of these codes (USD, EUR, GBP, AED, ...) in every fresh database,
+    # test databases included, so a bare create() would collide with it.
+    defaults = dict(name=code, country_code='US', buy_rate=buy_rate, sell_rate=sell_rate, is_visible=True)
+    defaults.update(extra)
+    obj, _ = Currency.objects.update_or_create(code=code, rate_type=RateType.CASH, defaults=defaults)
+    return obj
 
 
 def _patch_providers(return_value):
@@ -58,6 +61,12 @@ class ReferenceRateSettingsSingletonTests(TestCase):
 
 
 class RefreshReferenceRatesServiceTests(TestCase):
+    def setUp(self):
+        # rates.0009_seed_specific_currencies seeds several codes (USD, EUR, GBP, ...) into every
+        # fresh database, test databases included — this class asserts on exactly which codes
+        # were fetched/missing, so it needs a clean slate rather than that baseline.
+        Currency.objects.all().delete()
+
     def test_passes_the_configured_primary_provider_through(self):
         _currency('USD')
         settings_obj = ReferenceRateSettings.load()
