@@ -22,13 +22,13 @@ export default function Services() {
           <p style={{ fontSize: fs.lg, lineHeight: 1.6, color: c.onNavyText, margin: 0, maxWidth: 600 }}>Retail counters, remittance desks and a corporate dealing room operating under the same authorisation.</p>
         </div>
       </section>
-      <section style={{ background: c.surface, padding: '72px 0 96px' }}>
+      <section style={{ background: c.sand, padding: '72px 0 96px' }}>
         <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 20 }}>
           {SERVICES.map((s) => (
             <div
               key={s.id}
               onClick={() => navigate(`/services/${s.id}`)}
-              style={{ border: `1px solid ${c.sandLine}`, borderRadius: 14, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow .22s,transform .22s' }}
+              style={{ background: c.surface, border: `1px solid ${c.sandLine}`, borderRadius: 14, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow .22s,transform .22s' }}
               onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 24px 40px -28px rgba(11,27,51,.4)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
             >

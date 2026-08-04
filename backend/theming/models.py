@@ -165,6 +165,20 @@ class ThemeSetting(models.Model):
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
 
+    def reset_to_defaults(self):
+        """Overwrite every field with the model's own default — the shipped palette, type
+        scale and fonts documented above. Used by the admin's "Reset to default palette"
+        action, so a staff experiment gone wrong is always one click from the known-good
+        starting point. Skips the pk and the auto-updated timestamp; picks up any field added
+        to the model later automatically, since it reads defaults off the field, not a
+        hardcoded list that could drift from them.
+        """
+        for field in self._meta.fields:
+            if field.name in ('id', 'updated_at'):
+                continue
+            setattr(self, field.name, field.get_default())
+        self.save()
+
     # --- what the frontend actually consumes -----------------------------
     @property
     def css_variables(self):

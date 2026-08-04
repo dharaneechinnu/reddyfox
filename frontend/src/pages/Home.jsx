@@ -205,7 +205,7 @@ export default function Home() {
       </section>
       )}
 
-      <section style={{ background: c.surface, padding: '96px 0' }}>
+      <section style={{ background: c.sand, padding: '96px 0' }}>
         <div style={wrap}>
           <p style={eyebrow}>What we do</p>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 40, flexWrap: 'wrap', marginBottom: 44 }}>

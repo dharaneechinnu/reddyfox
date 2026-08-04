@@ -33,6 +33,30 @@ class SingletonTests(TestCase):
         self.assertEqual(ThemeSetting.objects.count(), 1)
 
 
+class ResetToDefaultsTests(TestCase):
+    def test_overwrites_every_field_with_the_model_default(self):
+        theme = ThemeSetting.load()
+        theme.brand = '#123456'
+        theme.surface = '#000000'
+        theme.base_font_size = Decimal('20')
+        theme.font_serif = "'Comic Sans MS', cursive"
+        theme.save()
+
+        theme.reset_to_defaults()
+
+        theme.refresh_from_db()
+        self.assertEqual(theme.brand, '#A87B2C')
+        self.assertEqual(theme.surface, '#F7F2E7')
+        self.assertEqual(theme.base_font_size, Decimal('14.5'))
+        self.assertEqual(theme.font_serif, "'Instrument Serif', serif")
+
+    def test_does_not_change_the_primary_key(self):
+        theme = ThemeSetting.load()
+        theme.reset_to_defaults()
+        self.assertEqual(theme.pk, 1)
+        self.assertEqual(ThemeSetting.objects.count(), 1)
+
+
 class HexValidationTests(TestCase):
     def test_six_and_three_digit_hex_are_both_accepted(self):
         for value in ('#A87B2C', '#a87b2c', '#E51'):
@@ -164,3 +188,17 @@ class ThemeAdminTests(TestCase):
         ThemeSetting.load()
         self.client.post('/admin/theming/themesetting/1/delete/', {'post': 'yes'})
         self.assertEqual(ThemeSetting.objects.count(), 1)
+
+    def test_reset_action_restores_the_default_palette(self):
+        theme = ThemeSetting.load()
+        theme.brand = '#123456'
+        theme.save()
+
+        response = self.client.post('/admin/theming/themesetting/', {
+            'action': 'reset_to_defaults',
+            '_selected_action': [str(theme.pk)],
+        }, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        theme.refresh_from_db()
+        self.assertEqual(theme.brand, '#A87B2C')

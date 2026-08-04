@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.utils.html import format_html, format_html_join
 
 from .models import ThemeSetting
@@ -48,6 +48,7 @@ class ThemeSettingAdmin(admin.ModelAdmin):
     """Singleton — one row, auto-created, never deleted."""
 
     form = ThemeSettingForm
+    actions = ['reset_to_defaults']
     readonly_fields = ('updated_at', 'palette_preview', 'type_scale_preview')
     fieldsets = (
         ('Colours', {
@@ -89,6 +90,15 @@ class ThemeSettingAdmin(admin.ModelAdmin):
         # land straight on the edit form.
         ThemeSetting.load()
         return super().changelist_view(request, extra_context)
+
+    @admin.action(description='Reset to default palette')
+    def reset_to_defaults(self, request, queryset):
+        """Overwrites the one row with the shipped defaults — colours, fonts, type scale and
+        radius, all of it. There's only ever one row, so which rows are ticked doesn't matter;
+        the action exists on the changelist because that's where Django puts bulk actions, not
+        because a selection means anything here."""
+        ThemeSetting.load().reset_to_defaults()
+        self.message_user(request, 'Theme reset to the default palette.', level=messages.SUCCESS)
 
     @admin.display(description='Current palette')
     def palette_preview(self, obj):
