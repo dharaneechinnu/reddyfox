@@ -1,8 +1,15 @@
 /**
  * Static site content for Reddy Forex Private Limited.
  *
- * SOURCE OF TRUTH: everything here is taken from the live reddyforex.com
- * (index.html, about-us.html, contact.html, faq.html), scraped July 2026.
+ * SOURCE OF TRUTH: originally scraped from the live reddyforex.com
+ * (index.html, about-us.html, contact.html, faq.html) in July 2026. The
+ * `exchange`, `money-transfer` and `forex-card` service entries were rewritten
+ * in August 2026 from official copy supplied directly by Reddy Forex
+ * (Word documents: currency exchange, Western Union/money transfer, forex
+ * card, plus company-wide "Why Choose Reddy Forex" copy) — a more current and
+ * authoritative source than the original scrape. `remittance`, `wire-transfer`
+ * and `student-services` still reflect the original scrape; no new source
+ * material has been supplied for those three yet.
  *
  * Rules for editing this file:
  *  - Do NOT invent licence numbers, certifications, branch counts, customer
@@ -16,36 +23,38 @@
 export const SERVICES = [
   {
     id: 'exchange', tag: '01', title: 'Foreign Exchange',
-    short: 'Buying and selling foreign currency',
-    // site copy
-    body: 'We buy and sell foreign currencies and travelers cheques at competitive rates. It is the right place for both encashing and purchasing of foreign currencies and travelers cheques.',
-    hero: 'Buy and sell foreign currency and travellers cheques at competitive rates.',
+    short: 'Buying and selling foreign currency, with same-day home delivery available.',
+    body: 'We buy and sell foreign currencies at competitive rates, fully compliant with RBI regulations — with same-day home delivery available so you don’t need to visit the counter in person.',
+    hero: 'Simple, secure and trusted foreign currency exchange — buy and sell major currencies at competitive rates, fully RBI-compliant, with same-day home delivery available.',
     benefits: [
-      ['Buy and sell', 'We handle both encashing and purchasing of foreign currencies and travellers cheques.', 'benefit_exchange-1'],
-      ['As per RBI guidelines', 'We undertake to buy and sell foreign currencies and en-cash travellers cheques as per RBI guidelines.', 'benefit_exchange-2'],
-      ['Competitive rates', 'Our rates are considered to be among the most competitive in the market.', 'benefit_exchange-3'],
-      ['Cash limit', 'You can buy forex up to ₹49,999 by cash. Above ₹50,000 must be paid by crossed cheque, demand draft or bank transfer (RTGS/NEFT).', 'benefit_exchange-4'],
+      ['Buy and sell', 'Hassle-free buying and selling of major foreign currencies — purchase for international travel, education, business or medical purposes, plus encashment of unused foreign currency after your trip, with assistance from experienced forex professionals.', 'benefit_exchange-1'],
+      ['RBI authorised and fully compliant', 'As an RBI Authorised Money Changer, every transaction is carried out in accordance with the latest Reserve Bank of India guidelines — secure, legally compliant, with proper documentation and verification and transparent procedures throughout.', 'benefit_exchange-2'],
+      ['Competitive exchange rates', 'Fair, transparent, market-driven exchange rates with no hidden charges — strong value for travellers, students and businesses.', 'benefit_exchange-3'],
+      ['Cash limit', 'Forex purchases up to ₹49,999 can be made in cash. Amounts of ₹50,000 and above must be completed through approved banking channels — crossed cheque, demand draft, NEFT or RTGS — in accordance with RBI guidelines. Our team guides you through the payment process.', 'benefit_exchange-4'],
+      ['Same-day home delivery', 'Same-day home delivery is available for your foreign currency — no need to visit the counter in person.', 'benefit_exchange-5'],
     ],
     process: [
-      ['Call for a quote', 'Ring the shop for the day’s rate on the currency you need.'],
-      ['Bring your documents', 'Passport and travel documents, plus payment as per the RBI cash limit.'],
-      ['Collect at the counter', 'Counted at the counter at our T. Nagar shop.'],
+      ['Contact us for today’s rate', 'Call or visit Reddy Forex to check the latest exchange rate for the currency you need. Our team can also answer questions on documentation, payment methods and RBI regulations before you visit.'],
+      ['Visit our branch with your documents', 'Bring your passport and travel documents, plus payment as per the RBI cash limit. Our specialists verify your documents and explain the applicable guidelines.'],
+      ['Receive your foreign currency', 'Once your documents and payment are verified, your foreign currency is counted and handed over securely at our T. Nagar, Chennai branch — or choose same-day home delivery instead.'],
     ],
   },
   {
     id: 'money-transfer', tag: '02', title: 'Money Transfer',
-    short: 'Western Union, MoneyGram',
-    // site copy (Western Union section)
-    body: 'We provide a secure way to send and receive money to and from your loved ones worldwide. We offer a quick, convenient and easy way to transfer your money worldwide.',
-    hero: 'Send and receive money worldwide through Western Union and MoneyGram.',
+    short: 'Western Union, MoneyGram — with same-day home delivery available.',
+    body: 'We provide a secure way to send and receive money to and from your loved ones worldwide through Western Union and MoneyGram, with same-day home delivery available.',
+    hero: 'Fast, secure and simple money transfers through our partnership with Western Union and MoneyGram — complete your transfer in three easy steps, with same-day home delivery available.',
     benefits: [
-      ['Western Union', 'Receive money from anywhere with the Western Union transfer service.', 'money-transfer_western-union'],
-      ['MoneyGram', 'Send and receive international transfers through MoneyGram.', 'money-transfer_moneygram'],
+      ['Western Union', 'Send money internationally or receive a Western Union transfer — our forex specialists guide you through the available options, transfer limits and applicable regulations.', 'money-transfer_western-union'],
+      ['MoneyGram', 'Send and receive international transfers through MoneyGram, processed securely at our counter.', 'money-transfer_moneygram'],
+      ['Valid ID required', 'A valid government photo ID — passport, Aadhaar card, PAN card, driving licence or voter ID — is required for every transaction, in compliance with RBI guidelines and international financial regulations. Additional documentation may be required depending on the transaction.', 'benefit_money-transfer-1'],
+      ['Cash limit', 'You can pay up to ₹49,999 in cash for a money transfer. Amounts of ₹50,000 and above must be paid by crossed cheque, demand draft or bank transfer (RTGS/NEFT), in accordance with RBI guidelines.', 'benefit_money-transfer-2'],
+      ['Same-day home delivery', 'Same-day home delivery is available — no need to visit the counter in person.', 'benefit_money-transfer-3'],
     ],
     process: [
-      ['Choose your service', 'Tell us which network the sender used, or which you want to send by.'],
-      ['Bring valid ID', 'Government photo ID as required for the transfer.'],
-      ['Collect or send', 'Completed at the counter, in partnership with banks.'],
+      ['Choose your service', 'Visit our branch and let our forex specialists know whether you’d like to send money internationally or receive a transfer — we’ll explain the requirements and help you choose the right option.'],
+      ['Bring valid identification', 'Present a valid government-issued photo ID along with any supporting documents applicable to your transaction, as required under RBI guidelines.'],
+      ['Complete your transaction', 'We verify your documents and process your transaction securely. Sending: complete the transfer form, provide recipient details, pay the amount and charges, and receive your receipt and reference number. Receiving: present your ID and the Money Transfer Control Number (MTCN) if available.'],
     ],
   },
   {
@@ -68,19 +77,20 @@ export const SERVICES = [
   },
   {
     id: 'forex-card', tag: '04', title: 'Prepaid Foreign Currency Card',
-    short: 'Multi-currency travel card',
-    body: 'A multi-currency travel card is a prepaid card in which you can load multiple currencies on one single card — useful for travel, study and business trips.',
-    hero: 'One prepaid card, up to 15 currencies loaded together.',
+    short: 'Multi-currency travel card, with same-day home delivery available.',
+    body: 'A multi-currency travel card is a prepaid card in which you can load multiple currencies on one single card — useful for travel, study and business trips, with same-day home delivery available.',
+    hero: 'Everything you need for hassle-free international travel — load up to 15 currencies onto one prepaid card, valid for three years, with same-day home delivery available.',
     benefits: [
-      ['15 currencies on one card', 'You can load 15 currencies on your multi-currency travel card.', 'benefit_forex-card-1'],
-      ['Three year validity', 'The validity period of the card is 3 years (subject to the card issued).', 'benefit_forex-card-2'],
-      ['Where it works', 'The card is not valid in India, Nepal and Bhutan — it is for use abroad.', 'benefit_forex-card-3'],
-      ['Encash the balance', 'Unused currency purchased through us can be encashed at the market rate on the day of exchange.', 'benefit_forex-card-4'],
+      ['15 currencies on one card', 'Load up to 15 major international currencies onto a single travel card — manage multiple currencies with one card, avoid repeated currency exchanges during your trip, and reload easily whenever required.', 'benefit_forex-card-1'],
+      ['Three year validity', 'Valid for up to three years (subject to the card issuer’s terms and conditions), so the same card covers multiple trips — ideal for students, professionals and frequent international travellers.', 'benefit_forex-card-2'],
+      ['Where it works', 'Accepted at millions of merchant outlets, restaurants, hotels, shopping centres and ATMs across the globe wherever the supported card network operates. For international use only — not valid in India, Nepal or Bhutan, per RBI regulations.', 'benefit_forex-card-3'],
+      ['Encash the balance', 'Unused foreign currency remaining on your card after your trip can be encashed with us at the prevailing exchange rate, subject to applicable regulations and terms — transparent rates, with professional assistance throughout.', 'benefit_forex-card-4'],
+      ['Same-day home delivery', 'Same-day home delivery is available for your prepaid forex card — no need to visit the counter in person.', 'benefit_forex-card-5'],
     ],
     process: [
-      ['Apply at the shop', 'Bring your passport and travel documents.'],
-      ['Load your currencies', 'Choose which of the 15 currencies to load and how much.'],
-      ['Travel', 'Use the card abroad; encash any balance with us on return.'],
+      ['Apply at the shop', 'Visit us with your passport, valid visa (if applicable), confirmed travel ticket and any other documents required under RBI guidelines. Our executives verify your documents and explain the card features and usage.'],
+      ['Load your currencies', 'Choose from up to 15 supported foreign currencies and the amount you wish to load. We offer competitive exchange rates and load your card securely before your departure.'],
+      ['Travel with confidence', 'Use your card abroad for shopping, dining, hotel bookings, online payments and ATM withdrawals. After returning to India, visit us to encash any remaining balance, subject to applicable terms and exchange rates.'],
     ],
   },
   {
