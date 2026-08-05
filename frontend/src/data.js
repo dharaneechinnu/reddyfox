@@ -132,7 +132,7 @@ export const SERVICES = [
 
 export const NAV = [
   ['Home', '/'], ['Exchange rates', '/rates'], ['Services', '/services'],
-  ['About', '/about'], ['Contact', '/contact'],
+  ['About', '/about'], ['FAQ', '/faq'], ['Contact', '/contact'],
 ];
 
 // FAQs and testimonials come from the backend (Wagtail Snippets -> see

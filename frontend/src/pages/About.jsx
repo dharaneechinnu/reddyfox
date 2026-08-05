@@ -15,7 +15,7 @@ export default function About() {
         description={`${COMPANY.yearsExperience} years as an RBI-authorised money changer in T. Nagar, Chennai — serving private and corporate clients since ${COMPANY.since}.`}
         path="/about"
       />
-      <section style={{ background: c.navy, padding: '60px 0 88px' }}>
+      <section style={{ background: c.orange, padding: '60px 0 88px' }}>
         <div style={wrap}>
           <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.navyMuted, marginBottom: 22 }}>
             <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / About
@@ -31,7 +31,7 @@ export default function About() {
         </div>
       </section>
 
-      <section style={{ background: c.surface, padding: '88px 0' }}>
+      <section style={{ background: c.sand, padding: '88px 0' }}>
         <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 56, alignItems: 'start' }}>
           <SitePhoto
             slot="about_counter"
@@ -95,7 +95,7 @@ export default function About() {
         </div>
       </section>
 
-      <section style={{ background: c.surface, padding: '88px 0' }}>
+      <section style={{ background: c.sand, padding: '88px 0' }}>
         <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 56, alignItems: 'center' }}>
           <div>
             <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.orange, margin: '0 0 14px' }}>Our team</p>
@@ -121,7 +121,7 @@ export default function About() {
         </div>
       </section>
 
-      <section style={{ background: c.navy, padding: '80px 0' }}>
+      <section style={{ background: c.sand, borderTop: `1px solid ${c.sandLine}`, padding: '80px 0' }}>
         <div style={wrap}>
           <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.accent, margin: '0 0 32px' }}>Compliance</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(260px,100%),1fr))', gap: 18 }}>

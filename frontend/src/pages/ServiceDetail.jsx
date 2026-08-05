@@ -25,7 +25,7 @@ export default function ServiceDetail() {
         description={active.hero || active.short}
         path={`/services/${active.id}`}
       />
-      <section style={{ background: c.navy, padding: '60px 0 76px' }}>
+      <section style={{ background: c.orange, padding: '60px 0 76px' }}>
         <div style={wrap}>
           <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.navyMuted, marginBottom: 22 }}>
             <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / <Link to="/services" style={{ cursor: 'pointer', color: c.onNavyText }}>Services</Link> / {active.title}
@@ -136,7 +136,7 @@ export default function ServiceDetail() {
       <section style={{ background: c.orange, padding: '72px 0' }}>
         <div style={{ ...wrap, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
           <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h3, lineHeight: 1.12, color: c.surface, margin: 0, maxWidth: 620 }}>Speak to a dealer about {active.title}</h2>
-          <span onClick={() => navigate('/contact')} style={{ background: c.navy, color: c.surface, padding: '16px 28px', borderRadius: 9, fontSize: fs.md, fontWeight: 600, cursor: 'pointer' }}>Start an enquiry</span>
+          <span onClick={() => navigate('/contact')} style={{ background: c.orange, color: c.surface, padding: '16px 28px', borderRadius: 9, fontSize: fs.md, fontWeight: 600, cursor: 'pointer' }}>Start an enquiry</span>
         </div>
       </section>
     </div>

@@ -4,6 +4,7 @@ import { c, fs, fonts, wrap } from '../tokens';
 import RequestForm from '../components/RequestForm';
 import Seo from '../components/Seo';
 import { useCompanyInfo } from '../context/CompanyInfoContext';
+import OpenStatus, { HoursTable } from '../components/OpenStatus';
 
 export default function Contact() {
   const { contact } = useCompanyInfo();
@@ -20,7 +21,7 @@ export default function Contact() {
         description={`Visit Reddy Forex at ${contact.addressOneLine}, or call ${contact.mobiles[0].display} for today's rate.`}
         path="/contact"
       />
-      <section style={{ background: c.navy, padding: '60px 0 72px' }}>
+      <section style={{ background: c.orange, padding: '60px 0 72px' }}>
         <div style={wrap}>
           <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.navyMuted, marginBottom: 22 }}>
             <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / Contact
@@ -43,26 +44,39 @@ export default function Contact() {
                 {contact.addressLines.map((l) => <span key={l}>{l}<br /></span>)}
                 <span style={{ color: c.navyMuted2 }}>{contact.addressNote}</span>
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, borderTop: '1px solid rgba(255,255,255,.14)', paddingTop: 22, fontSize: fs.md }}>
+              {/* Opening hours, with today's line marked and a live open/closed
+                  badge — the same block as the homepage and the footer, so the
+                  hours are never phrased two different ways. */}
+              <div style={{ borderTop: `1px solid ${c.navyLine}`, paddingTop: 22, marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 10 }}>
+                  <span style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, letterSpacing: '.16em', textTransform: 'uppercase', color: c.accent }}>Opening hours</span>
+                  <OpenStatus tone="ink" />
+                </div>
+                <HoursTable tone="ink" />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, borderTop: `1px solid ${c.navyLine}`, paddingTop: 22, fontSize: fs.md }}>
+                {/* One block link per number, so each is a row-sized tap target
+                    on a phone rather than the height of its own digits. */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start' }}>
                   <span style={{ color: c.navyMuted2, flex: 'none' }}>Phone</span>
-                  <span style={{ fontFamily: fonts.mono, textAlign: 'right' }}>
+                  <span style={{ fontFamily: fonts.mono, textAlign: 'right', display: 'flex', flexDirection: 'column' }}>
                     {contact.mobiles.map((m) => (
-                      <span key={m.tel}><a href={`tel:${m.tel}`} style={{ color: c.surface }}>{m.display}</a><br /></span>
+                      <a key={m.tel} href={`tel:${m.tel}`} style={{ padding: '4px 0', color: c.surface }}>{m.display}</a>
                     ))}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start' }}>
                   <span style={{ color: c.navyMuted2, flex: 'none' }}>Landline</span>
-                  <span style={{ fontFamily: fonts.mono, textAlign: 'right' }}>
+                  <span style={{ fontFamily: fonts.mono, textAlign: 'right', display: 'flex', flexDirection: 'column' }}>
                     {contact.landlines.map((l) => (
-                      <span key={l.tel}><a href={`tel:${l.tel}`} style={{ color: c.surface }}>{l.display}</a><br /></span>
+                      <a key={l.tel} href={`tel:${l.tel}`} style={{ padding: '4px 0', color: c.surface }}>{l.display}</a>
                     ))}
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
                   <span style={{ color: c.navyMuted2 }}>Email</span>
-                  <a href={`mailto:${contact.email}`}>{contact.email}</a>
+                  <a href={`mailto:${contact.email}`} style={{ color: c.surface }}>{contact.email}</a>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
                   <span style={{ color: c.navyMuted2 }}>Website</span>
@@ -79,7 +93,7 @@ export default function Contact() {
             >
               <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(11,27,51,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(11,27,51,.06) 1px,transparent 1px)', backgroundSize: '48px 48px' }} />
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                <span style={{ width: 16, height: 16, borderRadius: '50%', background: c.orange, border: '3px solid ${c.surface}', boxShadow: '0 4px 10px rgba(11,27,51,.3)' }} />
+                <span style={{ width: 16, height: 16, borderRadius: '50%', background: c.orange, border: `3px solid ${c.surface}`, boxShadow: '0 4px 10px rgba(11,27,51,.3)' }} />
                 <span style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.xs, lineHeight: 1.7, letterSpacing: '.14em', color: c.mapDot, textAlign: 'center' }}>
                   CHALLA MALL, T. NAGAR<br />Open in Google Maps →
                 </span>

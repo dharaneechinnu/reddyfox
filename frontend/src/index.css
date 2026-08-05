@@ -9,7 +9,9 @@ html {
 
 body {
   margin: 0;
-  background: var(--fx-surface);
+  /* The page ground is the cream, not the card white — see theme.css. Cards use
+     --fx-surface on top of this, which is what makes them read as raised. */
+  background: var(--fx-surface-alt);
   color: var(--fx-ink);
   font-family: var(--fx-font-sans);
   font-size: var(--fx-text-base);
@@ -65,17 +67,335 @@ button {
   50% { opacity: .35; }
 }
 
+/* ---- The submitted tick (SuccessTick.jsx) ---------------------------------
+   Ring sweeps, then the check writes itself, then one ring expands and fades.
+   Drawn with stroke-dashoffset: 151 is the circumference of the r=24 ring and
+   40 comfortably covers the check path, so each starts fully hidden. */
+@keyframes fx-tick-ring {
+  from { stroke-dashoffset: 151; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fx-tick-check {
+  from { stroke-dashoffset: 40; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fx-tick-ripple {
+  from { opacity: .5; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.45); }
+}
+
+.fx-tick-ring {
+  stroke-dasharray: 151;
+  stroke-dashoffset: 151;
+  animation: fx-tick-ring .5s cubic-bezier(.65, 0, .35, 1) forwards;
+}
+
+.fx-tick-check {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: fx-tick-check .34s cubic-bezier(.65, 0, .35, 1) .4s forwards;
+}
+
+.fx-tick-ripple {
+  opacity: 0;
+  animation: fx-tick-ripple .7s ease-out .55s;
+}
+
+/* The live-rate marquee in the hero, and the "we're open" dot. Classes rather
+   than inline animations so the reduced-motion block below can switch them off. */
+.fx-ticker-track {
+  animation: fx-ticker 38s linear infinite;
+}
+
+.fx-dot-pulse {
+  animation: fx-pulse 2.4s ease-in-out infinite;
+}
+
+/* ---- Hero entrance --------------------------------------------------------
+   One orchestrated page-load sequence on the homepage hero. The stagger is set
+   per element with --fx-delay rather than a class per step. */
+@keyframes fx-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+.fx-rise {
+  animation: fx-rise .62s cubic-bezier(.22, .61, .36, 1) both;
+  animation-delay: var(--fx-delay, 0s);
+}
+
+/* Cards are deliberately inert on hover. The service cards used to draw an
+   accent rule along their top edge; it was asked for and removed. A card that is
+   lighter than the ground it sits on already reads as a distinct object, and the
+   pointer cursor says it is clickable. */
+
+/* ---- The hero phone fan (HeroPhones.jsx) ---------------------------------
+   Three devices overlapping, the middle one upright and in front, the outer two
+   tilted away and dropped down. Negative margins do the overlap so the row
+   stays a normal flex layout and centres itself; z-index decides what sits on
+   top of what. The hero section clips its own overflow, so at narrow widths the
+   outer phones are trimmed at the panel edge rather than widening the page. */
+.fx-hero-phones {
+  display: flex;
+  /* Bottom-aligned: the outer phones are shorter, and lining their bases up with
+     the centre one is what reads as a fan rather than as three loose objects. */
+  align-items: flex-end;
+  justify-content: center;
+
+  /* One fixed geometry at every width. The fan is made to fit narrow screens by
+     zooming the whole thing (below), NOT by narrowing the frames: a narrower
+     frame keeps its text at full size, so the screens ran out of room and the
+     lists were cut off mid-item. Zoom scales the content with the device, which
+     is what looking at a phone from further away actually does.
+
+     --fx-phone-grow is how far a picked phone scales up. It rises as the fan
+     shrinks, because on a small screen picking one up is the only way to read it. */
+  --fx-phone-outer: 224px;
+  --fx-phone-centre: 264px;
+  --fx-phone-overlap: 78px;
+  --fx-phone-grow: 1.05;
+}
+
+.fx-phone--outer {
+  width: var(--fx-phone-outer);
+}
+
+.fx-phone--centre {
+  width: var(--fx-phone-centre);
+}
+
+/* The overlap that makes it a fan rather than a row. */
+.fx-hero-phones > :first-child {
+  margin-right: calc(-1 * var(--fx-phone-overlap));
+}
+
+.fx-hero-phones > :last-child {
+  margin-left: calc(-1 * var(--fx-phone-overlap));
+}
+
+/* Hovering, tapping or tabbing to a phone brings it forward — the transform and
+   opacity themselves are set in HeroPhones.jsx; this is only how they move. */
+.fx-phone {
+  transition: transform .32s cubic-bezier(.22, .61, .36, 1), opacity .28s ease, box-shadow .32s ease;
+}
+
+/* The whole phone is the target, so the default focus ring would trace a
+   rectangle around a rounded device. Follow the bezel instead. */
+.fx-phone:focus-visible {
+  outline: 2px solid var(--fx-accent);
+  outline-offset: 4px;
+  border-radius: 30px;
+}
+
+/* All three phones stay on screen at every width. They used to drop to just the
+   middle one below 1000px, which lost two thirds of what the fan is there to say.
+   The fan is 556px wide at full size and paints ~30px wider again, because the
+   tilted outer phones are rotated and rotation is not part of layout — the zoom
+   steps below leave room for that, or those outer edges clip.
+   `zoom` and not `transform: scale()` on purpose — zoom shrinks the layout box
+   too, so the fan stops reserving 556px of width and 540px of height it is no
+   longer using. Tapping a phone still enlarges it (--fx-phone-grow). */
+@media (max-width: 590px) {
+  .fx-hero-phones {
+    zoom: 0.8;
+    --fx-phone-grow: 1.12;
+  }
+}
+
+@media (max-width: 480px) {
+  .fx-hero-phones {
+    zoom: 0.66;
+    --fx-phone-grow: 1.2;
+  }
+}
+
+@media (max-width: 400px) {
+  .fx-hero-phones {
+    zoom: 0.55;
+    --fx-phone-grow: 1.3;
+  }
+}
+
+@media (max-width: 345px) {
+  .fx-hero-phones {
+    zoom: 0.48;
+    --fx-phone-grow: 1.35;
+  }
+}
+
+/* ---- The callback bar (CallbackBar.jsx) -----------------------------------
+   A band in the page at the foot of the hero, not a pinned overlay: it used to
+   be fixed to the window, which covered content and fought the mobile tab bar
+   for the bottom of the screen. Nothing here needs positioning any more — only
+   how the six columns fold up. */
+@media (max-width: 900px) {
+  /* The heading keeps its own row, the four fields go two-up, and the button
+     spans the full width underneath them. */
+  .fx-callback-row {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .fx-callback-label,
+  .fx-callback-row > *:last-child {
+    grid-column: 1 / -1 !important;
+  }
+
+  .fx-callback-row > *:last-child {
+    width: 100%;
+  }
+}
+
+/* ---- Footer layout --------------------------------------------------------
+   Four deliberate columns rather than auto-fit. Auto-fit fitted five tracks at
+   desktop width but the brand column needed more than its share, so the fifth
+   cell (shop info) wrapped onto a row of its own with three empty tracks beside
+   it, and its address plus five numbers stacked into a dozen lines. Shop info
+   now owns that second row outright and splits it: address left, numbers right. */
+.fx-footer-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.fx-footer-shop {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--fx-on-ink-line);
+  padding-top: clamp(28px, 3vw, 40px);
+}
+
+.fx-footer-shop-inner {
+  display: grid;
+  /* Four peer columns — address, mobile, landline, email — on the same tracks as
+     the row above, so the shop-info row fills the footer instead of leaving its
+     right half empty. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(28px, 3.4vw, 44px);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .fx-footer-grid,
+  .fx-footer-shop-inner {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .fx-footer-grid,
+  .fx-footer-shop-inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Header at phone width ------------------------------------------------
+   Logo, wordmark, "PVT LTD" and the CTA do not all fit across 390px. The
+   sub-wordmark goes and the button tightens; the logo mark and name stay. */
+@media (max-width: 560px) {
+  .fx-wordmark-sub {
+    display: none !important;
+  }
+
+  .fx-header-cta {
+    padding: 12px 16px !important;
+    font-size: var(--fx-text-base) !important;
+  }
+}
+
+/* ---- The three-step process (HowItWorks.jsx) -----------------------------
+   A dashed run between the cards, so the three read as one sequence rather
+   than three unrelated cards. Drawn on the gaps between them only, and only
+   while they are actually side by side. */
+@media (min-width: 1001px) {
+  .fx-step-card:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    /* Level with the middle of the 46px icon badge: 30px of card padding
+       above it (the clamp is at its maximum by this width) plus half of 46. */
+    top: 53px;
+    left: 100%;
+    width: clamp(16px, 2vw, 24px);
+    border-top: 2px dashed var(--fx-line-strong);
+  }
+}
+
+/* ---- Nav underline ------------------------------------------------------- */
+.fx-navlink {
+  position: relative;
+}
+
+.fx-navlink::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 2px;
+  background: var(--fx-brand);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .22s cubic-bezier(.22, .61, .36, 1);
+}
+
+.fx-navlink:hover::after,
+.fx-navlink[aria-current='page']::after {
+  transform: scaleX(1);
+}
+
+/* Keyboard users get the same affordances the pointer does. */
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--fx-brand);
+  outline-offset: 2px;
+}
+
+/* Anyone who has asked their system to calm motion down gets the finished
+   state, not the journey: the drawn tick still reads as "done" fully drawn. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .fx-tick-ring,
+  .fx-tick-check,
+  .fx-tick-ripple,
+  .fx-rise,
+  .fx-ticker-track,
+  .fx-dot-pulse {
+    animation: none !important;
+  }
+
+  .fx-tick-ring,
+  .fx-tick-check {
+    stroke-dashoffset: 0 !important;
+  }
+
+  .fx-tick-ripple {
+    display: none;
+  }
+
+  .fx-rise {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* The phone still comes forward when picked — it just arrives rather than
+     travelling, so the reveal keeps working without the movement. */
+  .fx-phone {
+    transition: none;
+  }
+}
+
 /* ---- Mobile navigation ---------------------------------------------- */
-/* Below this width the desktop header row (logo + horizontal nav links +
-   mega menu) gives way to a fixed bottom tab bar (MobileBottomNav.jsx) —
-   it doesn't fit, and hover-driven menus don't work on touch anyway. */
+/* Below this width the desktop header row (logo + horizontal nav links) gives
+   way to a fixed bottom tab bar (MobileBottomNav.jsx) — it doesn't fit. */
 .fx-bottomnav {
   display: none;
 }
 
 @media (max-width: 780px) {
+  /* The number stays reachable — it's in the status rail above and in the
+     bottom tab bar; the header just doesn't have room for it too. */
   .fx-nav-desktop,
-  .fx-header-rates-link {
+  .fx-header-phone {
     display: none !important;
   }
 
@@ -119,6 +439,54 @@ button {
      regulator line — drop it rather than let it crowd the phone number. */
   .fx-topbar-years {
     display: none;
+  }
+}
+
+/* ---- Homepage layout collapse -------------------------------------------
+   The homepage's asymmetric grids (hero board, service mosaic, why-us split,
+   visit block) all hold their proportions down to tablet width and then stack.
+   Written as breakpoints rather than auto-fit because the asymmetry is the
+   point — an auto-fitting hero would put the quote docket beside a headline
+   with no room for either. */
+@media (max-width: 1000px) {
+  .fx-hero-grid,
+  .fx-why-grid,
+  .fx-visit-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Two columns, and the lead card gives up its extra span: six equal cards
+     fill three rows exactly, where a featured card would leave an orphan. */
+  .fx-service-mosaic {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .fx-service-mosaic > *:first-child {
+    grid-column: span 1 !important;
+    grid-row: span 1 !important;
+    flex-direction: column !important;
+  }
+
+  .fx-service-mosaic > *:first-child > *:first-child {
+    flex: 0 0 auto !important;
+    min-height: 160px !important;
+  }
+
+  /* Why-us reads photo-then-text on one column; on two it was photo-left. */
+  .fx-why-grid > *:first-child {
+    min-height: 280px !important;
+  }
+}
+
+@media (max-width: 680px) {
+  .fx-service-mosaic {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Overlapping the hero's edge needs a card wide enough to carry it; at phone
+     width the strip sits below the board instead. */
+  .fx-stat-strip {
+    margin-top: 24px !important;
   }
 }
 

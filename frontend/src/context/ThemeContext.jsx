@@ -2,8 +2,24 @@ import { useEffect } from 'react';
 import useApi from '../hooks/useApi';
 import { fetchTheme } from '../api';
 
+/**
+ * Set VITE_USE_THEME_API=false to ignore the theme API and render in the palette
+ * and type scale compiled into theme.css.
+ *
+ * This exists for design previews. A preview build points at whatever backend
+ * has the content in it, and that backend's Theme row is whatever production is
+ * using — which it would then write onto :root, overriding the stylesheet and
+ * showing the old palette on a build meant to demonstrate a new one. Off is the
+ * same code path as "the theme request failed", which this component is already
+ * built to survive.
+ *
+ * Leave it unset everywhere else: production needs staff to be able to change
+ * the theme from the admin without a rebuild.
+ */
+const THEME_API_ENABLED = import.meta.env.VITE_USE_THEME_API !== 'false';
+
 // Module scope so useApi doesn't refetch on every render.
-const loadTheme = () => fetchTheme();
+const loadTheme = () => (THEME_API_ENABLED ? fetchTheme() : Promise.resolve(null));
 
 const FONT_LINK_ID = 'fx-fonts';
 

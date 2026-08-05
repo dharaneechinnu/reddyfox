@@ -40,6 +40,17 @@
     <meta name="twitter:title" content="Reddy Forex Private Limited — Foreign Currency Exchange in Chennai" />
     <meta name="twitter:description" content="RBI-authorised money changer in T. Nagar, Chennai since 2000. Buy and sell foreign currency, Western Union money transfer, forex cards and outward remittance at competitive rates." />
 
+    <!--
+      Business structured data for search results. Static, because it has to be
+      in the HTML for crawlers that don't run JavaScript (see
+      docs/seo-and-ai-discoverability.md).
+
+      openingHoursSpecification below must match the hours staff set in the
+      Django admin (Content -> Site settings -> Counter opening hours), which is
+      what the site itself renders — if the counter's hours change, change them
+      in both places. Sunday is absent because the shop is closed then: in
+      schema.org a closed day is stated by omission, not by an empty range.
+    -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -59,6 +70,14 @@
           "addressCountry": "IN"
         },
         "areaServed": "Chennai, Tamil Nadu, India",
+        "openingHoursSpecification": [
+          {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+            "opens": "09:30",
+            "closes": "19:00"
+          }
+        ],
         "sameAs": [
           "https://www.facebook.com/Reddy-Forex-Private-Limited-100909432036543",
           "https://x.com/ReddyForex",

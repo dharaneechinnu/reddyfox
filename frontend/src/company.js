@@ -46,6 +46,25 @@ export const CONTACT = {
   website: 'www.reddyforex.com',
 };
 
+/**
+ * Counter opening hours — the fallback shape, mirroring what
+ * /api/site-settings/ returns under `hours` (see content.SiteSetting.hours).
+ * Staff edit the real values in the Django admin; this is only what the site
+ * shows while that request is in flight or if it fails, so the header never
+ * renders an empty hours slot.
+ *
+ * `openNow` is deliberately null here rather than a guess: with no live data
+ * the honest answer is "we don't know yet", and useOpenStatus works it out
+ * from the times below instead of trusting a stale flag.
+ */
+export const HOURS = {
+  timezone: 'Asia/Kolkata',
+  weekday: { label: 'Monday – Saturday', labelShort: 'Mon – Sat', closed: false, opens: '09:30', closes: '19:00', display: '9:30 AM – 7:00 PM' },
+  sunday: { label: 'Sunday', labelShort: 'Sun', closed: true, opens: null, closes: null, display: 'Closed' },
+  note: '',
+  openNow: null,
+};
+
 // Real profile URLs taken from reddyforex.com (all three verified live).
 // `icon` maps to a path in components/SocialIcon.jsx.
 export const SOCIALS = [

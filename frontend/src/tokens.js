@@ -27,6 +27,7 @@ export const c = {
   accent: v('accent'),
   serviceIconBg: v('brand-tint'),
   onOrangeText: v('brand-pale'),
+  brandPale: v('brand-pale'),
 
   // --- ink / dark panels -------------------------------------------------
   navy: v('ink'),
@@ -164,3 +165,87 @@ export const h2Style = {
   color: c.navy,
   margin: 0,
 };
+
+/**
+ * The card shape used across the site: white, hairline-bordered, no drop shadow.
+ * The white is what does the work — it is lighter than the cream page ground, so
+ * a card reads as raised without a shadow saying so (see theme.css). Cards do
+ * not respond to hover; that was tried and taken back out.
+ */
+export const card = {
+  background: c.surface,
+  border: `1px solid ${c.sandLine}`,
+  borderRadius: 10,
+  overflow: 'hidden',
+};
+
+/** Vertical rhythm for a full-width section. One value, so sections can't drift. */
+export const sectionY = { padding: 'clamp(58px,7vw,96px) 0' };
+
+/**
+ * The mono label that heads a section, sized and spaced like the print on a
+ * currency band. Used with a rule beside it in the section headers.
+ */
+export const stamp = {
+  fontFamily: fonts.mono,
+  fontWeight: 500,
+  fontSize: fs.xs,
+  lineHeight: 1.4,
+  letterSpacing: '.2em',
+  textTransform: 'uppercase',
+};
+
+/**
+ * The primary action: indigo, with white text.
+ *
+ * Indigo is the site's action colour — if it is indigo it does something — and
+ * it carries white text at 11.7:1, so unlike the palettes this replaced the
+ * accent and the button fill can be the same value. `btnPrimaryHover` is the
+ * matching hover fill; use it rather than reaching for a shade of your own, so
+ * every primary button on the site behaves identically.
+ */
+export const btnPrimary = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 9,
+  background: c.orange,
+  color: c.surface,
+  padding: '15px 26px',
+  borderRadius: 8,
+  fontSize: fs.md,
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'background .18s ease',
+  whiteSpace: 'nowrap',
+};
+
+export const btnPrimaryHover = c.orangeDark;
+
+/**
+ * The primary action when it sits ON the indigo panel — white fill, indigo
+ * label. An indigo button on an indigo panel is not a button.
+ */
+export const btnOnBrand = {
+  ...btnPrimary,
+  background: c.surface,
+  color: c.orange,
+};
+
+/** The quiet second action. On dark panels pass `onInk` for the right border. */
+export const btnGhost = (onInk = false) => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 9,
+  border: `1px solid ${onInk ? c.navyLine : c.softLine}`,
+  color: onInk ? c.surface : c.navy,
+  background: 'transparent',
+  padding: '15px 26px',
+  borderRadius: 8,
+  fontSize: fs.md,
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'border-color .18s ease, background .18s ease',
+  whiteSpace: 'nowrap',
+});

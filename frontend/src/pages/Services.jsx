@@ -13,7 +13,7 @@ export default function Services() {
         description="Foreign exchange, Western Union money transfer, outward remittance, prepaid forex cards, wire transfers and student services — all under one RBI licence in T. Nagar, Chennai."
         path="/services"
       />
-      <section style={{ background: c.navy, padding: '60px 0 72px' }}>
+      <section style={{ background: c.orange, padding: '60px 0 72px' }}>
         <div style={wrap}>
           <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.navyMuted, marginBottom: 22 }}>
             <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / Services

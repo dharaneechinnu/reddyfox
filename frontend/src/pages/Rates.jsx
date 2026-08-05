@@ -79,7 +79,7 @@ export default function Rates() {
         description="Live buy and sell rates for USD, EUR, GBP and other major currencies at Reddy Forex, T. Nagar, Chennai — updated daily by our RBI-authorised dealing desk."
         path="/rates"
       />
-      <section style={{ background: c.navy, padding: '60px 0 44px' }}>
+      <section style={{ background: c.orange, padding: '60px 0 44px' }}>
         <div style={wrap}>
           <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.navyMuted, marginBottom: 22 }}>
             <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / Exchange rates
@@ -90,7 +90,9 @@ export default function Rates() {
               <p style={{ fontSize: fs.lg, lineHeight: 1.6, color: c.onNavyText, margin: 0, maxWidth: 560 }}>Counter rates at our T. Nagar shop, quoted in INR per unit of foreign currency. Forex Card rates shown alongside where published.</p>
             </div>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', border: '1px solid rgba(255,255,255,.16)', borderRadius: 9, padding: '11px 16px' }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.green, display: 'block', animation: 'fx-pulse 2.4s ease-in-out infinite' }} />
+              {/* "Live" dot, matching OpenStatus. Green here read as "rates are
+                  up", which is the one thing green means on this page. */}
+              <span className="fx-dot-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: c.accent, display: 'block' }} />
               <span style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.12em', color: c.onNavyText2 }}>UPDATED {fx.ratesUpdatedAt}</span>
             </div>
           </div>

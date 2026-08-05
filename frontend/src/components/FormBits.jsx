@@ -1,4 +1,4 @@
-import { c, fs } from '../tokens';
+import { c, fs, btnPrimaryHover } from '../tokens';
 
 /**
  * Shared field primitives for the three website forms.
@@ -126,7 +126,7 @@ export function SubmitButton({ sending, children, sendingLabel = 'Sending…' })
         padding: 15, borderRadius: 9, fontSize: fs.md, fontWeight: 600,
         transition: 'background .18s', cursor: sending ? 'default' : 'pointer',
       }}
-      onMouseEnter={(e) => { if (!sending) e.currentTarget.style.background = c.orangeDark; }}
+      onMouseEnter={(e) => { if (!sending) e.currentTarget.style.background = btnPrimaryHover; }}
       onMouseLeave={(e) => { if (!sending) e.currentTarget.style.background = c.orange; }}
     >
       {sending ? sendingLabel : children}

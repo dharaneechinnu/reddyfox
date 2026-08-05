@@ -229,12 +229,13 @@ class SiteSettingSerializer(serializers.ModelSerializer):
     contact = serializers.SerializerMethodField()
     socials = serializers.SerializerMethodField()
     footer = serializers.SerializerMethodField()
+    hours = serializers.SerializerMethodField()
 
     class Meta:
         model = SiteSetting
         fields = [
             'whatsapp_enabled', 'whatsapp_display', 'whatsapp_label', 'whatsapp_url',
-            'contact', 'socials', 'footer',
+            'contact', 'socials', 'footer', 'hours',
         ]
 
     def get_whatsapp_display(self, obj):
@@ -268,3 +269,6 @@ class SiteSettingSerializer(serializers.ModelSerializer):
             'legalName': obj.footer_legal_name,
             'tagline': obj.footer_tagline,
         }
+
+    def get_hours(self, obj):
+        return obj.hours

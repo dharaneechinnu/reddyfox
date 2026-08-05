@@ -4,6 +4,7 @@ import { FeatureFlagsProvider } from './context/FeatureFlagsContext';
 import { CompanyInfoProvider } from './context/CompanyInfoContext';
 import { ThemeProvider } from './context/ThemeContext';
 import Layout from './components/Layout';
+import ScrollToTop from './components/ScrollToTop';
 import Home from './pages/Home';
 import Rates from './pages/Rates';
 import Quote from './pages/Quote';
@@ -22,6 +23,7 @@ function App() {
         <FeatureFlagsProvider>
           <CompanyInfoProvider>
             <FxProvider>
+              <ScrollToTop />
               <Routes>
                 <Route element={<Layout />}>
                   <Route path="/" element={<Home />} />
