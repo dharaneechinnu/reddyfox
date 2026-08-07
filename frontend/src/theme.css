@@ -20,40 +20,40 @@
   /* == Core: the twelve knobs, mirrored by theming.models.ThemeSetting ======
      "Indigo, Cream and Ink" — three colours, each with exactly one job:
 
-       INDIGO (#26307A) is every action. Buttons, links, active nav, and the one
+       INDIGO (#1E2260) is every action. Buttons, links, active nav, and the one
          dark panel a page is allowed. If it is indigo, it does something.
-       CREAM (#F6F3EC) is the page ground. Not white — white is held back for
+       CREAM (#F4F1EA) is the page ground. Not white — white is held back for
          cards, so a card is always lighter than what it sits on and reads as
          raised without needing a shadow to say so.
-       INK (#14161A) is text, the footer, and dark surfaces that are not actions
+       INK (#1B1E4B) is text, the footer, and dark surfaces that are not actions
          (a table header, an address card). It never means "click me".
 
-     Indigo carries white text at 11.7:1 and reads on cream at 10.6:1, so unlike
-     the gold this replaced it can be both the button fill and the link colour —
-     one accent, no second value needed for contrast. --fx-accent is a light
-     indigo, used only for eyebrow text on the indigo panel (4.8:1 on it).
+     Indigo carries white text well past AA and reads on cream at a strong
+     contrast, so it alone can be both the button fill and the link colour.
+     --fx-accent is a gold, used for eyebrow text, stamps and small dividers —
+     decoration, never a click target — on both the cream and the indigo panel.
 
      Success and danger are NOT part of the palette — they are semantic signals,
      kept for the two places meaning depends on them: which way a rate moved
      (green/red on a rate board is a convention worth more than tidiness) and
      which form field is wrong. Nothing else on the site should use them. */
-  --fx-brand: #26307A;        /* every action: buttons, links, active nav, the dark panel */
-  --fx-brand-dark: #1C2560;   /* hover/pressed state for the above */
-  --fx-accent: #9AA2E0;       /* light indigo — eyebrow text on the indigo panel */
-  --fx-ink: #14161A;          /* headings, dark cards, table headers */
-  --fx-ink-deep: #0D0F12;     /* footer */
+  --fx-brand: #1E2260;        /* every action: buttons, links, active nav, the dark panel */
+  --fx-brand-dark: #171B58;   /* hover/pressed state for the above */
+  --fx-accent: #B08B3E;       /* gold — eyebrow text, stamps and dividers, on cream and on the indigo panel */
+  --fx-ink: #1B1E4B;          /* headings, dark cards, table headers */
+  --fx-ink-deep: #161A52;     /* footer */
   --fx-surface: #FFFFFF;      /* CARDS ONLY — this is what makes them read raised */
-  --fx-surface-alt: #F6F3EC;  /* cream: the page ground, and form fields */
-  --fx-line: #E4DFD4;         /* default border, warmed to sit on the cream */
-  --fx-body-text: #3A3D45;    /* paragraphs — 9.8:1 on cream */
-  --fx-muted-text: #5F636D;   /* captions, help text, card descriptions — 5.4:1 */
+  --fx-surface-alt: #F4F1EA;  /* cream: the page ground, and form fields */
+  --fx-line: #E3E1EC;         /* default border, tinted toward ink to sit on the cream */
+  --fx-body-text: #33364A;    /* paragraphs */
+  --fx-muted-text: #5A5D78;   /* captions, help text, card descriptions */
   --fx-success: #1F7A4C;      /* semantic only: rate up, submitted */
   --fx-danger: #A8342A;       /* semantic only: rate down, validation errors */
 
   /* == Typography ========================================================== */
-  --fx-font-sans: 'Instrument Sans', system-ui, sans-serif;
+  --fx-font-sans: 'Manrope', system-ui, sans-serif;
   --fx-font-serif: 'Instrument Serif', serif;
-  --fx-font-mono: 'IBM Plex Mono', monospace;
+  --fx-font-mono: 'JetBrains Mono', monospace;
 
   /* One base size, everything else a fixed proportion of it — see
      theming.models.ThemeSetting.css_variables, which is what actually computes
@@ -91,6 +91,52 @@
   --fx-brand-pale: color-mix(in srgb, var(--fx-accent) 28%, var(--fx-surface));
   --fx-brand-border: color-mix(in srgb, var(--fx-brand) 22%, var(--fx-surface-alt));
   --fx-brand-bg: color-mix(in srgb, var(--fx-brand) 6%, var(--fx-surface));
+  /* The gold accent lightened for use ON the dark brand panel — icon strokes and
+     eyebrow text there need more lift off #1E2260 than the cream-ground accent
+     value gives. */
+  --fx-accent-on-ink: color-mix(in srgb, var(--fx-accent) 55%, var(--fx-surface));
+
+  /* The ground every page sits on. The site is one continuous indigo field,
+     top to bottom, rather than a dark hero over a cream body — a shade deeper
+     than --fx-brand rather than equal to it, which does two jobs at once: the
+     site reads darker, and the header — still on the brand indigo — separates
+     from the body it sits over instead of merging into one flat field.
+     Derived from --fx-brand, not a fourth independent core colour, so it
+     re-tints along with every button and link if brand ever changes.
+
+     It is a SEPARATE token from --fx-surface-alt on purpose. surface-alt is
+     still the cream, and still what the tints inside a white card are mixed
+     from (field fills, badge backs, table stripes) — those sit ON white and
+     must stay light. Flipping surface-alt itself would have turned every one
+     of them into a dark blob in the middle of a white card.
+
+     Because the ground is still an indigo, an indigo button on it would be
+     invisible: btnPrimary in tokens.js is white-on-indigo site-wide, and the
+     global link colour below is the on-ink light. Anything inside a white card
+     sets its own indigo explicitly. */
+  --fx-page: color-mix(in srgb, var(--fx-brand) 78%, #000);
+
+  /* A panel raised off the dark ground — the step cards in the hero, the
+     callback form. Lifted with white rather than dropped into shadow, for the
+     same reason white cards work on the light surfaces: on a dark ground the
+     thing in front is the lighter one. Kept shallow so it stays a surface
+     rather than becoming a second background colour. */
+  --fx-panel: color-mix(in srgb, var(--fx-surface) 7%, var(--fx-page));
+  /* The same panel, brighter — a hover state for anything using --fx-panel,
+     not a surface used at rest anywhere. Lifting the mix rather than adding a
+     shadow is what actually reads as "raised" on a dark ground; see
+     .fx-hover-lift-panel in index.css. */
+  --fx-panel-hover: color-mix(in srgb, var(--fx-surface) 15%, var(--fx-page));
+
+  /* The three step tiles in "how it works", ON the indigo panel: one hue, lifted
+     further off the panel at each step, so the sequence reads as a progression
+     without a second colour entering the palette. They go light rather than
+     dark — a tile only a little lighter than the panel is not a tile — and each
+     carries the brand ink mark, which clears 4:1 on even the darkest of the
+     three. Spaced 13 points apart: closer and steps 1 and 2 are the same tile. */
+  --fx-brand-step-1: color-mix(in srgb, var(--fx-surface) 60%, var(--fx-brand));
+  --fx-brand-step-2: color-mix(in srgb, var(--fx-surface) 73%, var(--fx-brand));
+  --fx-brand-step-3: color-mix(in srgb, var(--fx-surface) 86%, var(--fx-brand));
 
   /* Ink family — headings and dark panels, stepped toward the muted grey rather
      than toward the body text. Mixing near-black with near-black (which is what
@@ -143,9 +189,8 @@
   --fx-danger-text: color-mix(in srgb, var(--fx-danger) 88%, #000);
   --fx-danger-field: color-mix(in srgb, var(--fx-surface) 45%, var(--fx-danger));
 
-  /* Favourited (the star on the rates table). This used to be its own hex, on
-     the grounds that "starred" should survive the brand moving somewhere
-     gold-adjacent. The brand IS gold now and the palette is three colours, so a
+  /* Favourited (the star on the rates table). This used to be its own hex; the
+     accent is gold now, which is exactly what "starred" should look like, so a
      fourth hue for one star is exactly what this file exists to prevent. */
   --fx-favourite: var(--fx-accent);
   --fx-favourite-off: color-mix(in srgb, var(--fx-surface) 60%, var(--fx-muted-text));

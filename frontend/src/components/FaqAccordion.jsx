@@ -7,16 +7,17 @@ import { c, fs } from '../tokens';
  * as HTML. Wagtail restricts the editor to bold/italic/link/lists and only
  * authenticated staff can write it, so this is trusted content.
  */
-export default function FaqAccordion({ faqs = [], maxWidth, padding = '22px 28px', answerPadding = '0 28px 24px' }) {
+export default function FaqAccordion({ faqs = [], maxWidth, padding = '22px 28px', answerPadding = '0 28px 24px', background = c.surface }) {
   const [open, setOpen] = useState(0);
 
   if (!faqs.length) return null;
 
   return (
-    <div style={{ background: c.surface, border: `1px solid ${c.sandLine}`, borderRadius: 14, overflow: 'hidden' }}>
+    <div style={{ background, border: `1px solid ${c.sandLine}`, borderRadius: 14, overflow: 'hidden' }}>
       {faqs.map((f, i) => (
         <div key={f.id} style={{ borderBottom: `1px solid ${c.sandLine3}` }}>
           <div
+            className="fx-faq-row"
             onClick={() => setOpen(open === i ? -1 : i)}
             style={{ padding, display: 'flex', justifyContent: 'space-between', gap: 24, cursor: 'pointer', alignItems: 'center' }}
           >

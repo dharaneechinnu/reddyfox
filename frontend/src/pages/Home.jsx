@@ -1,15 +1,18 @@
 import { useNavigate } from 'react-router-dom';
 import { useFx } from '../context/FxContext';
 import { useFeatureFlag } from '../context/FeatureFlagsContext';
-import { STATS, SERVICES, REASONS, fmt } from '../data';
-import { c, fs, fonts, wrap, sectionY, stamp, card, btnOnBrand, btnGhost } from '../tokens';
+import { STATS, REASONS, fmt } from '../data';
+import { COMPANY } from '../company';
+import { c, fs, fonts, wrap, sectionY, stamp, card, btnOnBrand, btnGhost, shadowCard } from '../tokens';
 import FaqAccordion from '../components/FaqAccordion';
 import CallbackBar from '../components/CallbackBar';
 import Seo from '../components/Seo';
 import SitePhoto from '../components/SitePhoto';
 import SectionHead from '../components/SectionHead';
-import HowItWorks from '../components/HowItWorks';
-import HeroPhones from '../components/HeroPhones';
+import HeroSteps, { STEP_ONE_ID } from '../components/HeroSteps';
+import WhatWeDoActions from '../components/WhatWeDoActions';
+import Reveal from '../components/Reveal';
+import WorldMapBackdrop from '../components/WorldMapBackdrop';
 import VisitCounter from '../components/VisitCounter';
 import OpenStatus from '../components/OpenStatus';
 import useApi from '../hooks/useApi';
@@ -62,64 +65,75 @@ export default function Home() {
       />
 
       {/* ---- Hero -----------------------------------------------------------
-          One indigo field running up into the header, with the pitch on the left
-          and a fan of three phones on the right. The phones are marketing, not
-          inputs — nothing is priced or bought on this site, every deal is agreed
-          on a call with a dealer, so they carry what we offer rather than any
-          figure (see HeroPhones.jsx). The form lives in the bar pinned to the
-          bottom of the window instead, where it stays reachable at any scroll
-          position. */}
-      <section style={{ background: c.orange, position: 'relative', overflow: 'hidden' }}>
-        <div aria-hidden="true" style={{ position: 'absolute', top: -220, right: -180, width: 700, height: 700, borderRadius: '50%', background: `radial-gradient(circle, color-mix(in srgb, ${c.accent} 26%, transparent), transparent 64%)` }} />
-
-        <div className="fx-hero-grid" style={{ position: 'relative', ...wrap, padding: 'clamp(48px,6vw,88px) clamp(16px,4.5vw,32px) clamp(44px,5vw,72px)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(32px,4vw,56px)', alignItems: 'center' }}>
-          <div>
-            <div className="fx-rise" style={{ ...stamp, color: c.accent, marginBottom: 26 }}>
-              T. Nagar, Chennai <span aria-hidden="true" style={{ opacity: .5 }}>·</span> One counter, no branches
-            </div>
-
-            <h1 className="fx-rise" style={{ '--fx-delay': '.06s', fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.hero, lineHeight: 1.04, letterSpacing: '-.02em', color: c.surface, margin: '0 0 24px' }}>
-              Foreign currency,
-              <br />
-              handed over
-              <br />
-              in person.
-            </h1>
-
-            <p className="fx-rise" style={{ '--fx-delay': '.12s', fontSize: fs.xl, lineHeight: 1.6, color: c.onNavyText, maxWidth: 470, margin: '0 0 32px' }}>
-              Ask for the rate on the phone. Collect at the counter or take same-day home delivery.
-              Nothing is charged before you agree the number.
-            </p>
-
-            <div className="fx-rise" style={{ '--fx-delay': '.18s', display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 28 }}>
-              <a href={`tel:${contact.mobiles[0]?.tel}`} style={btnOnBrand}>
-                Call {contact.mobiles[0]?.display}
-              </a>
-              <span onClick={() => navigate('/services')} style={btnGhost(true)}>
-                What we do
-              </span>
-            </div>
-
-            {/* The live badge, which the rail above deliberately doesn't carry. */}
-            <div className="fx-rise" style={{ '--fx-delay': '.24s', borderTop: `1px solid ${c.navyLine}`, paddingTop: 20, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-              <OpenStatus tone="ink" />
-              <span aria-hidden="true" style={{ width: 1, height: 12, background: c.navyLine }} />
-              <span style={{ fontSize: fs.sm, color: c.navyMuted2 }}>
-                {hours.weekday.labelShort} {hours.weekday.display} · {hours.sunday.labelShort} {hours.sunday.display.toLowerCase()}
-              </span>
-            </div>
+          One indigo field running up into the header, with the dotted world map
+          as the whole visual and the pitch reading across it. It is marketing,
+          not an input — nothing is priced or bought on this site, every deal is
+          agreed on a call with a dealer, so it carries what we offer rather
+          than any figure. The form lives in the bar under the hero instead,
+          where it stays reachable at any scroll position, and the three steps
+          have their own panel further down. */}
+      <section style={{ background: c.page, position: 'relative', overflow: 'hidden' }}>
+        {/* The pitch block, with the world dotted behind it — foreign currency
+            is what this counter sells, so the ground it sits on says so. The
+            backdrop is scoped to this block rather than the whole section: the
+            form bar and the ticker below have their own dark fills, and a map
+            centred behind all three would sit half-hidden under them. */}
+        <div style={{ position: 'relative' }}>
+          <div aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <WorldMapBackdrop color="rgba(255,255,255,.92)" opacity={.13} style={{ width: '116%', height: '92%' }} />
           </div>
+          <div aria-hidden="true" style={{ position: 'absolute', top: -220, right: -180, width: 700, height: 700, borderRadius: '50%', background: `radial-gradient(circle, color-mix(in srgb, ${c.accent} 26%, transparent), transparent 64%)` }} />
 
-          <div className="fx-rise" style={{ '--fx-delay': '.2s' }}>
-            <HeroPhones />
+          {/* Pitch left, the three steps in a row on the right. `alignItems:
+              stretch` is what makes the two ends line up: the taller side sets
+              the height, the pitch spreads to fill it and the step cards grow
+              to match rather than floating in a half-empty cell. */}
+          <div className="fx-hero-grid" style={{ position: 'relative', ...wrap, padding: 'clamp(48px,6vw,88px) clamp(16px,4.5vw,32px) clamp(44px,5vw,72px)', display: 'grid', gridTemplateColumns: '.82fr 1.18fr', gap: 'clamp(28px,3.4vw,48px)', alignItems: 'center' }}>
+            <div>
+              <div className="fx-rise" style={{ ...stamp, color: c.accent, marginBottom: 26 }}>
+                T. Nagar, Chennai <span aria-hidden="true" style={{ opacity: .5 }}>·</span> One counter, no branches
+              </div>
+
+              <h1 className="fx-rise" style={{ '--fx-delay': '.06s', fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.hero, lineHeight: 1.04, letterSpacing: '-.02em', color: c.surface, margin: '0 0 24px' }}>
+                Foreign currency,
+                <br />
+                handed over
+                <br />
+                in person.
+              </h1>
+
+              <p className="fx-rise" style={{ '--fx-delay': '.12s', fontSize: fs.xl, lineHeight: 1.6, color: c.onNavyText, maxWidth: 520, margin: '0 0 32px' }}>
+                Ask for the rate on the phone. Collect at the counter or take same-day home delivery.
+                Nothing is charged before you agree the number.
+              </p>
+
+              <div className="fx-rise" style={{ '--fx-delay': '.18s', display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 28 }}>
+                <a href={`tel:${contact.mobiles[0]?.tel}`} style={btnOnBrand}>
+                  Call {contact.mobiles[0]?.display}
+                </a>
+                <span onClick={() => navigate('/services')} style={btnGhost(true)}>
+                  What we do
+                </span>
+              </div>
+
+              {/* The live badge, which the rail above deliberately doesn't carry. */}
+              <div className="fx-rise" style={{ '--fx-delay': '.24s', borderTop: `1px solid ${c.navyLine}`, paddingTop: 20, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                <OpenStatus tone="ink" />
+                <span aria-hidden="true" style={{ width: 1, height: 12, background: c.navyLine }} />
+                <span style={{ fontSize: fs.sm, color: c.navyMuted2 }}>
+                  {hours.weekday.labelShort} {hours.weekday.display} · {hours.sunday.labelShort} {hours.sunday.display.toLowerCase()}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex' }}>
+              <HeroSteps />
+            </div>
           </div>
         </div>
 
-        {/* The form closes the first screen, with the ticker running under it. */}
-        <CallbackBar />
-
         {/* Live figures, moving — the board's own detail, not a decoration. */}
-        <div style={{ position: 'relative', borderTop: `1px solid ${c.navyLine}`, background: 'rgba(0,0,0,.24)', overflow: 'hidden' }}>
+        <div className="fx-ticker-wrap" style={{ position: 'relative', borderTop: `1px solid ${c.navyLine}`, background: 'rgba(0,0,0,.24)', overflow: 'hidden' }}>
           <div className="fx-ticker-track" style={{ display: 'flex', width: 'max-content' }}>
             {tickerCodes.map((code, i) => {
               const r = fx.rates[code];
@@ -134,33 +148,52 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Clear ink below the ticker for the facts strip to overlap into, so
-            the strip breaks the panel's edge without covering live figures. */}
-        <div aria-hidden="true" style={{ height: 'clamp(30px,4vw,58px)' }} />
       </section>
 
-      {/* ---- The four facts, overlapping the board's edge ------------------ */}
-      <section style={{ background: c.sand }}>
-        <div style={{ ...wrap, position: 'relative' }}>
-          <div className="fx-stat-strip" style={{ background: c.surface, border: `1px solid ${c.sandLine}`, borderRadius: 10, marginTop: 'clamp(-52px,-4vw,-28px)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(220px,100%),1fr))' }}>
+      {/* ---- The facts, and the form -----------------------------------------
+          The four facts as a 2 x 2 white box on the left, the callback form
+          beside it on the right. The form left the hero when the three steps
+          took that side; here it is still the first thing under the fold, next
+          to the four reasons to trust the number you are about to give.
+          Nothing is sold on this site, so that number is the whole conversion
+          (see docs/team-notifications.md). */}
+      <section style={{ background: c.page, ...sectionY }}>
+        <div className="fx-facts-grid" style={{ ...wrap, display: 'grid', gridTemplateColumns: '1.15fr .85fr', gap: 'clamp(20px,3vw,32px)', alignItems: 'stretch' }}>
+          <Reveal className="fx-stat-strip" style={{ background: c.surface, border: `1px solid ${c.sandLine}`, borderRadius: 16, display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
             {STATS.map((s, i) => (
-              <div key={s.label} style={{ padding: 'clamp(22px,2.4vw,30px)', borderLeft: i === 0 ? 'none' : `1px solid ${c.sandLine3}` }}>
+              <div
+                key={s.label}
+                className="fx-hover-lift"
+                style={{
+                  padding: 'clamp(22px,2.4vw,32px)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  borderRadius: 12,
+                  position: 'relative',
+                  // Hairlines only between cells, so the box keeps a clean edge:
+                  // no rule on the top row, none on the left column.
+                  borderTop: i > 1 ? `1px solid ${c.sandLine3}` : 'none',
+                  borderLeft: i % 2 === 1 ? `1px solid ${c.sandLine3}` : 'none',
+                }}
+              >
                 <div style={{ fontFamily: fonts.mono, fontSize: fs['3xl'], lineHeight: 1, color: c.navy, marginBottom: 12 }}>{s.value}</div>
                 <div style={{ fontSize: fs.base, fontWeight: 600, color: c.navyMid, marginBottom: 5 }}>{s.label}</div>
                 <div style={{ fontSize: fs.sm, lineHeight: 1.55, color: c.textFaint }}>{s.note}</div>
               </div>
             ))}
-          </div>
-        </div>
+          </Reveal>
 
-        {/* Breathing room under the strip; the process gets its own band. */}
-        <div aria-hidden="true" style={{ height: 'clamp(40px,5vw,72px)' }} />
+          {/* The hero's "start with step one" scrolls here. scroll-margin keeps
+              the panel's heading clear of the sticky header once it lands. */}
+          <Reveal delay={.1} id={STEP_ONE_ID} style={{ display: 'flex', scrollMarginTop: 96 }}>
+            <CallbackBar />
+          </Reveal>
+        </div>
       </section>
 
-      <HowItWorks />
-
       {liveBoardOn && (
-        <section style={{ background: c.sand, ...sectionY, borderTop: `1px solid ${c.sandLine}` }}>
+        <section style={{ background: c.page, ...sectionY, borderTop: `1px solid ${c.navyLine}` }}>
           <div style={wrap}>
             <SectionHead
               label="Live board"
@@ -214,95 +247,94 @@ export default function Home() {
         </section>
       )}
 
-      {/* ---- Services: one lead card, then the rest ------------------------
-          The mosaic is uneven on purpose. Foreign exchange is the bulk of what
-          crosses the counter, so it gets the room; the others are equals below
-          it rather than six identical tiles pretending otherwise. */}
+      {/* ---- What we do: five photo-led actions -----------------------------
+          Five everyday reasons someone opens this site, not a formal list of
+          every service — that full list, six of them, still lives on
+          /services. See WhatWeDoActions.jsx for how each tile maps to a real
+          service and an existing photo. */}
       {/* A hairline between neighbouring sections of the same colour: with the
           live board switched off, "how it works" and "what we do" would
           otherwise run together into one long field of sand. */}
-      <section style={{ background: c.sand, ...sectionY, borderTop: `1px solid ${c.sandLine}` }}>
+      <section style={{ background: c.page, ...sectionY, borderTop: `1px solid ${c.navyLine}` }}>
         <div style={wrap}>
           <SectionHead
             label="What we do"
             title="Every foreign exchange need, under one licence"
-            aside="From a ₹5,000 holiday buy to an import settlement — handled by the same compliance team."
           />
-          <div className="fx-service-mosaic" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
-            {SERVICES.map((s, i) => (
-              <div
-                key={s.id}
-                onClick={() => navigate(`/services/${s.id}`)}
-                onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/services/${s.id}`); }}
-                role="link"
-                tabIndex={0}
-                style={{
-                  ...card,
-                  cursor: 'pointer',
-                  // The lead card takes two columns and two rows, which leaves
-                  // exactly enough cells for the other five to fill the grid
-                  // with no orphan tile in the last row.
-                  gridColumn: i === 0 ? 'span 2' : 'span 1',
-                  gridRow: i === 0 ? 'span 2' : 'span 1',
-                  display: 'flex',
-                  flexDirection: i === 0 ? 'row' : 'column',
-                }}
-              >
-                <SitePhoto
-                  slot={`service_${s.id}`}
-                  placeholderLabel={s.title.toUpperCase()}
-                  style={i === 0
-                    ? { flex: '0 0 44%', minHeight: 240, border: 'none', borderRadius: 0 }
-                    : { height: 148, border: 'none', borderRadius: 0 }}
-                />
-                <div style={{ padding: 'clamp(20px,2.2vw,28px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <div style={{ ...stamp, color: c.orange, marginBottom: 12 }}>{s.tag}</div>
-                  <h3 style={{ fontSize: i === 0 ? fs.h3 : fs.xl, fontFamily: i === 0 ? fonts.serif : fonts.sans, fontWeight: i === 0 ? 400 : 600, lineHeight: 1.15, color: c.navy, margin: '0 0 10px' }}>{s.title}</h3>
-                  <p style={{ fontSize: i === 0 ? fs.md : fs.base, lineHeight: 1.62, color: c.textMuted, margin: '0 0 16px' }}>{i === 0 ? s.body : s.short}</p>
-
-                  {/* The lead card has the room to say what is actually on offer,
-                      so it lists the service's own headings rather than padding
-                      the space out with more prose. */}
-                  {i === 0 && (
-                    <ul style={{ listStyle: 'none', margin: '0 0 20px', padding: 0, display: 'flex', flexDirection: 'column', gap: 9 }}>
-                      {s.benefits.slice(0, 4).map(([benefit]) => (
-                        <li key={benefit} style={{ display: 'flex', gap: 10, alignItems: 'baseline', fontSize: fs.base, color: c.navyMid }}>
-                          <span aria-hidden="true" style={{ color: c.orange, flex: 'none' }}>—</span>
-                          {benefit}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-
-                  <span style={{ fontSize: fs.base, fontWeight: 600, color: c.orange }}>Learn more →</span>
-                </div>
-              </div>
-            ))}
-          </div>
+          <WhatWeDoActions />
         </div>
       </section>
 
       <VisitCounter />
 
       {/* ---- Why us -------------------------------------------------------- */}
-      <section style={{ background: c.sand, ...sectionY }}>
-        <div className="fx-why-grid" style={{ ...wrap, display: 'grid', gridTemplateColumns: '.9fr 1.1fr', gap: 'clamp(32px,5vw,64px)', alignItems: 'center' }}>
-          <SitePhoto
-            slot="home_why_us"
-            placeholderLabel={<>PHOTOGRAPHY<br />Counter service, T. Nagar shop</>}
-            style={{ minHeight: 440, borderRadius: 10 }}
-          />
+      <section style={{ background: c.page, ...sectionY }}>
+        {/* `alignItems: stretch` (the grid default, set explicitly here) is what
+            ties the photo's height to the four reason cards beside it: the
+            taller column sets the row height, and the photo — the only child
+            with nothing of its own to size by — fills whatever that is. */}
+        <div className="fx-why-grid" style={{ ...wrap, display: 'grid', gridTemplateColumns: '.72fr 1.28fr', gap: 'clamp(28px,4vw,52px)', alignItems: 'stretch' }}>
+          {/* The photo reveals like everything else on scroll, then carries its
+              own small hover — the image drifts in on `fx-photo-zoom`, which is
+              scoped to `.fx-photo-frame:hover img` in index.css so the frame's
+              overflow:hidden always clips it, never the badges over it.
+
+              The height is not set here beyond a mobile floor: the grid's
+              align-items: stretch (see fx-why-grid above) gives this cell the
+              reason column's full height, and the photo fills it by being
+              absolutely positioned inside — rather than a fixed pixel guess
+              that happened to look right at one viewport width.
+
+              Every badge restates something the site already publishes —
+              STATS[0] and STATS[1] from data.js, and the founding year from
+              company.js. A "25k+ customers" badge was asked for here and
+              deliberately not built: no customer count exists in company.js,
+              data.js or the database, and CLAUDE.md's never-invent-a-fact rule
+              is not negotiable on a regulated money changer's homepage. */}
+          <Reveal className="fx-photo-frame" style={{ position: 'relative', minHeight: 300, borderRadius: 16, overflow: 'hidden', border: `1px solid ${c.navyLine}`, boxShadow: shadowCard }}>
+            <SitePhoto
+              slot="home_why_us"
+              placeholderLabel={<>PHOTOGRAPHY<br />Counter service, T. Nagar shop</>}
+              style={{ position: 'absolute', inset: 0, border: 'none', borderRadius: 0 }}
+              imgClassName="fx-photo-zoom"
+            />
+            {/* Two overlays, not one: a flat wash that darkens the whole photo
+                so white badges read anywhere on it, plus the original corner
+                gradient deepened, which keeps the bottom-left corner darkest
+                where the largest badge sits. */}
+            <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'rgba(8,10,30,.34)', pointerEvents: 'none' }} />
+            <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: `linear-gradient(200deg, transparent 35%, color-mix(in srgb, ${c.navyDeep} 88%, transparent) 100%)`, pointerEvents: 'none' }} />
+
+            <div className="fx-float" style={{ '--fx-float-delay': '0s', position: 'absolute', left: 18, bottom: 18, background: c.panel, border: `1px solid ${c.navyLine}`, borderRadius: 12, padding: '11px 16px', display: 'flex', alignItems: 'baseline', gap: 9, boxShadow: '0 16px 30px -14px rgba(0,0,0,.6)' }}>
+              <span style={{ fontFamily: fonts.mono, fontSize: fs.xl, color: c.surface }}>{STATS[0].value}</span>
+              <span style={{ fontSize: fs.xs, color: c.onNavyText }}>{STATS[0].label}</span>
+            </div>
+
+            <div className="fx-float" style={{ '--fx-float-delay': '-1.7s', position: 'absolute', right: 18, top: 18, background: c.panel, border: `1px solid ${c.navyLine}`, borderRadius: 12, padding: '11px 16px', display: 'flex', alignItems: 'baseline', gap: 9, boxShadow: '0 16px 30px -14px rgba(0,0,0,.6)' }}>
+              <span style={{ fontFamily: fonts.mono, fontSize: fs.xl, color: c.accentOnInk }}>{STATS[1].value}</span>
+              <span style={{ fontSize: fs.xs, color: c.onNavyText }}>{STATS[1].label}</span>
+            </div>
+
+            <div className="fx-float" style={{ '--fx-float-delay': '-3.3s', position: 'absolute', right: 18, bottom: 18, background: c.panel, border: `1px solid ${c.navyLine}`, borderRadius: 12, padding: '11px 16px', display: 'flex', alignItems: 'baseline', gap: 9, boxShadow: '0 16px 30px -14px rgba(0,0,0,.6)' }}>
+              <span style={{ fontFamily: fonts.mono, fontSize: fs.xl, color: c.surface }}>Since {COMPANY.since}</span>
+            </div>
+          </Reveal>
           <div>
             <SectionHead label="Why us" title="The margin you see is the margin you pay" maxWidth={480} />
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {REASONS.map((f) => (
-                <div key={f.n} style={{ display: 'flex', gap: 18, padding: '20px 0', borderTop: `1px solid ${c.sandLine}` }}>
-                  <span style={{ fontFamily: fonts.mono, fontSize: fs.xs, letterSpacing: '.14em', color: c.orange, flex: 'none', paddingTop: 5 }}>{f.n}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {REASONS.map((f, i) => (
+                <Reveal
+                  key={f.n}
+                  delay={i * 0.08}
+                  className="fx-hover-lift-panel"
+                  style={{ display: 'flex', gap: 14, padding: '14px 16px', borderRadius: 12, border: `1px solid ${c.navyLine}` }}
+                >
+                  <span style={{ fontFamily: fonts.mono, fontSize: fs['2xs'], letterSpacing: '.14em', color: c.accent, flex: 'none', paddingTop: 4 }}>{f.n}</span>
                   <div>
-                    <h3 style={{ fontSize: fs.xl, fontWeight: 600, color: c.navy, margin: '0 0 7px' }}>{f.title}</h3>
-                    <p style={{ fontSize: fs.base, lineHeight: 1.62, color: c.textMuted, margin: 0 }}>{f.body}</p>
+                    <h3 style={{ fontSize: fs.md, fontWeight: 600, color: c.surface, margin: '0 0 5px' }}>{f.title}</h3>
+                    <p style={{ fontSize: fs.sm, lineHeight: 1.6, color: c.onNavyText, margin: 0 }}>{f.body}</p>
                   </div>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -310,12 +342,12 @@ export default function Home() {
       </section>
 
       {testimonials.length > 0 && (
-        <section style={{ background: c.sand, ...sectionY, borderTop: `1px solid ${c.sandLine}` }}>
+        <section style={{ background: c.page, ...sectionY, borderTop: `1px solid ${c.navyLine}` }}>
           <div style={wrap}>
             <SectionHead label="Customer voices" title="Trusted by travellers and finance teams" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(300px,100%),1fr))', gap: 16 }}>
-              {testimonials.map((t) => (
-                <div key={t.id} style={{ ...card, background: c.sand, padding: 'clamp(24px,2.6vw,30px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              {testimonials.map((t, i) => (
+                <Reveal key={t.id} delay={i * 0.08} className="fx-hover-lift" style={{ ...card, padding: 'clamp(24px,2.6vw,30px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <p style={{ fontFamily: fonts.serif, fontSize: fs['2xl'], lineHeight: 1.42, color: c.ink, margin: '0 0 24px' }}>“{t.quote}”</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 13, borderTop: `1px solid ${c.sandLine}`, paddingTop: 18 }}>
                     <span style={{ width: 38, height: 38, borderRadius: '50%', background: c.sandCard2, border: `1px solid ${c.sandBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, color: c.textMuted }}>{t.initials}</span>
@@ -324,7 +356,7 @@ export default function Home() {
                       <div style={{ fontSize: fs.sm, color: c.textFaint }}>{t.role}</div>
                     </div>
                   </div>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
@@ -332,7 +364,7 @@ export default function Home() {
       )}
 
       {faqs.length > 0 && (
-        <section style={{ background: c.sand, ...sectionY }}>
+        <section style={{ background: c.page, ...sectionY }}>
           <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 clamp(16px,4.5vw,32px)' }}>
             <SectionHead label="Questions" title="Before you walk in" align="center" />
             <FaqAccordion faqs={faqs} />
@@ -341,14 +373,15 @@ export default function Home() {
       )}
 
       {/* ---- Last word -----------------------------------------------------
-          Cream, not a dark band: the hero is this page's one dark panel. The
-          indigo buttons carry the weight here instead of the background. */}
-      <section style={{ background: c.sand, borderTop: `1px solid ${c.sandLine}`, padding: 'clamp(52px,6vw,80px) 0' }}>
+          Indigo, echoing the hero: the page opens on the dark panel and closes
+          on it too, so the call to action carries the same weight the first
+          screen did rather than fading out on a third stretch of cream. */}
+      <section style={{ background: c.navy, padding: 'clamp(52px,6vw,80px) 0' }}>
         <div style={{ ...wrap, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'clamp(28px,4vw,48px)', flexWrap: 'wrap' }}>
           <div>
-            <div style={{ ...stamp, color: c.orange, marginBottom: 14 }}>Talk to a dealer</div>
-            <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h2, lineHeight: 1.08, letterSpacing: '-.015em', color: c.navy, margin: '0 0 12px' }}>Call us for today’s rate</h2>
-            <p style={{ fontSize: fs.xl, lineHeight: 1.6, color: c.textMuted, margin: 0, maxWidth: 540 }}>
+            <div style={{ ...stamp, color: c.accent, marginBottom: 14 }}>Talk to a dealer</div>
+            <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h2, lineHeight: 1.08, letterSpacing: '-.015em', color: c.surface, margin: '0 0 12px' }}>Call us for today’s rate</h2>
+            <p style={{ fontSize: fs.xl, lineHeight: 1.6, color: c.onNavyText, margin: 0, maxWidth: 540 }}>
               Tell us the currency and the amount, and we’ll quote you. Or walk in — Challa Mall, T. Nagar, {contact.addressNote.replace(/[()]/g, '')}.
             </p>
           </div>
@@ -357,9 +390,9 @@ export default function Home() {
               <a
                 key={m.tel}
                 href={`tel:${m.tel}`}
-                style={{ background: c.orange, color: c.surface, padding: '15px 26px', borderRadius: 8, fontSize: fs.md, fontWeight: 600, fontFamily: fonts.mono, whiteSpace: 'nowrap', transition: 'background .18s ease' }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = c.orangeDark)}
-                onMouseLeave={(e) => (e.currentTarget.style.background = c.orange)}
+                style={{ background: c.surface, color: c.orange, padding: '15px 26px', borderRadius: 8, fontSize: fs.md, fontWeight: 600, fontFamily: fonts.mono, whiteSpace: 'nowrap', transition: 'background .18s ease' }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = c.brandPale)}
+                onMouseLeave={(e) => (e.currentTarget.style.background = c.surface)}
               >
                 {m.display}
               </a>

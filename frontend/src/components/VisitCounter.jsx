@@ -21,7 +21,7 @@ export default function VisitCounter() {
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(contact.addressOneLine)}`;
 
   return (
-    <section style={{ background: c.sand, ...sectionY, borderTop: `1px solid ${c.sandLine}` }}>
+    <section style={{ background: c.page, ...sectionY, borderTop: `1px solid ${c.navyLine}` }}>
       <div style={wrap}>
         <SectionHead
           label="Visit the counter"
@@ -31,7 +31,7 @@ export default function VisitCounter() {
 
         <div className="fx-visit-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(24px,3vw,36px)', alignItems: 'stretch' }}>
           {/* Hours first: it is the one thing that decides whether the rest matters today. */}
-          <div style={{ border: `1px solid ${c.sandLine}`, borderRadius: 10, padding: 'clamp(24px,3vw,34px)', background: c.surface }}>
+          <div className="fx-hover-lift" style={{ border: `1px solid ${c.sandLine}`, borderRadius: 10, padding: 'clamp(24px,3vw,34px)', background: c.surface }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 22 }}>
               <span style={{ ...stamp, color: c.textFaint }}>Opening hours</span>
               <OpenStatus tone="light" />
@@ -44,7 +44,7 @@ export default function VisitCounter() {
 
           {/* The address, set as the largest thing in the block — it is what
               someone screenshots before they set off. */}
-          <div style={{ background: c.navy, borderRadius: 10, padding: 'clamp(24px,3vw,34px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 26 }}>
+          <div className="fx-hover-lift" style={{ background: c.navy, borderRadius: 10, padding: 'clamp(24px,3vw,34px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 26 }}>
             <div>
               <span style={{ ...stamp, color: c.accent }}>The shop</span>
               <p style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs['3xl'], lineHeight: 1.25, color: c.surface, margin: '16px 0 10px' }}>

@@ -1,19 +1,19 @@
 import { useNavigate } from 'react-router-dom';
-import { c, fs, fonts } from '../tokens';
+import { c, fs, fonts, btnPrimary, btnGhost } from '../tokens';
 import Seo from '../components/Seo';
 
 export default function NotFound() {
   const navigate = useNavigate();
   return (
-    <section style={{ background: c.sand, padding: '140px 0' }}>
+    <section style={{ background: c.page, padding: '140px 0' }}>
       <Seo title="Page Not Found" path="/404" noindex />
       <div style={{ maxWidth: 720, margin: '0 auto', padding: '0 32px', textAlign: 'center' }}>
-        <div style={{ fontFamily: fonts.mono, fontSize: fs.md, letterSpacing: '.2em', color: c.orange, marginBottom: 22 }}>ERROR 404</div>
-        <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h1, lineHeight: 1.08, color: c.navy, margin: '0 0 18px' }}>This page has been withdrawn from circulation</h1>
-        <p style={{ fontSize: fs.xl, lineHeight: 1.65, color: c.textMuted, margin: '0 0 34px' }}>The link may be out of date. The rate board, converter and branch list are all one click away.</p>
+        <div style={{ fontFamily: fonts.mono, fontSize: fs.md, letterSpacing: '.2em', color: c.accent, marginBottom: 22 }}>ERROR 404</div>
+        <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h1, lineHeight: 1.08, color: c.surface, margin: '0 0 18px' }}>This page has been withdrawn from circulation</h1>
+        <p style={{ fontSize: fs.xl, lineHeight: 1.65, color: c.onNavyText, margin: '0 0 34px' }}>The link may be out of date. The rate board, converter and branch list are all one click away.</p>
         <div style={{ display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <span onClick={() => navigate('/')} style={{ background: c.orange, color: c.surface, padding: '15px 26px', borderRadius: 9, fontSize: fs.md, fontWeight: 600, cursor: 'pointer' }}>Back to home</span>
-          <span onClick={() => navigate('/rates')} style={{ border: '1px solid ${c.softLine}', color: c.navy, background: c.surface, padding: '15px 26px', borderRadius: 9, fontSize: fs.md, fontWeight: 600, cursor: 'pointer' }}>Today's rates</span>
+          <span onClick={() => navigate('/')} style={{ ...btnPrimary, borderRadius: 9 }}>Back to home</span>
+          <span onClick={() => navigate('/rates')} style={{ ...btnGhost(true), borderRadius: 9 }}>Today's rates</span>
         </div>
       </div>
     </section>

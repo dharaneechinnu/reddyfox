@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { SERVICES } from '../data';
 import { c, fs, fonts, wrap } from '../tokens';
 import Seo from '../components/Seo';
+import Reveal from '../components/Reveal';
 import SitePhoto from '../components/SitePhoto';
 
 export default function Services() {
@@ -13,7 +14,7 @@ export default function Services() {
         description="Foreign exchange, Western Union money transfer, outward remittance, prepaid forex cards, wire transfers and student services — all under one RBI licence in T. Nagar, Chennai."
         path="/services"
       />
-      <section style={{ background: c.orange, padding: '60px 0 72px' }}>
+      <section style={{ background: c.page, padding: '60px 0 72px' }}>
         <div style={wrap}>
           <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.navyMuted, marginBottom: 22 }}>
             <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / Services
@@ -22,15 +23,15 @@ export default function Services() {
           <p style={{ fontSize: fs.lg, lineHeight: 1.6, color: c.onNavyText, margin: 0, maxWidth: 600 }}>Retail counters, remittance desks and a corporate dealing room operating under the same authorisation.</p>
         </div>
       </section>
-      <section style={{ background: c.sand, padding: '72px 0 96px' }}>
+      <section style={{ background: c.page, padding: '72px 0 96px' }}>
         <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 20 }}>
-          {SERVICES.map((s) => (
-            <div
+          {SERVICES.map((s, i) => (
+            <Reveal
               key={s.id}
+              delay={i * 0.07}
+              className="fx-hover-lift"
               onClick={() => navigate(`/services/${s.id}`)}
-              style={{ background: c.surface, border: `1px solid ${c.sandLine}`, borderRadius: 14, overflow: 'hidden', cursor: 'pointer', transition: 'box-shadow .22s,transform .22s' }}
-              onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 24px 40px -28px rgba(11,27,51,.4)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
+              style={{ background: c.surface, border: `1px solid ${c.sandLine}`, borderRadius: 14, overflow: 'hidden', cursor: 'pointer' }}
             >
               <SitePhoto
                 slot={`service_${s.id}`}
@@ -43,7 +44,7 @@ export default function Services() {
                 <p style={{ fontSize: fs.base, lineHeight: 1.62, color: c.textMuted, margin: '0 0 18px' }}>{s.body}</p>
                 <span style={{ fontSize: fs.base, fontWeight: 600, color: c.orange }}>Open service page →</span>
               </div>
-            </div>
+            </Reveal>
           ))}
         </div>
       </section>

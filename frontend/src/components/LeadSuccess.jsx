@@ -117,7 +117,7 @@ export default function LeadSuccess({ heading, children, onReset, resetLabel = '
         {/* The commitment, set apart — this is the line the visitor is deciding
             whether to trust. Neutral, with the time in gold: green here would be
             a fourth colour doing a job the words already do. */}
-        <div style={{ background: c.sand, border: `1px solid ${c.sandLine}`, borderRadius: 9, padding: '13px 14px', marginBottom: 18, textAlign: 'left', display: 'flex', gap: 11, alignItems: 'flex-start' }}>
+        <div style={{ background: c.page, border: `1px solid ${c.sandLine}`, borderRadius: 9, padding: '13px 14px', marginBottom: 18, textAlign: 'left', display: 'flex', gap: 11, alignItems: 'flex-start' }}>
           <span style={{ fontFamily: fonts.mono, fontSize: fs['2xs'], letterSpacing: '.1em', color: c.orange, border: `1px solid ${c.softLine}`, borderRadius: 4, padding: '4px 6px', flex: 'none', whiteSpace: 'nowrap' }}>
             {status.known && !status.open ? 'NEXT' : `${CALLBACK_MINUTES} MIN`}
           </span>

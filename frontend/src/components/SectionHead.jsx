@@ -1,4 +1,5 @@
 import { c, fs, fonts, stamp, h2Style } from '../tokens';
+import Reveal from './Reveal';
 
 /**
  * The heading block at the top of a section: a mono label, a hairline rule that
@@ -9,18 +10,18 @@ import { c, fs, fonts, stamp, h2Style } from '../tokens';
  * `aside` puts supporting copy opposite the heading on wide screens and
  * underneath it on narrow ones.
  */
-// `tone: 'ink'` for the dark panels, where the same three parts need the
-// light-on-dark end of the palette.
+// `ink` is the default now that every section ground is indigo. `light` is kept
+// for the one light surface left — the inside of a white card.
 const TONES = {
   light: { label: c.orange, rule: c.sandLine, title: c.navy, aside: c.textMuted },
   ink: { label: c.accent, rule: c.navyLine, title: c.surface, aside: c.onNavyText },
 };
 
-export default function SectionHead({ label, title, aside, align = 'left', maxWidth = 620, tone = 'light' }) {
+export default function SectionHead({ label, title, aside, align = 'left', maxWidth = 620, tone = 'ink' }) {
   const centred = align === 'center';
   const t = TONES[tone] || TONES.light;
   return (
-    <div style={{ marginBottom: 'clamp(32px,4vw,48px)' }}>
+    <Reveal style={{ marginBottom: 'clamp(32px,4vw,48px)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18, justifyContent: centred ? 'center' : 'flex-start' }}>
         <span style={{ ...stamp, color: t.label }}>{label}</span>
         <span aria-hidden="true" style={{ height: 1, background: t.rule, flex: centred ? '0 0 64px' : 1 }} />
@@ -33,6 +34,6 @@ export default function SectionHead({ label, title, aside, align = 'left', maxWi
           <p style={{ fontFamily: fonts.sans, fontSize: fs.lg, lineHeight: 1.62, color: t.aside, maxWidth: 400, margin: 0 }}>{aside}</p>
         )}
       </div>
-    </div>
+    </Reveal>
   );
 }

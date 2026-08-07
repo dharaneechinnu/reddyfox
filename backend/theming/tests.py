@@ -51,7 +51,7 @@ class ResetToDefaultsTests(TestCase):
         theme.reset_to_defaults()
 
         theme.refresh_from_db()
-        self.assertEqual(theme.brand, '#26307A')
+        self.assertEqual(theme.brand, '#1E2260')
         self.assertEqual(theme.surface, '#FFFFFF')
         self.assertEqual(theme.base_font_size, Decimal('16.0'))
         self.assertEqual(theme.font_serif, "'Instrument Serif', serif")
@@ -166,7 +166,7 @@ class ThemeApiTests(TestCase):
         response = self.client.get(reverse('site-theme'))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['css_variables']['--fx-brand'], DEFAULT_BRAND)
-        self.assertIn('Instrument+Sans', response.data['fonts_url'])
+        self.assertIn('Manrope', response.data['fonts_url'])
 
     def test_works_before_anyone_has_opened_the_admin(self):
         # The row is created on demand — a fresh deploy must not 500 here just because nobody

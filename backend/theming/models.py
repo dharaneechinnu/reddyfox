@@ -49,35 +49,34 @@ class ThemeSetting(models.Model):
     #   INK is text, the footer, and dark surfaces that are not actions (a table header, an address
     #     card). It never means "click me".
     #
-    # Two earlier palettes are worth knowing about so they are not re-proposed. Navy + ember came
-    # first. Then teal + gold on a parchment surface, and after that black + white + gold. Both gold
-    # versions hit the same wall: a gold light enough to look like gold cannot carry white text
-    # (~3.8:1), so the accent could not also be the button colour, and it needed a second darker
-    # value just for small text. Indigo clears 11.7:1 with white text and 10.6:1 on the cream, so
-    # one value does every job. `accent` is a light indigo used only for eyebrow text on the indigo
-    # panel, where the brand itself would disappear.
+    # Earlier palettes tried gold or teal as the primary action colour and hit the same wall each
+    # time: a gold light enough to look like gold cannot carry white text (~3.8:1), so it could
+    # never also be the button fill. Indigo clears 11.7:1 with white text and 10.6:1 on the cream,
+    # so it alone carries every action. `accent` is a gold used only for eyebrow text, stamps and
+    # small dividers — decoration, never a click target — where the brand's own indigo would be too
+    # dark to read against the dark brand panel, or too heavy against small print on the cream.
     brand = models.CharField(
-        max_length=7, default='#26307A', validators=[HEX_COLOR],
+        max_length=7, default='#1E2260', validators=[HEX_COLOR],
         help_text='Every action: buttons, links, active nav, and the one dark panel per page. Needs to '
                   'work both as a fill under white text and as small text on the page ground, so keep it '
                   'dark enough for 4.5:1 in both directions.',
     )
     brand_dark = models.CharField(
-        max_length=7, default='#1C2560', validators=[HEX_COLOR],
+        max_length=7, default='#171B58', validators=[HEX_COLOR],
         help_text='Hover/pressed state for anything using the brand colour. Should be a shade darker than it.',
     )
     accent = models.CharField(
-        max_length=7, default='#9AA2E0', validators=[HEX_COLOR],
-        help_text='A light tint of the brand, used only for eyebrow text and hairlines on the dark brand '
-                  'panel, where the brand colour itself would be invisible.',
+        max_length=7, default='#B08B3E', validators=[HEX_COLOR],
+        help_text='A gold accent used for eyebrow text, stamps and small dividers — on both the cream '
+                  'ground and the dark brand panel, where the brand colour itself would be invisible.',
     )
     ink = models.CharField(
-        max_length=7, default='#14161A', validators=[HEX_COLOR],
+        max_length=7, default='#1B1E4B', validators=[HEX_COLOR],
         help_text='Headings, the footer, and dark surfaces that are NOT actions — a table header, an '
                   'address card. Buttons use the brand colour, not this.',
     )
     ink_deep = models.CharField(
-        max_length=7, default='#0D0F12', validators=[HEX_COLOR],
+        max_length=7, default='#161A52', validators=[HEX_COLOR],
         help_text='The footer background — a touch darker than the heading colour.',
     )
     surface = models.CharField(
@@ -86,20 +85,20 @@ class ThemeSetting(models.Model):
                   'every card read as raised — do not set this to the same value as the page ground.',
     )
     surface_alt = models.CharField(
-        max_length=7, default='#F6F3EC', validators=[HEX_COLOR],
+        max_length=7, default='#F4F1EA', validators=[HEX_COLOR],
         help_text='The page ground, and the fill inside form fields. This is the colour most of the site '
                   'is; cards sit on top of it in the lighter surface colour above.',
     )
     line = models.CharField(
-        max_length=7, default='#E4DFD4', validators=[HEX_COLOR],
+        max_length=7, default='#E3E1EC', validators=[HEX_COLOR],
         help_text='Default border/divider colour on light backgrounds.',
     )
     body_text = models.CharField(
-        max_length=7, default='#3A3D45', validators=[HEX_COLOR],
+        max_length=7, default='#33364A', validators=[HEX_COLOR],
         help_text='Paragraph text. Needs at least 4.5:1 against the page ground.',
     )
     muted_text = models.CharField(
-        max_length=7, default='#5F636D', validators=[HEX_COLOR],
+        max_length=7, default='#5A5D78', validators=[HEX_COLOR],
         help_text='Secondary text: captions, help text, card descriptions. Every fainter shade on the '
                   'site is mixed from this, so lightening it lightens all of them — keep it at 4.5:1 '
                   'or better against the page ground.',
@@ -117,7 +116,7 @@ class ThemeSetting(models.Model):
 
     # --- typography ------------------------------------------------------
     font_sans = models.CharField(
-        max_length=200, default="'Instrument Sans', system-ui, sans-serif", help_text=FONT_STACK_HELP,
+        max_length=200, default="'Manrope', system-ui, sans-serif", help_text=FONT_STACK_HELP,
         verbose_name='Body font stack',
     )
     font_serif = models.CharField(
@@ -125,13 +124,13 @@ class ThemeSetting(models.Model):
         verbose_name='Heading font stack',
     )
     font_mono = models.CharField(
-        max_length=200, default="'IBM Plex Mono', monospace", help_text=FONT_STACK_HELP,
+        max_length=200, default="'JetBrains Mono', monospace", help_text=FONT_STACK_HELP,
         verbose_name='Mono font stack',
     )
     fonts_url = models.URLField(
         max_length=500, blank=True,
-        default='https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700'
-                '&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap',
+        default='https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1'
+                '&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap',
         verbose_name='Webfont stylesheet URL',
         help_text='Loaded before the page renders. Pick fonts at fonts.google.com, copy the URL out of its '
                   '"@import"/"link" snippet, and make sure every family named above appears in it. '

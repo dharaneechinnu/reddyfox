@@ -267,7 +267,7 @@ function Footer() {
 
 export default function Layout() {
   return (
-    <div className="fx-page-shell" style={{ minHeight: '100vh', background: c.sand }}>
+    <div className="fx-page-shell" style={{ minHeight: '100vh', background: c.page }}>
       <StatusRail />
       <Header />
       <Outlet />

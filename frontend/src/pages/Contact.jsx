@@ -21,7 +21,7 @@ export default function Contact() {
         description={`Visit Reddy Forex at ${contact.addressOneLine}, or call ${contact.mobiles[0].display} for today's rate.`}
         path="/contact"
       />
-      <section style={{ background: c.orange, padding: '60px 0 72px' }}>
+      <section style={{ background: c.page, padding: '60px 0 72px' }}>
         <div style={wrap}>
           <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.navyMuted, marginBottom: 22 }}>
             <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / Contact
@@ -33,7 +33,7 @@ export default function Contact() {
         </div>
       </section>
 
-      <section style={{ background: c.sand, padding: '64px 0 96px' }}>
+      <section style={{ background: c.page, padding: '64px 0 96px' }}>
         <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 24, alignItems: 'start' }}>
           <RequestForm kind="enquiry" initialService={initialService} />
 

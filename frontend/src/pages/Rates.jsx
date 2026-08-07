@@ -79,7 +79,7 @@ export default function Rates() {
         description="Live buy and sell rates for USD, EUR, GBP and other major currencies at Reddy Forex, T. Nagar, Chennai — updated daily by our RBI-authorised dealing desk."
         path="/rates"
       />
-      <section style={{ background: c.orange, padding: '60px 0 44px' }}>
+      <section style={{ background: c.page, padding: '60px 0 44px' }}>
         <div style={wrap}>
           <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.navyMuted, marginBottom: 22 }}>
             <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / Exchange rates
@@ -99,16 +99,16 @@ export default function Rates() {
         </div>
       </section>
 
-      <section style={{ background: c.sand, padding: '44px 0 96px' }}>
+      <section style={{ background: c.page, padding: '44px 0 96px' }}>
         <div style={wrap}>
           {fx.favs.length > 0 && (
             <div style={{ marginBottom: 36 }}>
-              <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.orange, margin: '0 0 16px' }}>Favourites</p>
+              <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.accent, margin: '0 0 16px' }}>Favourites</p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(230px,100%),1fr))', gap: 16 }}>
                 {fx.favs.map((code) => {
                   const r = fx.rates[code];
                   return (
-                    <div key={code} style={{ background: c.surface, border: `1px solid ${c.sandLine}`, borderRadius: 13, padding: '20px 22px' }}>
+                    <div key={code} className="fx-hover-lift" style={{ background: c.surface, border: `1px solid ${c.sandLine}`, borderRadius: 13, padding: '20px 22px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                         <span style={{ fontSize: fs.md, fontWeight: 600, color: c.navy }}>{code}<span style={{ color: c.textFainter, fontWeight: 400 }}> / INR</span></span>
                         <StarButton active onClick={() => fx.toggleFav(code)} />
@@ -126,7 +126,7 @@ export default function Rates() {
           )}
 
           {forexCardError && (
-            <div style={{ marginBottom: 20, fontSize: fs.sm, color: c.redText }}>Couldn't load Forex Card rates: {forexCardError} — showing Currency rates only.</div>
+            <div style={{ marginBottom: 20, fontSize: fs.sm, color: c.redLight }}>Couldn't load Forex Card rates: {forexCardError} — showing Currency rates only.</div>
           )}
 
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>

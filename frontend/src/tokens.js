@@ -25,7 +25,11 @@ export const c = {
   orangeDark: v('brand-dark'),
   orangeDarker: v('brand-darker'),
   accent: v('accent'),
+  accentOnInk: v('accent-on-ink'),
   serviceIconBg: v('brand-tint'),
+  // The three step tiles on the indigo panel, in order. One hue, lifted further
+  // off the panel at each step, each carrying the brand ink mark — see theme.css.
+  stepTints: [v('brand-step-1'), v('brand-step-2'), v('brand-step-3')],
   onOrangeText: v('brand-pale'),
   brandPale: v('brand-pale'),
 
@@ -54,6 +58,11 @@ export const c = {
 
   // --- surfaces ----------------------------------------------------------
   surface: v('surface'),
+  /** The ground a full-width section sits on. Indigo — see theme.css. */
+  page: v('page'),
+  /** A panel raised off that ground: the hero's step cards, the callback form. */
+  panel: v('panel'),
+  /** The cream. Card fills and the tints inside them only, never a section. */
   sand: v('surface-alt'),
   cream: v('surface-2'),
   sandCard: v('surface-3'),
@@ -196,21 +205,26 @@ export const stamp = {
 };
 
 /**
- * The primary action: indigo, with white text.
+ * The primary action: white, with an indigo label.
  *
- * Indigo is the site's action colour — if it is indigo it does something — and
- * it carries white text at 11.7:1, so unlike the palettes this replaced the
- * accent and the button fill can be the same value. `btnPrimaryHover` is the
- * matching hover fill; use it rather than reaching for a shade of your own, so
- * every primary button on the site behaves identically.
+ * It used to be the other way round — indigo fill, white label — which worked
+ * while pages stood on cream. The ground is indigo now, and an indigo button on
+ * an indigo ground is not a button, so the fill and the label swapped. This is
+ * the one place that decision is made; `btnPrimaryHover` is the matching hover
+ * fill, so every primary button on the site behaves identically.
+ *
+ * `btnOnBrand` is kept as an alias: plenty of call sites reach for it by name
+ * to say "this one is on the dark panel", and now that every ground is the dark
+ * panel it resolves to the same thing rather than to a second definition that
+ * could drift.
  */
 export const btnPrimary = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
   gap: 9,
-  background: c.orange,
-  color: c.surface,
+  background: c.surface,
+  color: c.orange,
   padding: '15px 26px',
   borderRadius: 8,
   fontSize: fs.md,
@@ -220,20 +234,18 @@ export const btnPrimary = {
   whiteSpace: 'nowrap',
 };
 
-export const btnPrimaryHover = c.orangeDark;
+export const btnPrimaryHover = c.brandPale;
+
+export const btnOnBrand = btnPrimary;
 
 /**
- * The primary action when it sits ON the indigo panel — white fill, indigo
- * label. An indigo button on an indigo panel is not a button.
+ * The quiet second action.
+ *
+ * `onInk` is now the only case that exists on a page ground — it is kept as a
+ * parameter because the light variant is still correct inside a white card,
+ * which is the only light surface left.
  */
-export const btnOnBrand = {
-  ...btnPrimary,
-  background: c.surface,
-  color: c.orange,
-};
-
-/** The quiet second action. On dark panels pass `onInk` for the right border. */
-export const btnGhost = (onInk = false) => ({
+export const btnGhost = (onInk = true) => ({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',

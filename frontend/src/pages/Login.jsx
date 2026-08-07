@@ -19,7 +19,7 @@ export default function Login() {
           <div><div style={{ fontFamily: fonts.mono, fontSize: fs['2xl'], color: c.surface }}>2FA</div><div style={{ fontSize: fs.sm, color: c.navyMuted2, marginTop: 4 }}>On every login</div></div>
         </div>
       </div>
-      <div style={{ background: c.sand, padding: 'clamp(40px,8vw,80px) clamp(24px,6vw,56px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: c.page, padding: 'clamp(40px,8vw,80px) clamp(24px,6vw,56px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ width: '100%', maxWidth: 400 }}>
           <h2 style={{ fontSize: fs['3xl'], fontWeight: 600, color: c.navy, margin: '0 0 8px' }}>Sign in</h2>
           <p style={{ fontSize: fs.base, color: c.textMuted, margin: '0 0 30px' }}>New to Reddy Forex? <span style={{ color: c.orange, fontWeight: 600, cursor: 'pointer' }}>Register a company account</span></p>
