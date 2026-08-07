@@ -36,21 +36,22 @@ export default function CallbackForm() {
     }),
   });
 
-  if (f.result) {
-    return (
-      <LeadSuccess
-        heading={`Thanks, ${f.values.name.trim().split(' ')[0]} — we've got your details`}
-        onReset={f.reset}
-        resetLabel="Request another callback"
-      >
-        Our team will call you back shortly with the best price on{' '}
-        <strong>{fx.calc.amountLabel}</strong>.
-      </LeadSuccess>
-    );
-  }
+  // The confirmation is a centred dialog over the page (see LeadSuccess), so
+  // the form stays mounted underneath it rather than being replaced — swapping
+  // it out would leave a hole in the hero where the docket had been.
+  const confirmation = f.result ? (
+    <LeadSuccess
+      heading={`Thanks, ${f.values.name.trim().split(' ')[0]}`}
+      onReset={f.reset}
+      resetLabel="Request another callback"
+    >
+      A dealer will call you with the rate for <strong>{fx.calc.amountLabel}</strong>.
+    </LeadSuccess>
+  ) : null;
 
   return (
     <form noValidate onSubmit={f.handleSubmit}>
+      {confirmation}
       <Honeypot id={`${ID}-enquiry_ref`} value={f.values.enquiry_ref} onChange={(e) => f.setField('enquiry_ref', e.target.value)} />
       <ErrorSummary count={f.errorCount} serverError={f.serverError} />
 
@@ -69,7 +70,7 @@ export default function CallbackForm() {
 
       <SubmitButton sending={f.sending} sendingLabel="Sending…">Get best price</SubmitButton>
       <p style={{ margin: '10px 0 0', fontSize: fs.xs, lineHeight: 1.5, color: c.textFainter, textAlign: 'center' }}>
-        Figures shown are approximate — we'll call with the exact price.
+        A dealer calls you with the exact rate for this amount.
       </p>
     </form>
   );

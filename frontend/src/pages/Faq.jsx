@@ -45,8 +45,8 @@ export default function Faq() {
     borderRadius: 9,
     fontSize: fs.base,
     fontWeight: 500,
-    color: isActive ? c.surface : c.text,
-    background: isActive ? c.navy : 'transparent',
+    color: isActive ? c.orange : c.onNavyText,
+    background: isActive ? c.surface : 'transparent',
     cursor: 'pointer',
     transition: 'background .18s',
   });
@@ -60,7 +60,7 @@ export default function Faq() {
         jsonLd={faqJsonLd}
         jsonLdId="faq"
       />
-      <section style={{ background: c.navy, padding: '60px 0 72px' }}>
+      <section style={{ background: c.page, padding: '60px 0 72px' }}>
         <div style={wrap}>
           <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.navyMuted, marginBottom: 22 }}>
             <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / FAQ
@@ -69,13 +69,13 @@ export default function Faq() {
           <p style={{ fontSize: fs.lg, lineHeight: 1.6, color: c.onNavyText, margin: 0, maxWidth: 560 }}>Documents, limits, timings and buy-back — answered plainly.</p>
         </div>
       </section>
-      <section style={{ background: c.sand, padding: '64px 0 96px' }}>
+      <section style={{ background: c.page, padding: '64px 0 96px' }}>
         <div className="fx-faq-grid" style={{ ...wrap, display: 'grid', gridTemplateColumns: 'minmax(220px,260px) 1fr', gap: 40, alignItems: 'start' }}>
           <div className="fx-faq-rail" style={{ position: 'sticky', top: 100, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span
               onClick={() => setActiveCat(null)}
               style={catStyle(activeCat === null)}
-              onMouseEnter={(e) => { if (activeCat !== null) e.currentTarget.style.background = c.swatch; }}
+              onMouseEnter={(e) => { if (activeCat !== null) e.currentTarget.style.background = 'rgba(255,255,255,.08)'; }}
               onMouseLeave={(e) => { if (activeCat !== null) e.currentTarget.style.background = 'transparent'; }}
             >
               All questions
@@ -85,7 +85,7 @@ export default function Faq() {
                 key={cat.id}
                 onClick={() => setActiveCat(cat.name)}
                 style={catStyle(activeCat === cat.name)}
-                onMouseEnter={(e) => { if (activeCat !== cat.name) e.currentTarget.style.background = c.swatch; }}
+                onMouseEnter={(e) => { if (activeCat !== cat.name) e.currentTarget.style.background = 'rgba(255,255,255,.08)'; }}
                 onMouseLeave={(e) => { if (activeCat !== cat.name) e.currentTarget.style.background = 'transparent'; }}
               >
                 {cat.name}
@@ -115,7 +115,7 @@ export default function Faq() {
                 />
                 <div style={{ background: c.cream, border: `1px solid ${c.sandLine}`, borderTop: 'none', borderRadius: '0 0 14px 14px', padding: 30, display: 'flex', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', alignItems: 'center' }}>
                   <span style={{ fontSize: fs.md, color: c.text }}>Still unanswered? The branch team replies within an hour.</span>
-                  <span onClick={() => navigate('/contact')} style={{ background: c.navy, color: c.surface, padding: '13px 22px', borderRadius: 9, fontSize: fs.base, fontWeight: 600, cursor: 'pointer' }}>Contact us</span>
+                  <span onClick={() => navigate('/contact')} style={{ background: c.orange, color: c.surface, padding: '13px 22px', borderRadius: 9, fontSize: fs.base, fontWeight: 600, cursor: 'pointer' }}>Contact us</span>
                 </div>
               </>
             )}

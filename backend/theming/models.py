@@ -40,66 +40,83 @@ class ThemeSetting(models.Model):
     """Singleton — one row, auto-created, never deleted."""
 
     # --- core palette ----------------------------------------------------
-    # "Deep Teal + Gold" — a heritage-bank palette chosen over the original Navy + Ember for a
-    # regulated money changer: teal reads as institutional trust, the gold accent signals value
-    # without looking gimmicky, and the parchment surface avoids the stark, screen-glare white
-    # of a pure #FFFFFF background. brand/brand_dark were picked so white button text clears
-    # ~3.8:1 contrast — matching the original orange's own real-world contrast rather than
-    # chasing textbook AA on a small bold label, since strict AA (4.5:1) pushed the gold into a
-    # dull brown. See docs/ (or the PR that introduced this) for the fuller rationale and the
-    # two alternatives that were not picked.
+    # "Indigo, Cream and Ink" — three colours, each with exactly one job:
+    #
+    #   INDIGO (brand) is every action. Buttons, links, active nav, and the one dark panel a page
+    #     is allowed. If it is indigo, it does something.
+    #   CREAM (surface_alt) is the page ground. Not white — white is held back for cards, so a card
+    #     is always lighter than what it sits on and reads as raised without a shadow saying so.
+    #   INK is text, the footer, and dark surfaces that are not actions (a table header, an address
+    #     card). It never means "click me".
+    #
+    # Earlier palettes tried gold or teal as the primary action colour and hit the same wall each
+    # time: a gold light enough to look like gold cannot carry white text (~3.8:1), so it could
+    # never also be the button fill. Indigo clears 11.7:1 with white text and 10.6:1 on the cream,
+    # so it alone carries every action. `accent` is a gold used only for eyebrow text, stamps and
+    # small dividers — decoration, never a click target — where the brand's own indigo would be too
+    # dark to read against the dark brand panel, or too heavy against small print on the cream.
     brand = models.CharField(
-        max_length=7, default='#A87B2C', validators=[HEX_COLOR],
-        help_text='Primary accent: buttons, links, eyebrow labels, active underlines.',
+        max_length=7, default='#1E2260', validators=[HEX_COLOR],
+        help_text='Every action: buttons, links, active nav, and the one dark panel per page. Needs to '
+                  'work both as a fill under white text and as small text on the page ground, so keep it '
+                  'dark enough for 4.5:1 in both directions.',
     )
     brand_dark = models.CharField(
-        max_length=7, default='#8C6624', validators=[HEX_COLOR],
+        max_length=7, default='#171B58', validators=[HEX_COLOR],
         help_text='Hover/pressed state for anything using the brand colour. Should be a shade darker than it.',
     )
     accent = models.CharField(
-        max_length=7, default='#DCB35F', validators=[HEX_COLOR],
-        help_text='Lighter brand tone, used for eyebrow text on dark navy panels where the brand colour is too dim.',
+        max_length=7, default='#B08B3E', validators=[HEX_COLOR],
+        help_text='A gold accent used for eyebrow text, stamps and small dividers — on both the cream '
+                  'ground and the dark brand panel, where the brand colour itself would be invisible.',
     )
     ink = models.CharField(
-        max_length=7, default='#0E3B3E', validators=[HEX_COLOR],
-        help_text='Headings, and the background of the dark page-hero sections.',
+        max_length=7, default='#1B1E4B', validators=[HEX_COLOR],
+        help_text='Headings, the footer, and dark surfaces that are NOT actions — a table header, an '
+                  'address card. Buttons use the brand colour, not this.',
     )
     ink_deep = models.CharField(
-        max_length=7, default='#072A2C', validators=[HEX_COLOR],
+        max_length=7, default='#161A52', validators=[HEX_COLOR],
         help_text='The footer background — a touch darker than the heading colour.',
     )
     surface = models.CharField(
-        max_length=7, default='#F7F2E7', validators=[HEX_COLOR],
-        help_text='Page background and card background.',
+        max_length=7, default='#FFFFFF', validators=[HEX_COLOR],
+        help_text='CARD background. Deliberately lighter than the page ground below, which is what makes '
+                  'every card read as raised — do not set this to the same value as the page ground.',
     )
     surface_alt = models.CharField(
-        max_length=7, default='#EDE3CC', validators=[HEX_COLOR],
-        help_text='The warm off-white used for alternating page sections and form fields.',
+        max_length=7, default='#F4F1EA', validators=[HEX_COLOR],
+        help_text='The page ground, and the fill inside form fields. This is the colour most of the site '
+                  'is; cards sit on top of it in the lighter surface colour above.',
     )
     line = models.CharField(
-        max_length=7, default='#DDD2B4', validators=[HEX_COLOR],
+        max_length=7, default='#E3E1EC', validators=[HEX_COLOR],
         help_text='Default border/divider colour on light backgrounds.',
     )
     body_text = models.CharField(
-        max_length=7, default='#3D4A4B', validators=[HEX_COLOR],
-        help_text='Paragraph text.',
+        max_length=7, default='#33364A', validators=[HEX_COLOR],
+        help_text='Paragraph text. Needs at least 4.5:1 against the page ground.',
     )
     muted_text = models.CharField(
-        max_length=7, default='#6B7877', validators=[HEX_COLOR],
-        help_text='Secondary text: captions, help text, card descriptions.',
+        max_length=7, default='#5A5D78', validators=[HEX_COLOR],
+        help_text='Secondary text: captions, help text, card descriptions. Every fainter shade on the '
+                  'site is mixed from this, so lightening it lightens all of them — keep it at 4.5:1 '
+                  'or better against the page ground.',
     )
+    # Not part of the three-colour palette: these two are semantic signals, kept only where
+    # meaning depends on them — which way a rate moved, and which form field is wrong.
     success = models.CharField(
-        max_length=7, default='#2E8B62', validators=[HEX_COLOR],
-        help_text='Rate moved up, form submitted, WhatsApp panel.',
+        max_length=7, default='#1F7A4C', validators=[HEX_COLOR],
+        help_text='Rate moved up. A signal, not a brand colour — nothing decorative should use it.',
     )
     danger = models.CharField(
-        max_length=7, default='#B5482E', validators=[HEX_COLOR],
-        help_text='Rate moved down, validation errors.',
+        max_length=7, default='#A8342A', validators=[HEX_COLOR],
+        help_text='Rate moved down, and validation errors. A signal, not a brand colour.',
     )
 
     # --- typography ------------------------------------------------------
     font_sans = models.CharField(
-        max_length=200, default="'Instrument Sans', system-ui, sans-serif", help_text=FONT_STACK_HELP,
+        max_length=200, default="'Manrope', system-ui, sans-serif", help_text=FONT_STACK_HELP,
         verbose_name='Body font stack',
     )
     font_serif = models.CharField(
@@ -107,13 +124,13 @@ class ThemeSetting(models.Model):
         verbose_name='Heading font stack',
     )
     font_mono = models.CharField(
-        max_length=200, default="'IBM Plex Mono', monospace", help_text=FONT_STACK_HELP,
+        max_length=200, default="'JetBrains Mono', monospace", help_text=FONT_STACK_HELP,
         verbose_name='Mono font stack',
     )
     fonts_url = models.URLField(
         max_length=500, blank=True,
-        default='https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700'
-                '&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap',
+        default='https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1'
+                '&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap',
         verbose_name='Webfont stylesheet URL',
         help_text='Loaded before the page renders. Pick fonts at fonts.google.com, copy the URL out of its '
                   '"@import"/"link" snippet, and make sure every family named above appears in it. '
@@ -124,11 +141,16 @@ class ThemeSetting(models.Model):
     # Two knobs, not ten independently-editable sizes: a scale whose steps are set by hand
     # drifts (this site had 27 distinct hardcoded sizes before this app, including 14.5, 14.6
     # and 14.8 all doing the same job).
+    # 16px, the browser default and the size long-form text on a financial site should be set at.
+    # The scale's ratios are still measured from REFERENCE_BASE (14.5), the size the design was
+    # originally built at — so this default simply scales that whole set up by 16/14.5 and every
+    # proportion is preserved. Do not "simplify" this by moving REFERENCE_BASE to match.
     base_font_size = models.DecimalField(
-        max_digits=4, decimal_places=1, default=14.5,
+        max_digits=4, decimal_places=1, default=16,
         validators=[MinValueValidator(10), MaxValueValidator(24)],
         help_text='Pixel size of standard UI text, and the anchor for every other size on the site — '
-                  'raising it scales all text up proportionally. Between 10 and 24.',
+                  'raising it scales all text up proportionally. Between 10 and 24; 16 is the default '
+                  'and anything below about 14 gets hard to read on a phone.',
     )
     heading_scale = models.DecimalField(
         max_digits=4, decimal_places=2, default=1.00,

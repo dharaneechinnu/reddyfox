@@ -105,17 +105,17 @@ export default function RequestForm({ kind, initialService }) {
     },
   });
 
-  if (f.result) {
-    return (
-      <LeadSuccess
-        heading={copy.successHeading(f.values.name.trim().split(' ')[0])}
-        onReset={f.reset}
-        resetLabel={copy.resetLabel}
-      >
-        {copy.successBody(f.values)}
-      </LeadSuccess>
-    );
-  }
+  // A centred dialog over the page rather than a panel replacing the form (see
+  // LeadSuccess), so the form stays mounted behind it.
+  const confirmation = f.result ? (
+    <LeadSuccess
+      heading={copy.successHeading(f.values.name.trim().split(' ')[0])}
+      onReset={f.reset}
+      resetLabel={copy.resetLabel}
+    >
+      {copy.successBody(f.values)}
+    </LeadSuccess>
+  ) : null;
 
   const transfer = isMoneyTransfer(f.values.service);
   // Only offer currencies actually on the board.
@@ -123,6 +123,7 @@ export default function RequestForm({ kind, initialService }) {
 
   return (
     <form noValidate onSubmit={f.handleSubmit} style={formCard}>
+      {confirmation}
       <h2 style={{ fontSize: fs['2xl'], fontWeight: 600, color: c.navy, margin: '0 0 24px' }}>{copy.heading}</h2>
 
       <Honeypot id={`${ID}-enquiry_ref`} value={f.values.enquiry_ref} onChange={(e) => f.setField('enquiry_ref', e.target.value)} />

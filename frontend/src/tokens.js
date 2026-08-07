@@ -25,8 +25,13 @@ export const c = {
   orangeDark: v('brand-dark'),
   orangeDarker: v('brand-darker'),
   accent: v('accent'),
+  accentOnInk: v('accent-on-ink'),
   serviceIconBg: v('brand-tint'),
+  // The three step tiles on the indigo panel, in order. One hue, lifted further
+  // off the panel at each step, each carrying the brand ink mark — see theme.css.
+  stepTints: [v('brand-step-1'), v('brand-step-2'), v('brand-step-3')],
   onOrangeText: v('brand-pale'),
+  brandPale: v('brand-pale'),
 
   // --- ink / dark panels -------------------------------------------------
   navy: v('ink'),
@@ -53,6 +58,11 @@ export const c = {
 
   // --- surfaces ----------------------------------------------------------
   surface: v('surface'),
+  /** The ground a full-width section sits on. Indigo — see theme.css. */
+  page: v('page'),
+  /** A panel raised off that ground: the hero's step cards, the callback form. */
+  panel: v('panel'),
+  /** The cream. Card fills and the tints inside them only, never a section. */
   sand: v('surface-alt'),
   cream: v('surface-2'),
   sandCard: v('surface-3'),
@@ -164,3 +174,90 @@ export const h2Style = {
   color: c.navy,
   margin: 0,
 };
+
+/**
+ * The card shape used across the site: white, hairline-bordered, no drop shadow.
+ * The white is what does the work — it is lighter than the cream page ground, so
+ * a card reads as raised without a shadow saying so (see theme.css). Cards do
+ * not respond to hover; that was tried and taken back out.
+ */
+export const card = {
+  background: c.surface,
+  border: `1px solid ${c.sandLine}`,
+  borderRadius: 10,
+  overflow: 'hidden',
+};
+
+/** Vertical rhythm for a full-width section. One value, so sections can't drift. */
+export const sectionY = { padding: 'clamp(58px,7vw,96px) 0' };
+
+/**
+ * The mono label that heads a section, sized and spaced like the print on a
+ * currency band. Used with a rule beside it in the section headers.
+ */
+export const stamp = {
+  fontFamily: fonts.mono,
+  fontWeight: 500,
+  fontSize: fs.xs,
+  lineHeight: 1.4,
+  letterSpacing: '.2em',
+  textTransform: 'uppercase',
+};
+
+/**
+ * The primary action: white, with an indigo label.
+ *
+ * It used to be the other way round — indigo fill, white label — which worked
+ * while pages stood on cream. The ground is indigo now, and an indigo button on
+ * an indigo ground is not a button, so the fill and the label swapped. This is
+ * the one place that decision is made; `btnPrimaryHover` is the matching hover
+ * fill, so every primary button on the site behaves identically.
+ *
+ * `btnOnBrand` is kept as an alias: plenty of call sites reach for it by name
+ * to say "this one is on the dark panel", and now that every ground is the dark
+ * panel it resolves to the same thing rather than to a second definition that
+ * could drift.
+ */
+export const btnPrimary = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 9,
+  background: c.surface,
+  color: c.orange,
+  padding: '15px 26px',
+  borderRadius: 8,
+  fontSize: fs.md,
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'background .18s ease',
+  whiteSpace: 'nowrap',
+};
+
+export const btnPrimaryHover = c.brandPale;
+
+export const btnOnBrand = btnPrimary;
+
+/**
+ * The quiet second action.
+ *
+ * `onInk` is now the only case that exists on a page ground — it is kept as a
+ * parameter because the light variant is still correct inside a white card,
+ * which is the only light surface left.
+ */
+export const btnGhost = (onInk = true) => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 9,
+  border: `1px solid ${onInk ? c.navyLine : c.softLine}`,
+  color: onInk ? c.surface : c.navy,
+  background: 'transparent',
+  padding: '15px 26px',
+  borderRadius: 8,
+  fontSize: fs.md,
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'border-color .18s ease, background .18s ease',
+  whiteSpace: 'nowrap',
+});

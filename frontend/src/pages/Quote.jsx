@@ -15,7 +15,7 @@ export default function Quote() {
         description="Tell Reddy Forex which currency and amount you need and our T. Nagar, Chennai dealers will come back with a price — no obligation."
         path="/quote"
       />
-      <section style={{ background: c.navy, padding: '60px 0 72px' }}>
+      <section style={{ background: c.page, padding: '60px 0 72px' }}>
         <div style={wrap}>
           <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.navyMuted, marginBottom: 22 }}>
             <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / Get a quote
@@ -29,7 +29,7 @@ export default function Quote() {
         </div>
       </section>
 
-      <section style={{ background: c.sand, padding: '64px 0 96px' }}>
+      <section style={{ background: c.page, padding: '64px 0 96px' }}>
         <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 24, alignItems: 'start' }}>
           <RequestForm kind="quote" initialService={initialService} />
 
@@ -50,7 +50,7 @@ export default function Quote() {
                   {m.display}
                 </a>
               ))}
-              <a href={`mailto:${contact.email}`} style={{ fontSize: fs.base }}>{contact.email}</a>
+              <a href={`mailto:${contact.email}`} style={{ fontSize: fs.base, color: c.onNavyLink }}>{contact.email}</a>
             </div>
 
             <p style={{ fontSize: fs.sm, lineHeight: 1.6, color: c.navyMuted2, margin: '22px 0 0' }}>

@@ -373,6 +373,17 @@ class SiteSettingAdmin(admin.ModelAdmin):
             'description': 'The same values shown everywhere on the site — one edit here updates the header top '
                            'bar, the footer, the Contact page and every "call us" prompt at once.',
         }),
+        ('Counter opening hours', {
+            'fields': (
+                'hours_weekday_open', 'hours_weekday_close',
+                'hours_sunday_open', 'hours_sunday_close',
+                'hours_note',
+            ),
+            'description': 'Shown in the header bar, the homepage "Visit the counter" block, the footer and the '
+                           'Contact page — and used for the live "Open now / Closed" badge, which is worked out in '
+                           'Chennai time. Leave the Sunday times blank if the shop is closed on Sundays. '
+                           'Only publish the hours the shop actually keeps.',
+        }),
         ('Footer content', {
             'fields': ('footer_legal_name', 'footer_tagline'),
             'description': 'The company name in the footer copyright line and the short description shown '

@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import useApi from '../hooks/useApi';
 import { fetchSiteSettings } from '../api';
-import { CONTACT as DEFAULT_CONTACT, SOCIALS as DEFAULT_SOCIALS, COMPANY } from '../company';
+import { CONTACT as DEFAULT_CONTACT, SOCIALS as DEFAULT_SOCIALS, HOURS as DEFAULT_HOURS, COMPANY } from '../company';
 
 const DEFAULT_FOOTER = { legalName: COMPANY.legalName, tagline: `${COMPANY.regulator}. Foreign currency exchange, money transfer and remittance services in Chennai since ${COMPANY.since}.` };
 
@@ -9,6 +9,7 @@ const DEFAULT_VALUE = {
   contact: DEFAULT_CONTACT,
   socials: DEFAULT_SOCIALS,
   footer: DEFAULT_FOOTER,
+  hours: DEFAULT_HOURS,
   primaryPhone: DEFAULT_CONTACT.mobiles[0],
 };
 
@@ -35,6 +36,7 @@ export function CompanyInfoProvider({ children }) {
       contact: data.contact,
       socials: data.socials?.length ? data.socials : DEFAULT_SOCIALS,
       footer: data.footer?.tagline ? data.footer : DEFAULT_FOOTER,
+      hours: data.hours?.weekday ? data.hours : DEFAULT_HOURS,
       primaryPhone: data.contact.mobiles[0] || DEFAULT_VALUE.primaryPhone,
     }
     : DEFAULT_VALUE;

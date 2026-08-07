@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { NAV, SERVICES, FOOTER_COLS } from '../data';
+import { NAV, FOOTER_COLS } from '../data';
 import { COMPANY } from '../company';
-import { c, fs, fonts, wrap } from '../tokens';
+import { c, fs, fonts, wrap, stamp, btnOnBrand } from '../tokens';
 import { useFeatureFlag } from '../context/FeatureFlagsContext';
 import { useCompanyInfo } from '../context/CompanyInfoContext';
 import useApi from '../hooks/useApi';
@@ -10,6 +10,7 @@ import { fetchSiteImages } from '../api';
 import SocialIcon from './SocialIcon';
 import WhatsAppButton from './WhatsAppButton';
 import MobileBottomNav from './MobileBottomNav';
+import OpenStatus, { HoursTable } from './OpenStatus';
 
 // Module scope so useApi doesn't refetch this on every render — Header is
 // mounted once per page via Layout.
@@ -17,87 +18,62 @@ const loadSiteImages = () => fetchSiteImages();
 
 const LOGO_SLOT = 'site_logo';
 
-function TopBar() {
-  const { contact, primaryPhone } = useCompanyInfo();
+// Every column heading in the footer, in one place: SERVICES, COMPANY,
+// OPENING HOURS and the shop-info row all share it.
+const footerHeading = { ...stamp, letterSpacing: '.16em', color: c.surface, marginBottom: 18 };
+
+/**
+ * The thin rail above the header: the licence, the counter's hours, the email.
+ *
+ * All three are standing facts about the shop. The live "Open now / Closed"
+ * badge deliberately isn't here — it belongs next to the hours it qualifies, in
+ * the hero and the footer, and a rail that changes through the day is a rail
+ * people stop reading.
+ */
+function StatusRail() {
+  const { contact, hours } = useCompanyInfo();
   return (
-    <div style={{ background: c.navy, color: c.onNavyText, fontSize: fs.sm, letterSpacing: '.01em' }}>
-      <div className="fx-topbar-inner" style={{ ...wrap, padding: '10px 32px', display: 'flex', flexWrap: 'wrap', gap: '8px 20px', alignItems: 'center', justifyContent: 'space-between', lineHeight: 1.5 }}>
-        <div style={{ display: 'flex', gap: 22, alignItems: 'center', flexWrap: 'wrap' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.green, display: 'inline-block', animation: 'fx-pulse 2.4s ease-in-out infinite' }} />
-            {COMPANY.regulator}
-          </span>
-          <span className="fx-topbar-years" style={{ opacity: .45 }}>|</span>
-          <span className="fx-topbar-years">{COMPANY.yearsExperience} years of experience</span>
-        </div>
-        <div style={{ display: 'flex', gap: 22, alignItems: 'center', flexWrap: 'wrap' }}>
-          <a href={`tel:${primaryPhone.tel}`} style={{ color: c.onNavyLink }}>{primaryPhone.display}</a>
-          <span style={{ opacity: .45 }}>|</span>
-          <a href={`mailto:${contact.email}`} style={{ color: c.onNavyLink }}>{contact.email}</a>
-        </div>
+    <div style={{ background: c.orangeDark, color: c.onNavyText }}>
+      <div
+        className="fx-topbar-inner"
+        style={{ ...wrap, padding: '8px clamp(16px,4.5vw,32px)', display: 'flex', flexWrap: 'wrap', gap: '4px 22px', alignItems: 'center', justifyContent: 'space-between', fontFamily: fonts.mono, fontSize: fs.sm, letterSpacing: '.06em', lineHeight: 1.5 }}
+      >
+        <span style={{ textTransform: 'uppercase', color: c.accent }}>
+          {COMPANY.regulatorShort} <span aria-hidden="true" style={{ opacity: .5 }}>·</span> Since {COMPANY.since}
+        </span>
+        {/* The counter's hours, from the admin. The live Open now / Closed badge
+            lives in the hero and the footer instead — the rail is a standing fact
+            about the shop, not a clock. */}
+        <span style={{ textTransform: 'uppercase', color: c.surface }}>
+          {hours.weekday.labelShort} {hours.weekday.display}
+        </span>
+        <a href={`mailto:${contact.email}`} style={{ display: 'inline-block', padding: '3px 0', color: c.onNavyLink }}>{contact.email}</a>
       </div>
     </div>
   );
 }
 
-function NavItem({ label, to, onEnter }) {
-  const [hover, setHover] = useState(false);
+function NavItem({ label, to }) {
   return (
     <NavLink
       to={to}
-      style={{
-        padding: '9px 13px', borderRadius: 7, fontSize: fs.base, fontWeight: 500,
-        color: hover ? c.navy : c.navyMid, cursor: 'pointer', transition: 'background .18s,color .18s',
-        whiteSpace: 'nowrap', background: hover ? c.sandCard : 'transparent', textDecoration: 'none',
-      }}
-      onPointerEnter={() => { setHover(true); onEnter && onEnter(); }}
-      onPointerLeave={() => setHover(false)}
+      className="fx-navlink"
+      style={({ isActive }) => ({
+        padding: '6px 0', fontSize: fs.md, fontWeight: 500,
+        color: isActive ? c.surface : c.onNavyText, textDecoration: 'none', whiteSpace: 'nowrap',
+        transition: 'color .18s ease',
+      })}
     >
       {label}
     </NavLink>
   );
 }
 
-function MegaMenu({ open, onClose }) {
-  const navigate = useNavigate();
-  const { contact } = useCompanyInfo();
-  if (!open) return null;
-  return (
-    <div onMouseLeave={onClose} style={{ borderTop: `1px solid ${c.sandLine}`, background: c.surface, boxShadow: '0 22px 40px -24px rgba(11,27,51,.28)' }}>
-      <div style={{ ...wrap, padding: '34px 32px 38px', display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 44 }}>
-        <div>
-          <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.orange, margin: '0 0 20px' }}>Our services</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(240px,100%),1fr))', gap: 6 }}>
-            {SERVICES.map((s) => (
-              <div
-                key={s.id}
-                onClick={() => { navigate(`/services/${s.id}`); onClose(); }}
-                style={{ padding: '14px 16px', borderRadius: 10, cursor: 'pointer' }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = c.sandCard)}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-              >
-                <div style={{ fontSize: fs.md, fontWeight: 600, color: c.navy, marginBottom: 4 }}>{s.title}</div>
-                <div style={{ fontSize: fs.sm, lineHeight: 1.5, color: c.textMuted }}>{s.short}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div style={{ background: c.navy, borderRadius: 14, padding: 26, color: c.surface, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div>
-            <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', color: c.accent, margin: '0 0 12px' }}>CALL FOR A QUOTE</p>
-            <p style={{ fontFamily: fonts.serif, fontSize: fs['3xl'], lineHeight: 1.15, margin: '0 0 10px' }}>Talk to the counter</p>
-            <p style={{ fontSize: fs.base, lineHeight: 1.6, color: c.onNavyText, margin: 0 }}>Ring us for today’s rate on the currency you need, or to reserve notes for collection at our T. Nagar shop.</p>
-          </div>
-          <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {contact.mobiles.slice(0, 2).map((m) => (
-              <a key={m.tel} href={`tel:${m.tel}`} style={{ fontFamily: fonts.mono, fontSize: fs.md, color: c.surface }}>{m.display}</a>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+// There is no hover dropdown on "Services". It opened a full-width panel over
+// the page on nothing more than the pointer passing through, which is a lot of
+// movement to trigger by accident — and it could never work on touch anyway, so
+// the phone build already had to route people to /services. Everyone uses that
+// same route now.
 
 // The static /favicon.svg in index.html is the fallback for crawlers/browsers that grab it
 // before any JS runs, and for as long as staff haven't uploaded a logo. Once the site_logo
@@ -121,48 +97,55 @@ function LogoMark({ logo, size = 30 }) {
   if (logo) {
     return <img src={logo.url} alt={logo.alt_text} style={{ height: size + 14, width: 'auto', display: 'block' }} />;
   }
-  return <span style={{ width: size, height: size, background: c.orange, transform: 'rotate(45deg)', borderRadius: 6, display: 'block' }} />;
+  return <span style={{ width: size, height: size, background: c.accent, transform: 'rotate(45deg)', borderRadius: 6, display: 'block' }} />;
 }
 
 function Header() {
-  const [mega, setMega] = useState(false);
   const ratesPageOn = useFeatureFlag('exchange_rates_page');
   const nav = ratesPageOn ? NAV : NAV.filter(([, to]) => to !== '/rates');
   const { data: images } = useApi(loadSiteImages, {});
+  const { primaryPhone } = useCompanyInfo();
   const logo = images[LOGO_SLOT];
   useFaviconFromLogo(logo);
   return (
-    <div style={{ position: 'sticky', top: 0, zIndex: 60, background: 'rgba(255,255,255,.94)', backdropFilter: 'blur(12px)', borderBottom: `1px solid ${c.sandLine}` }}>
-      <div style={{ ...wrap, padding: '16px 32px', display: 'flex', alignItems: 'center', gap: 36 }}>
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 11, cursor: 'pointer', flex: 'none', textDecoration: 'none' }}>
-          <LogoMark logo={logo} />
-          <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1 }}>
-            <span style={{ fontFamily: fonts.serif, fontSize: fs['3xl'], letterSpacing: '.01em', color: c.navy }}>{COMPANY.wordmark}</span>
-            <span style={{ fontFamily: fonts.mono, fontSize: fs['2xs'], letterSpacing: '.24em', color: c.textFainter, marginTop: 4 }}>PVT LTD</span>
-          </span>
+    // Indigo, not a light bar: the header now runs into the hero panel below it
+    // as one field of colour, and stays indigo once cream sections scroll under
+    // it so it doesn't change identity halfway down the page.
+    <div style={{ position: 'sticky', top: 0, zIndex: 60, background: c.orange, borderBottom: `1px solid ${c.navyLine}` }}>
+      <div style={{ ...wrap, padding: '16px clamp(16px,4.5vw,32px)', display: 'flex', alignItems: 'center', gap: 'clamp(20px,3vw,40px)' }}>
+        <Link to="/" style={{ display: 'flex', alignItems: 'baseline', gap: 9, cursor: 'pointer', flex: 'none', textDecoration: 'none' }}>
+          {logo && <LogoMark logo={logo} />}
+          <span style={{ fontFamily: fonts.serif, fontSize: fs['3xl'], letterSpacing: '.01em', color: c.surface }}>{COMPANY.wordmark}</span>
+          <span className="fx-wordmark-sub" style={{ fontFamily: fonts.mono, fontSize: fs['2xs'], letterSpacing: '.22em', color: c.accent }}>PVT LTD</span>
         </Link>
 
-        <nav className="fx-nav-desktop" style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1, flexWrap: 'wrap' }}>
+        <nav className="fx-nav-desktop" style={{ display: 'flex', alignItems: 'center', gap: 'clamp(16px,2.2vw,28px)', flex: 1, justifyContent: 'center' }}>
           {nav.map(([label, to]) => (
-            <NavItem key={to} label={label} to={to} onEnter={() => setMega(to === '/services')} />
+            <NavItem key={to} label={label} to={to} />
           ))}
         </nav>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 'none', marginLeft: 'auto' }}>
-          {ratesPageOn && (
-            <Link to="/rates" className="fx-header-rates-link" style={{ fontSize: fs.base, fontWeight: 500, color: c.navyMid, cursor: 'pointer', whiteSpace: 'nowrap' }}>Today's rates</Link>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 18, flex: 'none', marginLeft: 'auto' }}>
+          {/* The phone number sits in the header as text, not behind an icon:
+              a call is the outcome this whole site is built to produce. */}
+          <a
+            href={`tel:${primaryPhone.tel}`}
+            className="fx-header-phone"
+            style={{ fontFamily: fonts.mono, fontSize: fs.md, fontWeight: 500, color: c.surface, whiteSpace: 'nowrap' }}
+          >
+            {primaryPhone.display}
+          </a>
           <Link
             to="/quote"
-            style={{ background: c.orange, color: c.surface, padding: '12px 20px', borderRadius: 8, fontSize: fs.base, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background .18s,transform .18s' }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = c.orangeDark; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = c.orange; e.currentTarget.style.transform = 'none'; }}
+            className="fx-header-cta"
+            style={btnOnBrand}
+            onMouseEnter={(e) => { e.currentTarget.style.background = c.brandPale; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = c.surface; }}
           >
-            Get a quote
+            Get a rate
           </Link>
         </div>
       </div>
-      <MegaMenu open={mega} onClose={() => setMega(false)} />
     </div>
   );
 }
@@ -173,10 +156,10 @@ function Footer() {
   const { data: images } = useApi(loadSiteImages, {});
   const logo = images[LOGO_SLOT];
   return (
-    <footer style={{ background: c.navyDeep, color: c.navyMuted2, padding: '76px 0 0' }}>
+    <footer style={{ background: c.orangeDark, color: c.navyMuted2, padding: 'clamp(52px,6vw,76px) 0 0' }}>
       <div style={wrap}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(200px,100%),1fr))', gap: 44, paddingBottom: 52, borderBottom: '1px solid rgba(255,255,255,.1)' }}>
-          <div style={{ gridColumn: 'span 1', minWidth: 220 }}>
+        <div className="fx-footer-grid" style={{ display: 'grid', gap: 'clamp(28px,3.4vw,44px)', paddingBottom: 48, borderBottom: `1px solid ${c.navyLine}` }}>
+          <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 18 }}>
               {logo ? (
                 <span style={{ background: c.surface, borderRadius: 6, padding: '4px 6px', display: 'flex', alignItems: 'center' }}>
@@ -187,7 +170,7 @@ function Footer() {
               )}
               <span style={{ fontFamily: fonts.serif, fontSize: fs['2xl'], color: c.surface }}>{COMPANY.wordmark}</span>
             </div>
-            <p style={{ fontSize: fs.base, lineHeight: 1.68, margin: '0 0 22px', maxWidth: 280 }}>
+            <p style={{ fontSize: fs.base, lineHeight: 1.68, margin: '0 0 20px', maxWidth: 280 }}>
               {footer.tagline}
             </p>
             <div style={{ display: 'flex', gap: 10 }}>
@@ -199,9 +182,9 @@ function Footer() {
                   rel="noreferrer noopener"
                   aria-label={`${COMPANY.shortName} on ${s.label}`}
                   title={s.label}
-                  style={{ width: 36, height: 36, border: '1px solid rgba(255,255,255,.16)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: c.onNavyText3, transition: 'background .18s,border-color .18s,color .18s' }}
+                  style={{ width: 36, height: 36, border: `1px solid ${c.navyLine}`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: c.onNavyText3, transition: 'background .18s,border-color .18s,color .18s' }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,.08)'; e.currentTarget.style.borderColor = c.orange; e.currentTarget.style.color = c.surface; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(255,255,255,.16)'; e.currentTarget.style.color = c.onNavyText3; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = c.navyLine; e.currentTarget.style.color = c.onNavyText3; }}
                 >
                   <SocialIcon name={s.icon} />
                 </a>
@@ -210,32 +193,67 @@ function Footer() {
           </div>
           {FOOTER_COLS.map((col) => (
             <div key={col.title}>
-              <div style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.16em', color: c.surface, marginBottom: 20 }}>{col.title}</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={footerHeading}>{col.title}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
                 {col.links.map(([label, to]) => (
                   <span key={label} onClick={() => navigate(to)} style={{ fontSize: fs.base, color: c.onNavyText4, cursor: 'pointer' }}>{label}</span>
                 ))}
               </div>
             </div>
           ))}
+
+          {/* Opening hours in the footer as well as the header rail: this is
+              where people look for them once they have scrolled past the top. */}
           <div>
-            <div style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.16em', color: c.surface, marginBottom: 20 }}>SHOP INFO</div>
-            <p style={{ fontSize: fs.base, lineHeight: 1.68, margin: '0 0 14px' }}>
-              {contact.addressLines.map((l) => <span key={l}>{l}<br /></span>)}
-              {contact.addressNote}
-            </p>
-            <p style={{ fontSize: fs.base, lineHeight: 1.9, margin: 0 }}>
-              {contact.mobiles.map((m) => (
-                <span key={m.tel}><a href={`tel:${m.tel}`} style={{ color: c.surface }}>{m.display}</a><br /></span>
+            <div style={footerHeading}>OPENING HOURS</div>
+            <HoursTable tone="ink" />
+            <div style={{ marginTop: 14 }}>
+              <OpenStatus tone="ink" />
+            </div>
+          </div>
+
+          {/* Address, mobiles, landlines and email as four peer columns across the
+              row, matching the columns above them. Stacking the three contact
+              groups under one "CONTACT" heading left the right half of the footer
+              empty and pushed the email a long way down the page. Any group with
+              nothing in it drops out — staff can blank the optional mobiles and
+              the landlines in the admin — and the rest close up. */}
+          <div className="fx-footer-shop">
+            <div className="fx-footer-shop-inner">
+              <div>
+                <div style={footerHeading}>SHOP INFO</div>
+                <p style={{ fontSize: fs.base, lineHeight: 1.68, margin: 0 }}>
+                  {contact.addressLines.map((l) => <span key={l}>{l}<br /></span>)}
+                  {contact.addressNote}
+                </p>
+              </div>
+
+              {[
+                ['MOBILE', contact.mobiles, c.surface],
+                ['LANDLINE', contact.landlines, c.onNavyText4],
+              ].filter(([, numbers]) => numbers.length > 0).map(([groupLabel, numbers, tone]) => (
+                <div key={groupLabel}>
+                  <div style={footerHeading}>{groupLabel}</div>
+                  {/* Block links rather than inline text split by <br>: each number
+                      is its own row, so it should be a row-sized tap target. */}
+                  <div style={{ display: 'flex', flexDirection: 'column', fontSize: fs.base }}>
+                    {numbers.map((n) => (
+                      <a key={n.tel} href={`tel:${n.tel}`} style={{ padding: '4px 0', fontFamily: fonts.mono, color: tone }}>{n.display}</a>
+                    ))}
+                  </div>
+                </div>
               ))}
-              {contact.landlines.map((l) => (
-                <span key={l.tel}><a href={`tel:${l.tel}`} style={{ color: c.onNavyText4 }}>{l.display}</a><br /></span>
-              ))}
-              <a href={`mailto:${contact.email}`}>{contact.email}</a>
-            </p>
+
+              {contact.email && (
+                <div>
+                  <div style={footerHeading}>EMAIL</div>
+                  <a href={`mailto:${contact.email}`} style={{ display: 'inline-block', padding: '4px 0', fontSize: fs.base, color: c.surface, wordBreak: 'break-word' }}>{contact.email}</a>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-        <div style={{ padding: '26px 0 34px', display: 'flex', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', fontSize: fs.sm }}>
+        <div style={{ padding: '24px 0 32px', display: 'flex', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', fontSize: fs.sm }}>
           <span>© {new Date().getFullYear()} {footer.legalName}. All rights reserved.</span>
           <div style={{ display: 'flex', gap: 24 }}>
             <Link to="/faq" style={{ cursor: 'pointer', color: c.onNavyText4 }}>FAQ</Link>
@@ -249,8 +267,8 @@ function Footer() {
 
 export default function Layout() {
   return (
-    <div className="fx-page-shell" style={{ minHeight: '100vh', background: c.surface }}>
-      <TopBar />
+    <div className="fx-page-shell" style={{ minHeight: '100vh', background: c.page }}>
+      <StatusRail />
       <Header />
       <Outlet />
       <Footer />

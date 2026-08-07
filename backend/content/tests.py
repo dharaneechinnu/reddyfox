@@ -1,7 +1,7 @@
 import io
 import shutil
 import tempfile
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -449,6 +449,80 @@ _TEST_MEDIA_ROOT = tempfile.mkdtemp(prefix='reddyfox-test-media-')
 
 
 @override_settings(MEDIA_ROOT=_TEST_MEDIA_ROOT)
+class SiteSettingHoursTests(TestCase):
+    """Counter opening hours and the live "Open now" badge.
+
+    The badge is worked out from these times in Chennai time on the server, so
+    a visitor checking from another timezone still sees the shop's own hours —
+    see SiteSetting.is_open_now and useOpenStatus.js, which keeps it current
+    between fetches using the same rules.
+    """
+
+    def test_defaults_are_the_published_counter_hours(self):
+        setting = SiteSetting.load()
+        self.assertEqual(setting.hours_weekday_open, time(9, 30))
+        self.assertEqual(setting.hours_weekday_close, time(19, 0))
+        # Sunday blank == closed, which is what the shop actually keeps.
+        self.assertIsNone(setting.hours_sunday_open)
+
+    def test_hours_payload_formats_a_shop_sign_not_a_timestamp(self):
+        hours = SiteSetting.load().hours
+        self.assertEqual(hours['weekday']['display'], '9:30 AM – 7:00 PM')
+        self.assertEqual(hours['weekday']['opens'], '09:30')
+        self.assertEqual(hours['sunday']['display'], 'Closed')
+        self.assertTrue(hours['sunday']['closed'])
+        self.assertEqual(hours['timezone'], 'Asia/Kolkata')
+
+    def test_noon_hour_reads_as_pm_not_zero(self):
+        setting = SiteSetting.load()
+        setting.hours_weekday_open = time(12, 0)
+        setting.hours_weekday_close = time(12, 30)
+        self.assertEqual(setting.hours['weekday']['display'], '12:00 PM – 12:30 PM')
+
+    def test_open_during_weekday_trading_hours(self):
+        setting = SiteSetting.load()
+        # Wednesday 11:00 — well inside 9:30–20:00.
+        self.assertTrue(setting.is_open_now(datetime(2026, 8, 5, 11, 0)))
+
+    def test_closed_before_opening_and_after_closing(self):
+        setting = SiteSetting.load()
+        self.assertFalse(setting.is_open_now(datetime(2026, 8, 5, 9, 29)))
+        self.assertFalse(setting.is_open_now(datetime(2026, 8, 5, 19, 0)))
+
+    def test_closed_all_day_sunday_when_sunday_times_are_blank(self):
+        setting = SiteSetting.load()
+        # 2026-08-09 is a Sunday; 11:00 would be open on any other day.
+        self.assertFalse(setting.is_open_now(datetime(2026, 8, 9, 11, 0)))
+
+    def test_sunday_times_are_used_when_staff_fill_them_in(self):
+        setting = SiteSetting.load()
+        setting.hours_sunday_open = time(10, 0)
+        setting.hours_sunday_close = time(14, 0)
+        self.assertTrue(setting.is_open_now(datetime(2026, 8, 9, 11, 0)))
+        self.assertFalse(setting.is_open_now(datetime(2026, 8, 9, 15, 0)))
+
+    def test_half_filled_day_counts_as_closed_rather_than_open_ended(self):
+        setting = SiteSetting.load()
+        setting.hours_sunday_open = time(10, 0)  # no closing time entered
+        self.assertTrue(setting.hours['sunday']['closed'])
+        self.assertFalse(setting.is_open_now(datetime(2026, 8, 9, 11, 0)))
+
+    def test_a_shift_closing_after_midnight_stays_open_late(self):
+        setting = SiteSetting.load()
+        setting.hours_weekday_open = time(9, 30)
+        setting.hours_weekday_close = time(0, 30)
+        self.assertTrue(setting.is_open_now(datetime(2026, 8, 5, 23, 0)))
+        self.assertTrue(setting.is_open_now(datetime(2026, 8, 5, 0, 10)))
+        self.assertFalse(setting.is_open_now(datetime(2026, 8, 5, 4, 0)))
+
+    def test_api_publishes_hours_for_the_site(self):
+        res = APIClient().get(reverse('site-settings'))
+        self.assertEqual(res.status_code, 200)
+        hours = res.json()['hours']
+        self.assertEqual(hours['weekday']['labelShort'], 'Mon – Sat')
+        self.assertIn('openNow', hours)
+
+
 class SiteImageValidatorTests(TestCase):
     @classmethod
     def tearDownClass(cls):

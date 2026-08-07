@@ -9,8 +9,10 @@ html {
 
 body {
   margin: 0;
-  background: var(--fx-surface);
-  color: var(--fx-ink);
+  /* The page ground is indigo — see --fx-page in theme.css. White cards sit on
+     top of it, which is what makes them read as raised. */
+  background: var(--fx-page);
+  color: var(--fx-on-ink-strong);
   font-family: var(--fx-font-sans);
   font-size: var(--fx-text-base);
   -webkit-font-smoothing: antialiased;
@@ -20,13 +22,17 @@ body {
   box-sizing: border-box;
 }
 
+/* The default is the on-indigo light, because the page ground is indigo now and
+   a link left at --fx-brand there is the ground colour. Links inside a white
+   card (the FAQ rich text below, the cards on the service pages) set the indigo
+   back explicitly — a white card is the only light surface left. */
 a {
-  color: var(--fx-brand);
+  color: var(--fx-on-ink-link);
   text-decoration: none;
 }
 
 a:hover {
-  color: var(--fx-brand-darker);
+  color: var(--fx-surface);
 }
 
 input, select, textarea, button {
@@ -65,17 +71,334 @@ button {
   50% { opacity: .35; }
 }
 
+/* The badges floating over the "Why us" photo. A slow, shallow drift — 8px
+   over 5s — so they read as hovering off the photo rather than bobbing.
+   Each badge sets its own --fx-float-delay so the three are never in step;
+   three things moving in perfect sync read as one thing, which defeats the
+   point of floating them separately. */
+@keyframes fx-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.fx-float {
+  animation: fx-float 5s ease-in-out infinite;
+  animation-delay: var(--fx-float-delay, 0s);
+}
+
+/* ---- The submitted tick (SuccessTick.jsx) ---------------------------------
+   Ring sweeps, then the check writes itself, then one ring expands and fades.
+   Drawn with stroke-dashoffset: 151 is the circumference of the r=24 ring and
+   40 comfortably covers the check path, so each starts fully hidden. */
+@keyframes fx-tick-ring {
+  from { stroke-dashoffset: 151; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fx-tick-check {
+  from { stroke-dashoffset: 40; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes fx-tick-ripple {
+  from { opacity: .5; transform: scale(1); }
+  to { opacity: 0; transform: scale(1.45); }
+}
+
+.fx-tick-ring {
+  stroke-dasharray: 151;
+  stroke-dashoffset: 151;
+  animation: fx-tick-ring .5s cubic-bezier(.65, 0, .35, 1) forwards;
+}
+
+.fx-tick-check {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: fx-tick-check .34s cubic-bezier(.65, 0, .35, 1) .4s forwards;
+}
+
+.fx-tick-ripple {
+  opacity: 0;
+  animation: fx-tick-ripple .7s ease-out .55s;
+}
+
+/* The live-rate marquee in the hero, and the "we're open" dot. Classes rather
+   than inline animations so the reduced-motion block below can switch them off. */
+.fx-ticker-track {
+  animation: fx-ticker 38s linear infinite;
+}
+
+/* Slows to a third of its speed under the pointer rather than stopping —
+   reading a rate off a marquee that snaps to a dead stop feels like something
+   broke; one that eases into a crawl feels like it noticed you. Changing
+   animation-duration on a running animation rescales its current position
+   rather than jumping, so this doesn't stutter on the way in or out. */
+.fx-ticker-wrap:hover .fx-ticker-track {
+  animation-duration: 110s;
+}
+
+.fx-dot-pulse {
+  animation: fx-pulse 2.4s ease-in-out infinite;
+}
+
+/* ---- Hero entrance --------------------------------------------------------
+   One orchestrated page-load sequence on the homepage hero. The stagger is set
+   per element with --fx-delay rather than a class per step. */
+@keyframes fx-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+.fx-rise {
+  animation: fx-rise .62s cubic-bezier(.22, .61, .36, 1) both;
+  animation-delay: var(--fx-delay, 0s);
+}
+
+/* ---- Card hover: lift + zoom ------------------------------------------
+   Cards used to be deliberately inert on hover — a lighter-than-ground
+   surface plus a pointer cursor was judged enough to say "distinct object,
+   clickable" on their own, and an accent rule tried along the top edge of the
+   service cards was asked for and removed. That verdict is overridden now, on
+   direction from whoever owns the call for this site: every card should
+   visibly react to the pointer. Recorded here rather than silently reversed,
+   the same way seed_real_photos.py records overriding seed_site_images'
+   placeholder-only default — both are "we know what the old rule said, and
+   we're choosing the opposite on purpose."
+
+   Two variants, because a light-on-cream card and a glass panel on the indigo
+   ground need opposite treatments to actually read as "lifted":
+
+   .fx-hover-lift       — white/cream cards. A black shadow under a light
+                           card is what "raised" looks like, same logic as the
+                           card colour itself.
+   .fx-hover-lift-panel — dark panels already sitting on the indigo ground
+                           (the hero step cards, About's reason cards). Same
+                           lift, same shadow — just no colour change: an
+                           earlier version of this also brightened the panel
+                           fill and lit the border gold on hover, which read
+                           as a backdrop appearing behind the card rather than
+                           the card itself moving, and was asked to be taken
+                           back out. The card coming up is the whole effect. */
+.fx-hover-lift,
+.fx-hover-lift-panel {
+  transition: transform .32s cubic-bezier(.22, .61, .36, 1), box-shadow .32s ease;
+}
+
+.fx-hover-lift:hover {
+  transform: translateY(-7px) scale(1.015);
+  box-shadow: 0 30px 54px -24px rgba(10, 12, 40, .38);
+}
+
+.fx-hover-lift-panel:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 26px 48px -22px rgba(0, 0, 0, .5);
+}
+
+/* ---- FAQ row (FaqAccordion.jsx) ---------------------------------------- */
+.fx-faq-row {
+  transition: background .2s ease;
+}
+
+.fx-faq-row:hover {
+  background: var(--fx-surface-2);
+}
+
+/* ---- Photo frame (SitePhoto, the "Why us" badge and the "What we do"
+   action tiles) --------------------------------------------------------
+   A slow drift on hover, not a snap — the frame clips it (overflow:hidden on
+   the container), so the zoom only ever grows into the existing crop, never
+   spills past the rounded corners. Scoped to the .fx-photo-zoom class rather
+   than every SitePhoto, since a photo used as a plain fill has no frame to
+   clip into and would zoom straight out of its box. Two trigger classes:
+   .fx-photo-frame (the single "Why us" photo) and .fx-action-card (each
+   WhatWeDoActions tile) — same effect, different container. */
+.fx-photo-zoom {
+  transition: transform .7s cubic-bezier(.22, .61, .36, 1);
+}
+
+.fx-photo-frame:hover .fx-photo-zoom,
+.fx-action-card:hover .fx-photo-zoom {
+  transform: scale(1.06);
+}
+
+/* ---- "What we do" action tiles (WhatWeDoActions.jsx) -------------------- */
+.fx-action-grid {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.fx-action-card:hover .fx-action-arrow {
+  background: var(--fx-accent);
+  border-color: var(--fx-accent);
+  transform: rotate(45deg);
+}
+
+@media (max-width: 1000px) {
+  .fx-action-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 620px) {
+  .fx-action-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* The callback form's six-column fold-up rules went with its move out of the
+   foot of the hero: it is a stacked panel in the hero's right half now, so the
+   only thing it needs at narrow widths is the hero grid collapsing under it. */
+
+/* ---- Footer layout --------------------------------------------------------
+   Four deliberate columns rather than auto-fit. Auto-fit fitted five tracks at
+   desktop width but the brand column needed more than its share, so the fifth
+   cell (shop info) wrapped onto a row of its own with three empty tracks beside
+   it, and its address plus five numbers stacked into a dozen lines. Shop info
+   now owns that second row outright and splits it: address left, numbers right. */
+.fx-footer-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.fx-footer-shop {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--fx-on-ink-line);
+  padding-top: clamp(28px, 3vw, 40px);
+}
+
+.fx-footer-shop-inner {
+  display: grid;
+  /* Four peer columns — address, mobile, landline, email — on the same tracks as
+     the row above, so the shop-info row fills the footer instead of leaving its
+     right half empty. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(28px, 3.4vw, 44px);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .fx-footer-grid,
+  .fx-footer-shop-inner {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .fx-footer-grid,
+  .fx-footer-shop-inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Header at phone width ------------------------------------------------
+   Logo, wordmark, "PVT LTD" and the CTA do not all fit across 390px. The
+   sub-wordmark goes and the button tightens; the logo mark and name stay. */
+@media (max-width: 560px) {
+  .fx-wordmark-sub {
+    display: none !important;
+  }
+
+  .fx-header-cta {
+    padding: 12px 16px !important;
+    font-size: var(--fx-text-base) !important;
+  }
+}
+
+/* The dashed run that used to join the three step cards went with their move
+   into the hero: on the indigo ground the cards are glass rather than raised
+   white, and a dashed rule between them read as a seam in the panel. The
+   staggered reveal is what sequences them now (see HeroSteps.jsx). */
+
+/* ---- Nav underline ------------------------------------------------------- */
+.fx-navlink {
+  position: relative;
+}
+
+.fx-navlink::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 2px;
+  background: var(--fx-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .22s cubic-bezier(.22, .61, .36, 1);
+}
+
+.fx-navlink:hover::after,
+.fx-navlink[aria-current='page']::after {
+  transform: scaleX(1);
+}
+
+/* Keyboard users get the same affordances the pointer does. The ring is the
+   gold accent, not the brand indigo: the ground is indigo now, and a focus ring
+   the same colour as what it is drawn on is not a focus ring. */
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--fx-accent);
+  outline-offset: 2px;
+}
+
+/* Anyone who has asked their system to calm motion down gets the finished
+   state, not the journey: the drawn tick still reads as "done" fully drawn. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .fx-tick-ring,
+  .fx-tick-check,
+  .fx-tick-ripple,
+  .fx-rise,
+  .fx-ticker-track,
+  .fx-dot-pulse {
+    animation: none !important;
+  }
+
+  .fx-photo-zoom,
+  .fx-hover-lift,
+  .fx-hover-lift-panel {
+    transition: none;
+  }
+
+  .fx-float {
+    animation: none;
+  }
+
+  /* Cards still change state on hover — the shadow and colour shift are the
+     feedback that the pointer is over something — the movement is what's
+     switched off, since that's the part motion-sensitivity is about. */
+  .fx-hover-lift:hover,
+  .fx-hover-lift-panel:hover {
+    transform: none;
+  }
+
+  .fx-tick-ring,
+  .fx-tick-check {
+    stroke-dashoffset: 0 !important;
+  }
+
+  .fx-tick-ripple {
+    display: none;
+  }
+
+  .fx-rise {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* ---- Mobile navigation ---------------------------------------------- */
-/* Below this width the desktop header row (logo + horizontal nav links +
-   mega menu) gives way to a fixed bottom tab bar (MobileBottomNav.jsx) —
-   it doesn't fit, and hover-driven menus don't work on touch anyway. */
+/* Below this width the desktop header row (logo + horizontal nav links) gives
+   way to a fixed bottom tab bar (MobileBottomNav.jsx) — it doesn't fit. */
 .fx-bottomnav {
   display: none;
 }
 
 @media (max-width: 780px) {
+  /* The number stays reachable — it's in the status rail above and in the
+     bottom tab bar; the header just doesn't have room for it too. */
   .fx-nav-desktop,
-  .fx-header-rates-link {
+  .fx-header-phone {
     display: none !important;
   }
 
@@ -119,6 +442,40 @@ button {
      regulator line — drop it rather than let it crowd the phone number. */
   .fx-topbar-years {
     display: none;
+  }
+}
+
+/* ---- Homepage layout collapse -------------------------------------------
+   The homepage's asymmetric grids (hero board, service mosaic, why-us split,
+   visit block) all hold their proportions down to tablet width and then stack.
+   Written as breakpoints rather than auto-fit because the asymmetry is the
+   point — an auto-fitting hero would put the quote docket beside a headline
+   with no room for either. */
+@media (max-width: 1000px) {
+  .fx-hero-grid,
+  .fx-facts-grid,
+  .fx-why-grid,
+  .fx-visit-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* The three step cards share the hero's right half at desktop width; at
+     phone width three tracks would be about 110px each, so they stack. */
+  .fx-hero-steps {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Why-us reads photo-then-text on one column; on two it was photo-left. */
+  .fx-why-grid > *:first-child {
+    min-height: 280px !important;
+  }
+}
+
+@media (max-width: 680px) {
+  /* Overlapping the hero's edge needs a card wide enough to carry it; at phone
+     width the strip sits below the board instead. */
+  .fx-stat-strip {
+    margin-top: 24px !important;
   }
 }
 

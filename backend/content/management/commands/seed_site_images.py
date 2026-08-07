@@ -31,6 +31,7 @@ LOGO_SIZE = 512
 # card itself.
 SHORT_CAPTION = {
     SiteImage.Slot.HOME_WHY_US: 'Why choose us',
+    SiteImage.Slot.HOME_HERO_PHONE: 'On your phone',
     SiteImage.Slot.ABOUT_COUNTER: 'Our counter',
     SiteImage.Slot.ABOUT_TEAM: 'Our team',
 }

@@ -1,3 +1,5 @@
+from datetime import time
+
 from django.db import models
 from django.utils import timezone
 
@@ -443,6 +445,39 @@ class SiteSetting(models.Model):
         help_text='Message pre-filled in the customer’s WhatsApp. '
                   'Leave blank to open an empty chat.',
     )
+    # --- counter opening hours ---
+    # The shop is a walk-in counter, so "are they open right now?" is one of the
+    # few things a visitor genuinely needs before setting off for T. Nagar. Stored
+    # as times rather than a free-text string so the site can answer that question
+    # itself instead of making the reader compare a sentence against their watch.
+    # Sunday is a separate pair because it is the day that actually differs; blank
+    # means closed, which is the published default.
+    hours_weekday_open = models.TimeField(
+        default=time(9, 30),
+        verbose_name='Mon–Sat opens',
+        help_text='When the counter opens Monday to Saturday.',
+    )
+    hours_weekday_close = models.TimeField(
+        default=time(19, 0),
+        verbose_name='Mon–Sat closes',
+        help_text='When the counter closes Monday to Saturday.',
+    )
+    hours_sunday_open = models.TimeField(
+        null=True, blank=True,
+        verbose_name='Sunday opens',
+        help_text='Leave blank if the shop is closed on Sundays.',
+    )
+    hours_sunday_close = models.TimeField(
+        null=True, blank=True,
+        verbose_name='Sunday closes',
+        help_text='Leave blank if the shop is closed on Sundays.',
+    )
+    hours_note = models.CharField(
+        max_length=120, blank=True,
+        verbose_name='Hours note (optional)',
+        help_text='Shown under the hours, e.g. "Closed on public holidays". Leave blank to show nothing.',
+    )
+
     # --- per-type notification recipients ---
     notify_enquiries = models.CharField(
         max_length=255, blank=True,
@@ -487,6 +522,68 @@ class SiteSetting(models.Model):
             ('youtube', 'YouTube', self.youtube_url),
         ]
         return [{'icon': icon, 'label': label, 'url': url} for icon, label, url in options if url]
+
+    # --- opening hours, shaped for the frontend ------------------------------
+    @staticmethod
+    def _clock(t):
+        """9:30 AM — no leading zero, because this is read as a shop sign rather
+        than a timestamp. Built by hand: %-I / %#I differ between platforms."""
+        hour = t.hour % 12 or 12
+        return f'{hour}:{t.minute:02d} {"AM" if t.hour < 12 else "PM"}'
+
+    def _span(self, opens, closes):
+        """One day's hours as the frontend wants them, or a closed day.
+
+        A half-filled pair (an open time with no close) is treated as closed
+        rather than rendered as an open-ended day — the same never-publish-a-
+        half-fact rule the rest of this app follows.
+        """
+        if not opens or not closes:
+            return {'closed': True, 'opens': None, 'closes': None, 'display': 'Closed'}
+        return {
+            'closed': False,
+            'opens': opens.strftime('%H:%M'),
+            'closes': closes.strftime('%H:%M'),
+            'display': f'{self._clock(opens)} – {self._clock(closes)}',
+        }
+
+    @property
+    def hours(self):
+        """Opening hours plus the answer to "open right now?".
+
+        `openNow` is computed here, in the shop's own timezone, so the site
+        never has to guess the counter's local time from the visitor's clock —
+        someone checking from Dubai should still see Chennai's opening hours.
+        The raw 24h `opens`/`closes` strings go out alongside it so the
+        frontend can keep the badge current as the minutes pass without
+        refetching.
+        """
+        weekday = self._span(self.hours_weekday_open, self.hours_weekday_close)
+        sunday = self._span(self.hours_sunday_open, self.hours_sunday_close)
+        return {
+            'timezone': 'Asia/Kolkata',
+            'weekday': {'label': 'Monday – Saturday', 'labelShort': 'Mon – Sat', **weekday},
+            'sunday': {'label': 'Sunday', 'labelShort': 'Sun', **sunday},
+            'note': self.hours_note,
+            'openNow': self.is_open_now(),
+        }
+
+    def is_open_now(self, now=None):
+        """True if the counter is open at `now` (default: the current time in
+        Chennai). Sunday takes the Sunday pair; every other day the weekday
+        pair. A shift that ends before it starts is read as closing after
+        midnight, so a late-night counter isn't reported shut all evening."""
+        now = now or timezone.localtime()
+        if now.weekday() == 6:  # Monday is 0, so Sunday is 6
+            opens, closes = self.hours_sunday_open, self.hours_sunday_close
+        else:
+            opens, closes = self.hours_weekday_open, self.hours_weekday_close
+        if not opens or not closes:
+            return False
+        current = now.time()
+        if closes <= opens:
+            return current >= opens or current < closes
+        return opens <= current < closes
 
     def recipients_for(self, kind):
         """Emails to alert for a given Lead.kind, falling back to the project
@@ -547,6 +644,10 @@ class SiteImage(models.Model):
     class Slot(models.TextChoices):
         SITE_LOGO = 'site_logo', 'Site — logo (header)'
         HOME_WHY_US = 'home_why_us', 'Homepage — "Why us" counter photo'
+        # Shown inside the phone mock on the homepage hero. Portrait crops work
+        # best — the frame is roughly 9:19.5. Until something is uploaded here the
+        # frame shows a designed screen built from the live rates instead.
+        HOME_HERO_PHONE = 'home_hero_phone', 'Homepage — hero phone screen'
         ABOUT_COUNTER = 'about_counter', 'About us — counter photo'
         ABOUT_TEAM = 'about_team', 'About us — front office team photo'
         SERVICE_EXCHANGE = 'service_exchange', 'Service page — Foreign Exchange'
