@@ -1,0 +1,13 @@
+{
+  "name": "reddy-forex-lead-relay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Independent fallback for the site's lead forms: alerts the desk on Telegram immediately and retries the real lead save when the Django API is unreachable.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

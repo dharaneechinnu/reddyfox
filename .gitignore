@@ -35,3 +35,6 @@ backend/media
 
 # Frontend env (frontend/.env.example documents the shape)
 frontend/.env
+
+# Lead relay env (relay/.env.example documents the shape)
+relay/.env

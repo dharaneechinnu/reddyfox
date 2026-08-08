@@ -15,6 +15,12 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || (
   import.meta.env.DEV ? `${window.location.protocol}//${window.location.hostname}:8000/api` : '/api'
 );
 
+// Optional. Left unset, a lead submission that can't reach Django just fails
+// as before — this is a backup path, not a requirement. See relay/README.md
+// and docs/lead-relay.md for what this service is and why it's separate
+// from Django (so a Django outage can't take the fallback down with it).
+const RELAY_BASE = import.meta.env.VITE_RELAY_BASE_URL || '';
+
 // rateType defaults to 'cash' — the rate used everywhere except the Forex
 // Card toggle on the rates table, so every existing caller keeps working
 // unchanged now that a currency code alone no longer identifies one row.
@@ -59,17 +65,61 @@ export async function fetchFeatureFlags() {
   return res.json();
 }
 
+async function fetchWithTimeout(url, options, ms) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Backend down, mid-deploy, or the DB unreachable shows up here as a
+// gateway-level 5xx, never as a normal DRF error response. A 4xx is a real
+// validation problem, not an outage, so it's never routed to the relay.
+const GATEWAY_ERROR_STATUSES = [502, 503, 504];
+
+// Only fires when the normal save above has already failed. Hands the same
+// payload to the relay so the desk still gets paged on Telegram immediately
+// and the lead still lands in Postgres once Django recovers — see
+// docs/lead-relay.md. If the relay isn't configured, or is itself
+// unreachable, this just re-throws the original error so the customer sees
+// the usual "please call us instead" message.
+async function relayFallback(kind, payload, originalErr) {
+  if (!RELAY_BASE) throw originalErr;
+  try {
+    const res = await fetchWithTimeout(`${RELAY_BASE}/relay/lead`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind, payload }),
+    }, 5000);
+    if (!res.ok) throw originalErr;
+    return { relayed: true };
+  } catch {
+    throw originalErr;
+  }
+}
+
 /**
  * POST a lead to one of the three create-only endpoints. Returns the success
  * payload, or throws an Error whose `.fieldErrors` holds per-field messages
  * from DRF, so the form can show them next to the right inputs.
+ *
+ * On a network failure or timeout — Django unreachable, not a validation
+ * problem — falls back to the lead relay instead of failing outright.
  */
 async function postLead(path, payload) {
-  const res = await fetch(`${API_BASE}/${path}/`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
+  let res;
+  try {
+    res = await fetchWithTimeout(`${API_BASE}/${path}/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }, 8000);
+  } catch {
+    return relayFallback(path, payload, new Error('Could not reach the server. Please call us instead.'));
+  }
 
   if (res.ok) return res.json();
 
@@ -77,6 +127,10 @@ async function postLead(path, payload) {
     const err = new Error('Too many submissions from this connection. Please wait a while, or call us instead.');
     err.throttled = true;
     throw err;
+  }
+
+  if (GATEWAY_ERROR_STATUSES.includes(res.status)) {
+    return relayFallback(path, payload, new Error(`Could not send your request (${res.status}). Please call us instead.`));
   }
 
   let data = null;

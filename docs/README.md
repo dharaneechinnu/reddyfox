@@ -13,6 +13,10 @@ Add new docs to this folder and link them below.
 - [Telegram staff alerts](./telegram-bot.md) — setup (bot creation, staff
   onboarding), the admin-approval model, message format, and failure handling
   for the Telegram channel added alongside the email alert.
+- [Lead relay](./lead-relay.md) — the independent fallback (`relay/`) that
+  pages the desk on Telegram and keeps retrying the real save when Django
+  itself is unreachable at submit time. What it handles, what it doesn't,
+  and the one tradeoff it accepts.
 - [Product reference](./product-reference.md) — researched, dated reference
   points from comparable real-world businesses (competitors, industry
   findings, channel costs), plus ideas consciously parked and why. Research
