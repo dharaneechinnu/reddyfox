@@ -1,4 +1,4 @@
-import { c, fs, fonts, wrap, sectionY, stamp, btnPrimary, btnGhost } from '../tokens';
+import { c, fs, fonts, wrap, sectionY, stamp, btnOnBrand, btnGhost, inkCard } from '../tokens';
 import { useCompanyInfo } from '../context/CompanyInfoContext';
 import SectionHead from './SectionHead';
 import OpenStatus, { HoursTable } from './OpenStatus';
@@ -21,7 +21,7 @@ export default function VisitCounter() {
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(contact.addressOneLine)}`;
 
   return (
-    <section style={{ background: c.page, ...sectionY, borderTop: `1px solid ${c.navyLine}` }}>
+    <section style={{ background: c.page, ...sectionY, borderTop: `1px solid ${c.pageLine}` }}>
       <div style={wrap}>
         <SectionHead
           label="Visit the counter"
@@ -31,22 +31,25 @@ export default function VisitCounter() {
 
         <div className="fx-visit-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(24px,3vw,36px)', alignItems: 'stretch' }}>
           {/* Hours first: it is the one thing that decides whether the rest matters today. */}
-          <div className="fx-hover-lift" style={{ border: `1px solid ${c.sandLine}`, borderRadius: 10, padding: 'clamp(24px,3vw,34px)', background: c.surface }}>
+          <div className="fx-hover-lift-panel" style={{ border: `1px solid ${c.navyLine}`, borderRadius: 10, padding: 'clamp(24px,3vw,34px)', background: c.panel }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 22 }}>
-              <span style={{ ...stamp, color: c.textFaint }}>Opening hours</span>
-              <OpenStatus tone="light" />
+              <span style={{ ...stamp, color: c.accentOnInk }}>Opening hours</span>
+              <OpenStatus tone="ink" />
             </div>
-            <HoursTable tone="light" />
-            <p style={{ fontSize: fs.sm, lineHeight: 1.6, color: c.textFaint, margin: '18px 0 0' }}>
+            <HoursTable tone="ink" />
+            <p style={{ fontSize: fs.sm, lineHeight: 1.6, color: c.onNavyText, margin: '18px 0 0' }}>
               Times are Chennai local time. Call ahead for a large amount so the notes are counted and ready when you arrive.
             </p>
           </div>
 
           {/* The address, set as the largest thing in the block — it is what
-              someone screenshots before they set off. */}
-          <div className="fx-hover-lift" style={{ background: c.navy, borderRadius: 10, padding: 'clamp(24px,3vw,34px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 26 }}>
+              someone screenshots before they set off. Both cards in this row
+              are the same dark ink family now (see the opening-hours card
+              beside this one), so this one just goes one step further with
+              `inkCard`'s gold hairline. */}
+          <div className="fx-hover-lift-panel" style={{ ...inkCard, borderRadius: 10, padding: 'clamp(24px,3vw,34px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 26 }}>
             <div>
-              <span style={{ ...stamp, color: c.accent }}>The shop</span>
+              <span style={{ ...stamp, color: c.accentOnInk }}>The shop</span>
               <p style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs['3xl'], lineHeight: 1.25, color: c.surface, margin: '16px 0 10px' }}>
                 {contact.addressLines.map((line) => <span key={line} style={{ display: 'block' }}>{line}</span>)}
               </p>
@@ -56,14 +59,14 @@ export default function VisitCounter() {
             </div>
 
             <div>
-              <div style={{ ...stamp, color: c.navyMuted2, marginBottom: 10 }}>Call the counter</div>
+              <div style={{ ...stamp, color: c.onNavyText, marginBottom: 10 }}>Call the counter</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 20px', marginBottom: 22 }}>
                 {contact.mobiles.map((m) => (
                   <a key={m.tel} href={`tel:${m.tel}`} style={{ display: 'inline-block', padding: '4px 0', fontFamily: fonts.mono, fontSize: fs.md, color: c.surface }}>{m.display}</a>
                 ))}
               </div>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <a href={directionsUrl} target="_blank" rel="noreferrer noopener" style={btnPrimary}>Get directions</a>
+                <a href={directionsUrl} target="_blank" rel="noreferrer noopener" style={btnOnBrand}>Get directions</a>
                 <a href={`tel:${contact.mobiles[0]?.tel}`} style={btnGhost(true)}>Call now</a>
               </div>
             </div>

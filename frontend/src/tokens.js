@@ -35,6 +35,9 @@ export const c = {
 
   // --- ink / dark panels -------------------------------------------------
   navy: v('ink'),
+  /** The dark FILL for cards, table headers and bands. Derived from the brand,
+   *  never from the ink — see --fx-ink-surface in theme.css for why. */
+  inkSurface: v('ink-surface'),
   navyDeep: v('ink-deep'),
   navyLight: v('ink-light'),
   navyMid: v('ink-mid'),
@@ -46,6 +49,20 @@ export const c = {
   textFaint: v('text-faint'),
   textFainter: v('text-fainter'),
 
+  // --- ON THE PAGE GROUND ------------------------------------------------
+  // The ground is the cream, so these are the dark end of the palette. Named
+  // for WHERE they sit, not what colour they are: a component saying "the
+  // heading colour on the page" survives the ground changing colour, and a
+  // component saying c.surface does not — which is exactly what had to be
+  // unpicked by hand when the site went from indigo back to cream. Anything
+  // drawn directly on a section background belongs here; only the header, the
+  // footer and dark ink cards use the on-ink family above.
+  pageHeading: v('page-heading'),
+  pageText: v('page-text'),
+  pageMuted: v('page-muted'),
+  pageEyebrow: v('page-eyebrow'),
+  pageLine: v('page-line'),
+
   // --- text on the dark ink panels ---------------------------------------
   navyMuted: v('on-ink-faint'),
   navyMuted2: v('on-ink-dim'),
@@ -54,14 +71,48 @@ export const c = {
   onNavyText3: v('on-ink-mid'),
   onNavyText4: v('on-ink-dim'),
   onNavyLink: v('on-ink-link'),
+
+  // --- hairlines and fills on a dark ground -------------------------------
+  // Four rungs, by weight. Anything drawn over indigo or over a photo picks one
+  // of these rather than inventing another rgba(255,255,255,…).
   navyLine: v('on-ink-line'),
+  navyLineFaint: v('on-ink-line-faint'),
+  navyLineStrong: v('on-ink-line-strong'),
+  onInkFill: v('on-ink-fill'),
+  onInkFillStrong: v('on-ink-fill-strong'),
+
+  // --- overlays laid over something to darken it -------------------------
+  wash: v('wash'),
+  photoWash: v('photo-wash'),
+  photoVeil: v('photo-veil'),
+  scrim: v('scrim'),
+  gridOnInk: v('grid-on-ink'),
+  gridOnLight: v('grid-on-light'),
 
   // --- surfaces ----------------------------------------------------------
+  /** Pure white. White TEXT, white buttons, a white rule — not a card fill. */
   surface: v('surface'),
+  /**
+   * The light card fill: an off-white, warmed toward the cream. This is what a
+   * card is made of; `surface` is what white text is made of. Keeping them
+   * separate is what let the cards come off flat white without also bleaching
+   * every label that happens to be drawn in the same token.
+   */
+  cardBg: v('card'),
+  /** One step deeper — a strip or footer nested inside a card. */
+  cardBg2: v('card-2'),
   /** The ground a full-width section sits on. Indigo — see theme.css. */
   page: v('page'),
   /** A panel raised off that ground: the hero's step cards, the callback form. */
   panel: v('panel'),
+  /** The same panel, brighter — a hover/nested-strip state, not a resting fill. */
+  panelHover: v('panel-hover'),
+  /** The dark information card, lifted further and edged in gold. */
+  panelRaised: v('panel-raised'),
+  /** That card's gold hairline. */
+  panelLine: v('panel-line'),
+  /** A full-width closing band, lifted toward the brand rather than away. */
+  band: v('band'),
   /** The cream. Card fills and the tints inside them only, never a section. */
   sand: v('surface-alt'),
   cream: v('surface-2'),
@@ -73,7 +124,13 @@ export const c = {
   mapBg: v('surface-4'),
 
   // --- borders -----------------------------------------------------------
-  sandLine: v('line'),
+  /**
+   * A card's hairline. Points at --fx-card-line, which is brand-tinted like
+   * the card fill itself — NOT at the admin's `line`, which is a warm beige
+   * and read as a different palette wrapped around a cool card. Every card
+   * border on the site comes through this one name, so the two stay in step.
+   */
+  sandLine: v('card-line'),
   sandLine2: v('line-softer'),
   sandLine3: v('line-soft'),
   sandBorder: v('line-strong'),
@@ -95,6 +152,7 @@ export const c = {
   greenBorder: v('success-border'),
   greenBg: v('success-bg'),
   greenBg2: v('success-bg-2'),
+  chipSuccess: v('chip-success'),
 
   // --- status: down / danger ---------------------------------------------
   red: v('danger'),
@@ -102,6 +160,8 @@ export const c = {
   redText: v('danger-text'),
   redBorder: v('brand-border'),
   redBg2: v('brand-bg'),
+  /** An error summary's own fill on a dark panel — see theme.css. */
+  redBgInk: v('danger-bg-ink'),
   errorField: v('danger-field'),
 
   // --- favourites --------------------------------------------------------
@@ -150,7 +210,27 @@ export const fonts = {
 };
 
 export const radius = v('radius');
+
+/**
+ * Every drop shadow on the site, by what it sits under. Same rule as colour: a
+ * shadow is how high something reads, so two cards at the same elevation must
+ * name the same shadow rather than each carry its own hand-tuned blur.
+ */
 export const shadowCard = v('shadow-card');
+export const shadowLift = v('shadow-lift');
+export const shadowPanel = v('shadow-panel');
+export const shadowFloat = v('shadow-float');
+export const shadowChip = v('shadow-chip');
+export const shadowDialog = v('shadow-dialog');
+export const shadowFab = v('shadow-fab');
+
+/**
+ * How far a scroll target must sit below the top of the window to clear the
+ * sticky header. Spread onto anything a link or a script scrolls to — without
+ * it the header lands on top of whatever the visitor just asked for.
+ */
+export const headerOffset = v('header-h');
+export const scrollBelowHeader = { scrollMarginTop: `calc(${v('header-h')} + 24px)` };
 
 export const wrap = { maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,4.5vw,32px)' };
 export const wrapNarrow = { maxWidth: 1000, margin: '0 auto', padding: '0 clamp(16px,4.5vw,32px)' };
@@ -162,7 +242,7 @@ export const eyebrow = {
   lineHeight: 1.4,
   letterSpacing: '.18em',
   textTransform: 'uppercase',
-  color: c.orange,
+  color: c.pageEyebrow,
   margin: '0 0 14px',
 };
 
@@ -171,21 +251,78 @@ export const h2Style = {
   fontWeight: 400,
   fontSize: fs.h2,
   lineHeight: 1.08,
-  color: c.navy,
+  color: c.pageHeading,
   margin: 0,
 };
 
 /**
- * The card shape used across the site: white, hairline-bordered, no drop shadow.
- * The white is what does the work — it is lighter than the cream page ground, so
- * a card reads as raised without a shadow saying so (see theme.css). Cards do
- * not respond to hover; that was tried and taken back out.
+ * The shared shape of a page heading block: the mono eyebrow, then the serif
+ * heading, then the lead paragraph. Every page's hero band repeated these three
+ * by hand, which is how the Contact page ended up with the Quote page's
+ * heading colour logic and how all of them had to be revisited one at a time
+ * when the ground changed colour.
+ */
+export const pageH1 = {
+  fontFamily: fonts.serif,
+  fontWeight: 400,
+  fontSize: fs.h1,
+  lineHeight: 1.05,
+  color: c.pageHeading,
+  margin: '0 0 14px',
+};
+
+export const pageLead = {
+  fontSize: fs.lg,
+  lineHeight: 1.6,
+  color: c.pageText,
+  margin: 0,
+  maxWidth: 560,
+};
+
+/** The "Home / Services" trail above a page heading. */
+export const crumb = {
+  fontFamily: fonts.mono,
+  fontWeight: 400,
+  fontSize: fs.sm,
+  lineHeight: 1.4,
+  color: c.pageMuted,
+  marginBottom: 22,
+};
+
+/**
+ * The card shape used across the site: off-white, hairline-bordered, no drop
+ * shadow at rest. The fill is what does the work — it is lighter than the
+ * indigo page ground, so a card reads as raised without a shadow saying so
+ * (see theme.css). It is `c.cardBg` rather than pure white deliberately: on a
+ * deep indigo field, flat white is the harshest pairing available and a grid of
+ * them glares. Warming it keeps the separation and loses the glare.
+ *
+ * A translucent, backdrop-blurred version of this was tried and taken back
+ * out: without a textured backdrop behind it (only the homepage hero's dotted
+ * map has one), the blur has nothing to reveal and the fill just reads as a
+ * flatter, washed-out version of this same colour — worse, not better.
+ *
+ * `lightCard` is the same shape for anything that needs the card ON a light
+ * surface — nested inside another card, where the off-white would disappear.
  */
 export const card = {
-  background: c.surface,
+  background: c.cardBg,
   border: `1px solid ${c.sandLine}`,
   borderRadius: 10,
   overflow: 'hidden',
+};
+
+/**
+ * The dark information card: "what happens next" on /quote, the shop-info block
+ * on /contact. Lifted off the indigo ground and edged in gold — see
+ * --fx-panel-raised in theme.css for why it is no longer filled with the ink.
+ */
+export const inkCard = {
+  background: c.panelRaised,
+  border: `1px solid ${c.panelLine}`,
+  borderRadius: 16,
+  padding: 32,
+  color: c.surface,
 };
 
 /** Vertical rhythm for a full-width section. One value, so sections can't drift. */
@@ -204,27 +341,11 @@ export const stamp = {
   textTransform: 'uppercase',
 };
 
-/**
- * The primary action: white, with an indigo label.
- *
- * It used to be the other way round — indigo fill, white label — which worked
- * while pages stood on cream. The ground is indigo now, and an indigo button on
- * an indigo ground is not a button, so the fill and the label swapped. This is
- * the one place that decision is made; `btnPrimaryHover` is the matching hover
- * fill, so every primary button on the site behaves identically.
- *
- * `btnOnBrand` is kept as an alias: plenty of call sites reach for it by name
- * to say "this one is on the dark panel", and now that every ground is the dark
- * panel it resolves to the same thing rather than to a second definition that
- * could drift.
- */
-export const btnPrimary = {
+const btnBase = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
   gap: 9,
-  background: c.surface,
-  color: c.orange,
   padding: '15px 26px',
   borderRadius: 8,
   fontSize: fs.md,
@@ -234,30 +355,38 @@ export const btnPrimary = {
   whiteSpace: 'nowrap',
 };
 
+/**
+ * The primary action: white fill, indigo label.
+ *
+ * Every ground on this site is the indigo — the page, the header, the footer,
+ * the dark cards — so "the primary button" and "the button on the dark panel"
+ * are one thing, and `btnOnBrand` is kept as an alias rather than a second
+ * definition that could drift from it. They only need to come apart if the
+ * page ground ever stops being dark; if that happens, split them here rather
+ * than overriding the fill at call sites.
+ *
+ */
+export const btnPrimary = {
+  ...btnBase,
+  background: c.surface,
+  color: c.orange,
+};
+
 export const btnPrimaryHover = c.brandPale;
 
 export const btnOnBrand = btnPrimary;
+export const btnOnBrandHover = btnPrimaryHover;
 
 /**
  * The quiet second action.
  *
- * `onInk` is now the only case that exists on a page ground — it is kept as a
- * parameter because the light variant is still correct inside a white card,
- * which is the only light surface left.
+ * `onInk` says which ground it is drawn on, and defaults to true because the
+ * page ground is dark. The light variant is still correct inside a card.
  */
 export const btnGhost = (onInk = true) => ({
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: 9,
+  ...btnBase,
   border: `1px solid ${onInk ? c.navyLine : c.softLine}`,
   color: onInk ? c.surface : c.navy,
   background: 'transparent',
-  padding: '15px 26px',
-  borderRadius: 8,
-  fontSize: fs.md,
-  fontWeight: 600,
-  cursor: 'pointer',
   transition: 'border-color .18s ease, background .18s ease',
-  whiteSpace: 'nowrap',
 });

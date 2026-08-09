@@ -1,6 +1,6 @@
 import useApi from '../hooks/useApi';
 import { fetchSiteSettings } from '../api';
-import { c } from '../tokens';
+import { c, shadowFab } from '../tokens';
 import SocialIcon from './SocialIcon';
 
 // Module scope so useApi does not refetch on every render.
@@ -27,7 +27,7 @@ export default function WhatsAppButton() {
       style={{
         width: 56, height: 56, borderRadius: '50%', background: c.whatsapp, color: c.surface,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        boxShadow: '0 18px 30px -14px rgba(11,27,51,.6)', transition: 'transform .18s',
+        boxShadow: shadowFab, transition: 'transform .18s',
         textDecoration: 'none', flex: 'none',
       }}
       onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-2px)')}

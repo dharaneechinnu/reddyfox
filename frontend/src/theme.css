@@ -83,6 +83,26 @@
   /* == Shape =============================================================== */
   --fx-radius: 14px;
 
+  /* == Layout metrics ======================================================
+     The sticky header's height. Anything a link or a script scrolls to must
+     clear it, or the header lands on top of the thing the visitor asked for —
+     which is exactly what "I clicked Get a rate and got the navbar" was.
+     Named once here so the scroll offsets on /quote and /contact, and the
+     service page's sub-nav `top`, cannot drift apart from the header itself.
+     Value = 16px padding x2 + the wordmark's line box at the default scale,
+     measured off the rendered header rather than added up on paper — the
+     paper figure was 73px against a real 85.6px, which put every scroll target
+     twelve pixels behind the bar it was meant to clear.
+
+     Scripts that CAN measure should: useFormAnchor.js reads the live header
+     via [data-fx-header] and only falls back to this, because the header's
+     height follows the admin-editable type scale. This value is what CSS uses,
+     where no measurement is possible. */
+  --fx-header-h: 86px;
+  /* Header + the status rail above it: what a scroll target needs to clear when
+     the rail is still on screen, i.e. near the top of the page. */
+  --fx-header-stack: 108px;
+
   /* == Derived: mixed from the core above, never set independently ========= */
 
   /* Brand family */
@@ -96,37 +116,150 @@
      value gives. */
   --fx-accent-on-ink: color-mix(in srgb, var(--fx-accent) 55%, var(--fx-surface));
 
-  /* The ground every page sits on. The site is one continuous indigo field,
-     top to bottom, rather than a dark hero over a cream body — a shade deeper
-     than --fx-brand rather than equal to it, which does two jobs at once: the
-     site reads darker, and the header — still on the brand indigo — separates
-     from the body it sits over instead of merging into one flat field.
+  /* == The page ground =====================================================
+     INDIGO. The site is one continuous indigo field, top to bottom, rather
+     than a dark hero over a light body — a shade deeper than --fx-brand rather
+     than equal to it, which does two jobs at once: the site reads darker, and
+     the header, still on the brand indigo, separates from the body it sits
+     over instead of merging into one flat field.
+
      Derived from --fx-brand, not a fourth independent core colour, so it
      re-tints along with every button and link if brand ever changes.
 
      It is a SEPARATE token from --fx-surface-alt on purpose. surface-alt is
-     still the cream, and still what the tints inside a white card are mixed
-     from (field fills, badge backs, table stripes) — those sit ON white and
-     must stay light. Flipping surface-alt itself would have turned every one
-     of them into a dark blob in the middle of a white card.
+     still the cream, and still what the tints inside a light card are mixed
+     from (field fills, badge backs, table stripes) — those sit ON a card and
+     must stay light. Aliasing the two turns every one of them into a dark blob
+     in the middle of a light card.
 
-     Because the ground is still an indigo, an indigo button on it would be
-     invisible: btnPrimary in tokens.js is white-on-indigo site-wide, and the
-     global link colour below is the on-ink light. Anything inside a white card
-     sets its own indigo explicitly. */
+     This was flipped to the cream for a while and flipped straight back: the
+     instruction that prompted it was about the CARDS — the black one and the
+     flat white one — not about the ground they sit on. The card work survives
+     that revert (see --fx-card and --fx-panel-raised below); only the ground
+     came back.
+
+     Consequences that are easy to miss when changing this:
+       - A button on this ground must be WHITE-filled with an indigo label. An
+         indigo button on an indigo ground is not a button. btnPrimary in
+         tokens.js is white-on-indigo site-wide.
+       - The global link colour in index.css is the on-ink light, not the brand
+         indigo, which here would be the ground colour.
+       - Text on this ground uses the --fx-page-* family below. */
   --fx-page: color-mix(in srgb, var(--fx-brand) 78%, #000);
 
+  /* Text, hairlines and eyebrows ON THE PAGE GROUND.
+     Named for where they sit rather than for what colour they are, and that is
+     the whole point: the ground has now changed colour twice, and each time
+     these five lines were the only edit the page files needed. A component
+     naming "the heading colour on the page" survives it; a component naming
+     "white" has to be hunted down. Anything drawn straight onto a section
+     belongs here.
+
+     The --fx-on-ink-* family they point at is shared with the header and the
+     footer, which is correct — on this ground the page IS a dark panel. */
+  --fx-page-heading: var(--fx-surface);
+  --fx-page-text: var(--fx-on-ink);
+  --fx-page-muted: var(--fx-on-ink-dim);
+  --fx-page-eyebrow: var(--fx-accent);
+  --fx-page-line: var(--fx-on-ink-line);
+
   /* A panel raised off the dark ground — the step cards in the hero, the
-     callback form. Lifted with white rather than dropped into shadow, for the
-     same reason white cards work on the light surfaces: on a dark ground the
-     thing in front is the lighter one. Kept shallow so it stays a surface
-     rather than becoming a second background colour. */
+     callback form, the "why us" cards. Lifted with white rather than dropped
+     into shadow, for the same reason light cards work on light surfaces: the
+     thing in front is the one further from the ground. Kept shallow so it
+     stays a surface rather than becoming a second background colour. */
   --fx-panel: color-mix(in srgb, var(--fx-surface) 7%, var(--fx-page));
-  /* The same panel, brighter — a hover state for anything using --fx-panel,
-     not a surface used at rest anywhere. Lifting the mix rather than adding a
-     shadow is what actually reads as "raised" on a dark ground; see
-     .fx-hover-lift-panel in index.css. */
+  /* The same panel, brighter — a hover state, not a surface used at rest. */
   --fx-panel-hover: color-mix(in srgb, var(--fx-surface) 15%, var(--fx-page));
+
+  /* == The light card family — TINTED WITH THE BRAND ========================
+     Every light surface on this site is white with a little of the brand
+     indigo mixed into it. Not pure white, and not the cream.
+
+     Why not white: a sheet of pure white on a deep indigo ground is the
+     highest-contrast pairing available, so a grid of six of them glares and
+     reads as holes punched in the page rather than as cards lying on it.
+
+     Why not the cream: that was the first attempt, and it failed twice over.
+     It measured #FCFCFA against this installation's theme — 72% white mixed
+     with a surface-alt that is itself already near-white, so "off-white" came
+     out indistinguishable from white. And the cream is WARM, which on a cool
+     indigo ground reads as a different palette arriving rather than the same
+     one continuing. The cards looked stuck on.
+
+     Mixing the brand in fixes both at once: it drops the glare, and it makes
+     every light surface a member of the indigo family, so a card sitting on
+     the dark ground is visibly the same design as the ground.
+
+     HOW DEEP: the card sits at 14%, which is as far as this ramp can go — at
+     16% the caption text on it falls to 4.49 and misses AA. It was tried at 7%
+     first and that was too timid to be worth doing: the change was real
+     (#FCFCFA to #F0F1F6) but still read as white at a glance, which is the
+     only test that matters. 14% is unmistakably a tinted surface. Every step
+     below is checked against the text that actually sits on it.
+
+     One consequence worth knowing: this family no longer follows the admin's
+     `surface_alt` (the cream). It follows `brand`, so restyling the brand
+     re-tints every card with it. The cream still drives form-field fills and
+     the tints the admin thinks of as "the page colour". */
+  --fx-card: color-mix(in srgb, var(--fx-brand) 14%, var(--fx-surface));
+  /* One step deeper, for a strip or footer nested inside a card that needs to
+     sit back from the card's own fill (the FAQ's "still unanswered" bar, the
+     callback promise in the confirmation dialog).
+     BODY TEXT ONLY on this one — it is deep enough that the muted caption
+     colour measures 3.99 against it and misses AA. Both current users carry
+     body text; keep it that way. */
+  --fx-card-2: color-mix(in srgb, var(--fx-brand) 22%, var(--fx-surface));
+  /* A card's own hairline. Tinted the same way, because a warm beige border
+     around a cool card is the mismatch this whole block exists to remove. */
+  --fx-card-line: color-mix(in srgb, var(--fx-brand) 26%, var(--fx-surface));
+
+  /* == Dark surfaces, and the black-card fix ===============================
+     THIS IS THE CHANGE THAT WAS ACTUALLY ASKED FOR, and it survives the ground
+     going back to indigo. Every dark FILL on the site — the information cards
+     on /quote and /contact, the address card, the rate-table headers, the
+     closing band — derives from --fx-brand, never from --fx-ink.
+
+     Two separate things were making those cards read as black slabs:
+
+     1. --fx-ink is ADMIN-EDITABLE, and this installation has it set to
+        #14161A — a near-black charcoal, not the dark navy this stylesheet
+        ships as its default. Nothing in this file would have revealed that;
+        the value that produced it lives in the database. Any card filled with
+        the ink was therefore black regardless of what theme.css said.
+
+     2. On this indigo ground, ink sits within a few points of --fx-page
+        anyway, so an ink card was a near-black rectangle on a near-black
+        field — visible only by its own text.
+
+     --fx-panel-raised fixes both: it is lifted OFF the ground (the same
+     direction the hero's step cards go) so it reads as a card, and the gold
+     hairline gives it the one edge a fill alone cannot. --fx-ink-surface is
+     the same reasoning for a dark fill that sits inside a LIGHT card, where
+     the table headers live — dark enough to read as a header, brand-derived
+     so it is never the charcoal.
+
+     Rule for anything added later: if it is a dark fill, derive it from
+     --fx-brand. --fx-ink is for text, where near-black is simply strong. */
+  --fx-ink-surface: color-mix(in srgb, var(--fx-brand) 88%, #000);
+  /* 8%, not 12%. It has to do two things at once and they pull opposite ways:
+     stand off the ground enough to read as a card, and stay dark enough that
+     the on-ink text inside it clears 4.5:1. Measured against the live theme, a
+     12% lift put body text at 4.26 and captions at 3.96 — the card stopped
+     being black and became unreadable instead. 8% keeps a 1.26 separation from
+     the ground and puts body text at 4.84. */
+  --fx-panel-raised: color-mix(in srgb, var(--fx-surface) 8%, var(--fx-page));
+  --fx-panel-line: color-mix(in srgb, var(--fx-accent) 34%, transparent);
+
+  /* A full-width closing band — the homepage's last word. A section rather
+     than a card, so it lifts the other way: toward the brand indigo, which
+     separates it from the deeper page ground without introducing a second
+     dark colour. Also not the ink, for the reason above. */
+  /* The brand indigo exactly. Mixing white into it to lift it further off the
+     ground dropped its own body text to 3.60; the brand is already lighter
+     than --fx-page (which is the brand darkened), so it separates on its own
+     and it ties the closing band to the header that opens the page. */
+  --fx-band: var(--fx-brand);
 
   /* The three step tiles in "how it works", ON the indigo panel: one hue, lifted
      further off the panel at each step, so the sequence reads as a progression
@@ -145,35 +278,74 @@
   --fx-ink-light: color-mix(in srgb, var(--fx-ink) 80%, var(--fx-muted-text));
   --fx-ink-mid: color-mix(in srgb, var(--fx-ink) 40%, var(--fx-muted-text));
 
-  /* Text on light backgrounds, progressively fainter. The mixes are kept
-     shallow on purpose: on a white surface, washing the muted text out any
-     further drops small print below AA, and small print on this site is
-     things like the RBI cash limit. */
-  --fx-text-faint: color-mix(in srgb, var(--fx-surface) 10%, var(--fx-muted-text));
-  --fx-text-fainter: color-mix(in srgb, var(--fx-surface) 18%, var(--fx-muted-text));
+  /* Text on light backgrounds, one step below the muted text.
+     THEY NO LONGER LIGHTEN IT. The note that used to sit here was right —
+     "washing the muted text out any further drops small print below AA, and
+     small print on this site is things like the RBI cash limit" — and the
+     values underneath it did exactly that anyway: 10% and 18% of the surface
+     mixed in, which measured 3.9:1 on a card against a 4.5 requirement. It
+     failed on the step-card captions, the callback form's "a dealer calls
+     within 15 minutes", and the line under every lead form.
 
-  /* Text on the dark ink panels, progressively brighter */
+     Mixing toward the surface cannot be made safe by choosing a smaller
+     number, because --fx-muted-text is admin-editable and any headroom
+     assumed here disappears the moment someone lightens it. The admin already
+     requires muted-text itself to clear 4.5:1, so these inherit that promise
+     instead of gambling against it.
+
+     The hierarchy that lightening was for is carried by size and weight, which
+     is where it belonged: these are 11-12.5px captions under 14-16px body
+     copy, and nobody was reading the eight-percent difference between "faint"
+     and "fainter" as meaning anything. */
+  --fx-text-faint: var(--fx-muted-text);
+  --fx-text-fainter: var(--fx-muted-text);
+
+  /* Text on the dark ink panels, progressively brighter.
+     `dim` is the faintest rung anything readable actually uses — the footer's
+     link columns, the captions in the shop-info card, the small print under
+     the closing call to action. It sat at 34%, which measured 4.07:1 on the
+     brand indigo: under AA, on the band carrying the last thing the page says.
+     Raised to 42%, which clears 4.5 on every dark ground the site has (the
+     band, the darker footer, and the ink card) with room to spare rather than
+     landing exactly on the line.
+
+     `faint` below it is decorative only — breadcrumb separators and rules —
+     and is deliberately left where it is. */
   --fx-on-ink-faint: color-mix(in srgb, var(--fx-surface) 26%, var(--fx-muted-text));
-  --fx-on-ink-dim: color-mix(in srgb, var(--fx-surface) 34%, var(--fx-muted-text));
+  --fx-on-ink-dim: color-mix(in srgb, var(--fx-surface) 42%, var(--fx-muted-text));
   --fx-on-ink: color-mix(in srgb, var(--fx-surface) 46%, var(--fx-muted-text));
   --fx-on-ink-mid: color-mix(in srgb, var(--fx-surface) 66%, var(--fx-muted-text));
   --fx-on-ink-strong: color-mix(in srgb, var(--fx-surface) 76%, var(--fx-muted-text));
   --fx-on-ink-link: color-mix(in srgb, var(--fx-surface) 90%, var(--fx-body-text));
 
-  /* Surfaces between white and the section tint */
-  --fx-surface-2: color-mix(in srgb, var(--fx-surface) 34%, var(--fx-surface-alt));
-  --fx-surface-3: color-mix(in srgb, var(--fx-surface-alt) 74%, var(--fx-line));
-  --fx-surface-4: color-mix(in srgb, var(--fx-surface-alt) 50%, var(--fx-line));
+  /* Tints used INSIDE a card — a hovered table row, a currency badge, the
+     photo placeholder's stripes. All brand-tinted for the same reason the card
+     itself is: a warm beige badge sitting on a cool card is the one thing that
+     gives away that two different palettes are in play. Each is a step down
+     the same ramp as --fx-card, so anything nested reads as a shade of the
+     card rather than as a separate colour. */
+  --fx-surface-2: color-mix(in srgb, var(--fx-brand) 19%, var(--fx-surface));
+  --fx-surface-3: color-mix(in srgb, var(--fx-brand) 21%, var(--fx-surface));
+  --fx-surface-4: color-mix(in srgb, var(--fx-brand) 21%, var(--fx-surface));
 
-  /* Borders, lighter and heavier than the default line */
-  --fx-line-soft: color-mix(in srgb, var(--fx-surface-alt) 46%, var(--fx-line));
-  --fx-line-softer: color-mix(in srgb, var(--fx-surface-alt) 30%, var(--fx-line));
-  --fx-line-strong: color-mix(in srgb, var(--fx-line) 96%, #000);
-  --fx-line-strongest: color-mix(in srgb, var(--fx-line) 90%, #000);
+  /* Borders on light surfaces, lighter and heavier than the card's own line.
+     Same ramp again — these divide rows inside a card and outline the form
+     fields, so they have to belong to the card they are drawn on. */
+  --fx-line-softer: color-mix(in srgb, var(--fx-brand) 18%, var(--fx-surface));
+  --fx-line-soft: color-mix(in srgb, var(--fx-brand) 22%, var(--fx-surface));
+  --fx-line-strong: color-mix(in srgb, var(--fx-brand) 30%, var(--fx-surface));
+  --fx-line-strongest: color-mix(in srgb, var(--fx-brand) 34%, var(--fx-surface));
 
-  /* Decorative placeholder swatch (SitePhoto's empty state) */
-  --fx-swatch-text: color-mix(in srgb, var(--fx-line) 60%, #000);
-  --fx-disabled-text: color-mix(in srgb, var(--fx-line) 70%, #000);
+  /* Decorative placeholder swatch (SitePhoto's empty state), and the label on
+     the map card. A deep brand indigo rather than a darkened beige: it is
+     drawn on the brand-tinted light surfaces above, and one of the things
+     wearing it is "Open in Google Maps" — a link, not decoration, so it is
+     kept well clear of AA rather than treated as a texture. */
+  --fx-swatch-text: color-mix(in srgb, var(--fx-brand) 62%, #000);
+  /* A disabled control's label. Deliberately low contrast — that is what
+     "disabled" looks like, and WCAG exempts inactive controls — but tinted
+     with the brand so it is muted rather than a different colour. */
+  --fx-disabled-text: color-mix(in srgb, var(--fx-brand) 34%, var(--fx-surface));
 
   /* Status: success */
   --fx-success-light: color-mix(in srgb, var(--fx-surface) 26%, var(--fx-success));
@@ -182,12 +354,21 @@
   --fx-success-border: color-mix(in srgb, var(--fx-surface) 68%, var(--fx-success));
   --fx-success-bg: color-mix(in srgb, var(--fx-surface) 90%, var(--fx-success));
   --fx-success-bg-2: color-mix(in srgb, var(--fx-surface) 94%, var(--fx-success));
+  /* The "Sent"/"Received" pill laid over a photo. Nearly opaque rather than
+     solid so a little of the photograph reads through it — but derived from
+     --fx-success, not a second green of its own. */
+  --fx-chip-success: color-mix(in srgb, var(--fx-success) 92%, transparent);
 
   /* Status: danger. Lightened with the surface, not with the gold accent —
      mixing gold into red gave an orange that belonged to neither palette. */
   --fx-danger-light: color-mix(in srgb, var(--fx-surface) 30%, var(--fx-danger));
   --fx-danger-text: color-mix(in srgb, var(--fx-danger) 88%, #000);
   --fx-danger-field: color-mix(in srgb, var(--fx-surface) 45%, var(--fx-danger));
+  /* An error summary's own fill, for a form on a dark panel (RequestForm on
+     its solid indigo card) — the danger colour mixed into the panel itself
+     rather than into the surface, so it reads as "this same card, in red"
+     instead of a foreign light-mode chip pasted onto a dark one. */
+  --fx-danger-bg-ink: color-mix(in srgb, var(--fx-danger) 24%, var(--fx-panel));
 
   /* Favourited (the star on the rates table). This used to be its own hex; the
      accent is gold now, which is exactly what "starred" should look like, so a
@@ -201,9 +382,52 @@
      brand assets rather than generating placeholders for them. */
   --fx-whatsapp: #25D366;
 
-  /* Translucent overlays. Not derived — these sit on top of whatever is behind
-     them, so they are alpha values rather than colours, and mixing a theme
-     colour in would defeat the point. */
-  --fx-on-ink-line: rgba(255, 255, 255, .14);
-  --fx-shadow-card: 0 24px 40px -28px rgba(0, 0, 0, .35);
+  /* == Translucent overlays ================================================
+     These sit ON TOP of whatever is behind them, so they are alpha values
+     rather than opaque colours — mixing a theme colour in would defeat the
+     point, since the whole job is to let the thing underneath show through.
+     That does not make them literals to scatter through components: an alpha
+     still has to be consistent, and before this block the site had eight
+     different whites-on-ink (.04 / .08 / .12 / .14 / .16 / .18 / .22 / .26 /
+     .4) doing four jobs between them. Four rungs, named by weight. */
+  --fx-on-ink-line-faint: rgba(255, 255, 255, .08);  /* hover fills, hairline greys */
+  --fx-on-ink-line: rgba(255, 255, 255, .14);        /* the default hairline on any dark ground */
+  --fx-on-ink-line-strong: rgba(255, 255, 255, .26); /* a bordered control on a dark ground */
+  --fx-on-ink-fill: rgba(255, 255, 255, .18);        /* a filled pill/disc on a photo */
+  --fx-on-ink-fill-strong: rgba(255, 255, 255, .4);  /* its border, which has to beat the photo */
+
+  /* Blacks laid over something to darken it. Two weights: a wash that only
+     takes the edge off a photo so white type survives anywhere on it, and a
+     scrim heavy enough to push a whole page behind a dialog. */
+  --fx-wash: rgba(0, 0, 0, .24);        /* the ticker rail over the hero */
+  --fx-photo-wash: rgba(8, 10, 30, .34); /* over a photograph, tinted to the ink rather than neutral */
+  --fx-scrim: rgba(0, 0, 0, .55);        /* behind the confirmation dialog */
+
+  /* The gradient that darkens the top of a photo tile so its title reads.
+     One definition, used by every tile — it is the tile's title treatment, not
+     a per-tile decoration. */
+  --fx-photo-veil: linear-gradient(180deg, rgba(10, 12, 32, .68) 0%, rgba(10, 12, 32, .28) 45%, transparent 100%);
+
+  /* Faint ruled grids drawn over a flat panel (the map placeholder, the client
+     portal's left half). Light one for dark grounds, dark one for light. */
+  --fx-grid-on-ink: rgba(255, 255, 255, .04);
+  --fx-grid-on-light: rgba(11, 27, 51, .06);
+
+  /* == Shadows =============================================================
+     Every drop shadow on the site, named by what it is under. Same argument as
+     the colours: a shadow is part of how raised something reads, and eight
+     hand-tuned rgba blurs is eight chances for two cards at the same elevation
+     to disagree about how high they are. */
+  --fx-shadow-card: 0 24px 40px -28px rgba(0, 0, 0, .35);   /* a card at rest */
+  --fx-shadow-lift: 0 30px 54px -24px rgba(10, 12, 40, .38); /* a light card, hovered */
+  --fx-shadow-panel: 0 26px 48px -22px rgba(0, 0, 0, .5);    /* a dark panel, hovered */
+  --fx-shadow-float: 0 16px 30px -14px rgba(0, 0, 0, .6);    /* the badges over the "why us" photo */
+  --fx-shadow-chip: 0 8px 18px -8px rgba(0, 0, 0, .5);       /* a small pill sitting on a photo */
+  --fx-shadow-dialog: 0 30px 60px -24px rgba(7, 42, 44, .5); /* the confirmation dialog */
+  --fx-shadow-fab: 0 18px 30px -14px rgba(11, 27, 51, .6);   /* the floating WhatsApp button */
+  --fx-shadow-bottomnav: 0 18px 40px -18px rgba(11, 27, 51, .35);
+  /* The ring that pulses round a form when a visitor is sent straight to it —
+     see .fx-form-target in index.css. Gold, because it is drawing attention
+     rather than reporting a state, and gold is this palette's attention colour. */
+  --fx-shadow-form-focus: 0 0 0 3px color-mix(in srgb, var(--fx-accent) 55%, transparent);
 }

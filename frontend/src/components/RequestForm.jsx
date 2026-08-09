@@ -5,6 +5,7 @@ import { useCompanyInfo } from '../context/CompanyInfoContext';
 import { validatePhone, validateRequired } from '../validation';
 import { submitEnquiry, submitQuoteRequest } from '../api';
 import useLeadForm from '../hooks/useLeadForm';
+import useFormAnchor from '../hooks/useFormAnchor';
 import { ConsentCheck, ErrorSummary, Field, Honeypot, SubmitButton, formCard } from './FormBits';
 import LeadSuccess from './LeadSuccess';
 
@@ -56,6 +57,11 @@ export default function RequestForm({ kind, initialService }) {
   const { primaryPhone } = useCompanyInfo();
   const copy = COPY[kind];
   const ID = copy.id;
+  // Scrolls this card clear of the sticky header, rings it and focuses the
+  // first field when the visitor arrived here asking for the form — which is
+  // what every "Get a rate" / "Request a quote" / "Contact us" button on the
+  // site is for. See hooks/useFormAnchor.js.
+  const { className: anchorClass, ...anchor } = useFormAnchor();
 
   const VALIDATORS = {
     name: (v) => validateRequired(v, 'full name'),
@@ -122,25 +128,38 @@ export default function RequestForm({ kind, initialService }) {
   const currencies = fx.currencyList.filter((x) => x.code !== 'INR');
 
   return (
-    <form noValidate onSubmit={f.handleSubmit} style={formCard}>
+    <form
+      noValidate
+      onSubmit={f.handleSubmit}
+      className={anchorClass}
+      {...anchor}
+      style={{ ...formCard, ...anchor.style }}
+    >
       {confirmation}
-      <h2 style={{ fontSize: fs['2xl'], fontWeight: 600, color: c.navy, margin: '0 0 24px' }}>{copy.heading}</h2>
+      <h2 style={{ fontSize: fs['2xl'], fontWeight: 600, color: c.surface, margin: '0 0 24px' }}>{copy.heading}</h2>
 
       <Honeypot id={`${ID}-enquiry_ref`} value={f.values.enquiry_ref} onChange={(e) => f.setField('enquiry_ref', e.target.value)} />
-      <ErrorSummary count={f.errorCount} serverError={f.serverError} />
+      <ErrorSummary count={f.errorCount} serverError={f.serverError} dark />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(200px,100%),1fr))', gap: 16, marginBottom: 16 }}>
+      {/* --fx-field-i staggers each row in behind the card, so the form
+          assembles rather than appearing whole — see .fx-field-row in
+          index.css. Rows, not individual fields: a row of three inputs should
+          arrive together, not ripple left to right. */}
+      <div className="fx-field-row" style={{ '--fx-field-i': 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(200px,100%),1fr))', gap: 16, marginBottom: 16 }}>
         <Field
+          dark
           id={`${ID}-name`} label={transfer ? "Sender's name" : 'Full name'} error={f.errorFor('name')}
           value={f.values.name} onChange={(e) => f.setField('name', e.target.value)}
-          onBlur={() => f.handleBlur('name')} placeholder="As per your Goverment ID" autoComplete="name"
+          onBlur={() => f.handleBlur('name')} placeholder="As on your government ID" autoComplete="name"
         />
         <Field
+          dark
           id={`${ID}-phone`} label="Phone" error={f.errorFor('phone')} type="tel" inputMode="tel"
           value={f.values.phone} onChange={(e) => f.setField('phone', e.target.value)}
           onBlur={() => f.handleBlur('phone')} placeholder="+91 99414 56261" autoComplete="tel"
         />
         <Field
+          dark
           id={`${ID}-service`} label="Service" as="select"
           value={f.values.service} onChange={(e) => f.setField('service', e.target.value)}
         >
@@ -148,8 +167,9 @@ export default function RequestForm({ kind, initialService }) {
         </Field>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(160px,100%),1fr))', gap: 16, marginBottom: 16 }}>
+      <div className="fx-field-row" style={{ '--fx-field-i': 1, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(160px,100%),1fr))', gap: 16, marginBottom: 16 }}>
         <Field
+          dark
           id={`${ID}-from_currency`} label="Currency" as="select" error={f.errorFor('from_currency')}
           value={f.values.from_currency} onChange={(e) => f.setField('from_currency', e.target.value)}
           onBlur={() => f.handleBlur('from_currency')}
@@ -157,6 +177,7 @@ export default function RequestForm({ kind, initialService }) {
           {currencies.map((cur) => <option key={cur.code} value={cur.code}>{cur.code}</option>)}
         </Field>
         <Field
+          dark
           id={`${ID}-amount`} label="Amount" error={f.errorFor('amount')} inputMode="decimal"
           value={f.values.amount} onChange={(e) => f.setField('amount', e.target.value)}
           onBlur={() => f.handleBlur('amount')} placeholder="1000"
@@ -164,13 +185,15 @@ export default function RequestForm({ kind, initialService }) {
       </div>
 
       {transfer && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(200px,100%),1fr))', gap: 16, marginBottom: 16 }}>
+        <div className="fx-field-row" style={{ '--fx-field-i': 2, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(200px,100%),1fr))', gap: 16, marginBottom: 16 }}>
           <Field
+            dark
             id={`${ID}-recipient_name`} label="Receiver's name" error={f.errorFor('recipient_name')}
             value={f.values.recipient_name} onChange={(e) => f.setField('recipient_name', e.target.value)}
             onBlur={() => f.handleBlur('recipient_name')} placeholder="Who the transfer is for"
           />
           <Field
+            dark
             id={`${ID}-relationship`} label="Relationship to receiver" error={f.errorFor('relationship')}
             value={f.values.relationship} onChange={(e) => f.setField('relationship', e.target.value)}
             onBlur={() => f.handleBlur('relationship')} placeholder="e.g. Father, Friend, Employer"
@@ -178,21 +201,25 @@ export default function RequestForm({ kind, initialService }) {
         </div>
       )}
 
+      <div className="fx-field-row" style={{ '--fx-field-i': 3 }}>
       <Field
+        dark
         id={`${ID}-message`} label="Anything else? (optional)" as="textarea" rows={4}
         value={f.values.message} onChange={(e) => f.setField('message', e.target.value)}
-        placeholder="Share your number, our team will call you within 15 minutes"
+        placeholder="Tell us anything else that helps — our team calls you back within 15 minutes"
       />
+      </div>
 
       <ConsentCheck
+        dark
         id={`${ID}-consent`} checked={f.values.consent}
         onChange={(e) => f.setField('consent', e.target.checked)}
         onBlur={() => f.handleBlur('consent')} error={f.errorFor('consent')}
       />
 
       <SubmitButton sending={f.sending} sendingLabel="Sending…">{copy.submitLabel}</SubmitButton>
-      <p style={{ margin: '14px 0 0', fontSize: fs.xs, lineHeight: 1.55, color: c.textFainter, textAlign: 'center' }}>
-        We reply on the phone number you give us. Prefer to talk? Call {primaryPhone.display}.
+      <p style={{ margin: '14px 0 0', fontSize: fs.xs, lineHeight: 1.55, color: c.onNavyText, textAlign: 'center' }}>
+        We call you back on the number you give us. Would you rather talk now? Call {primaryPhone.display}.
       </p>
     </form>
   );

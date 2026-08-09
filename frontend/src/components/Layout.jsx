@@ -111,7 +111,11 @@ function Header() {
     // Indigo, not a light bar: the header now runs into the hero panel below it
     // as one field of colour, and stays indigo once cream sections scroll under
     // it so it doesn't change identity halfway down the page.
-    <div style={{ position: 'sticky', top: 0, zIndex: 60, background: c.orange, borderBottom: `1px solid ${c.navyLine}` }}>
+    // data-fx-header is how anything scrolling to a target measures what it has
+    // to clear. Measured, not assumed: the header's height follows the type
+    // scale, which staff can change in the admin, so a hardcoded number goes
+    // stale the first time someone raises the base font size.
+    <div data-fx-header style={{ position: 'sticky', top: 0, zIndex: 60, background: c.orange, borderBottom: `1px solid ${c.navyLine}` }}>
       <div style={{ ...wrap, padding: '16px clamp(16px,4.5vw,32px)', display: 'flex', alignItems: 'center', gap: 'clamp(20px,3vw,40px)' }}>
         <Link to="/" style={{ display: 'flex', alignItems: 'baseline', gap: 9, cursor: 'pointer', flex: 'none', textDecoration: 'none' }}>
           {logo && <LogoMark logo={logo} />}
@@ -135,8 +139,12 @@ function Header() {
           >
             {primaryPhone.display}
           </a>
+          {/* #form, not bare /quote: this button's entire job is to put
+              someone in front of the form, and /quote on its own landed them on
+              the heading with the form below the fold — so what the click
+              visibly produced was the header. See hooks/useFormAnchor.js. */}
           <Link
-            to="/quote"
+            to="/quote#form"
             className="fx-header-cta"
             style={btnOnBrand}
             onMouseEnter={(e) => { e.currentTarget.style.background = c.brandPale; }}
@@ -183,7 +191,7 @@ function Footer() {
                   aria-label={`${COMPANY.shortName} on ${s.label}`}
                   title={s.label}
                   style={{ width: 36, height: 36, border: `1px solid ${c.navyLine}`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: c.onNavyText3, transition: 'background .18s,border-color .18s,color .18s' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,.08)'; e.currentTarget.style.borderColor = c.orange; e.currentTarget.style.color = c.surface; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = c.navyLineFaint; e.currentTarget.style.borderColor = c.accent; e.currentTarget.style.color = c.surface; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = c.navyLine; e.currentTarget.style.color = c.onNavyText3; }}
                 >
                   <SocialIcon name={s.icon} />
@@ -206,7 +214,11 @@ function Footer() {
               where people look for them once they have scrolled past the top. */}
           <div>
             <div style={footerHeading}>OPENING HOURS</div>
-            <HoursTable tone="ink" />
+            {/* compact: this is one of four columns in the footer grid, which
+                is the narrowest place the hours appear. "Mon – Sat" instead of
+                "Monday – Saturday" is what lets the opening time sit on the
+                same line as its day rather than wrapping under it. */}
+            <HoursTable tone="ink" compact />
             <div style={{ marginTop: 14 }}>
               <OpenStatus tone="ink" />
             </div>
@@ -257,7 +269,7 @@ function Footer() {
           <span>© {new Date().getFullYear()} {footer.legalName}. All rights reserved.</span>
           <div style={{ display: 'flex', gap: 24 }}>
             <Link to="/faq" style={{ cursor: 'pointer', color: c.onNavyText4 }}>FAQ</Link>
-            <Link to="/contact" style={{ cursor: 'pointer', color: c.onNavyText4 }}>Contact</Link>
+            <Link to="/contact#form" style={{ cursor: 'pointer', color: c.onNavyText4 }}>Contact</Link>
           </div>
         </div>
       </div>

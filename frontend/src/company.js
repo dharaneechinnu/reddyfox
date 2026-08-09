@@ -16,6 +16,27 @@ export const COMPANY = {
   tagline: 'We specialize in providing the Money Exchange Services are Fast',
   since: 2000,
   yearsExperience: 25, // as published on the site
+
+  /**
+   * Customers served since 2000.
+   *
+   * PROVENANCE: not from reddyforex.com — this figure does not appear on the
+   * old site. It was given directly by the business owner on 9 August 2026,
+   * when the site copy was being reviewed, and confirmed as a number the
+   * business stands behind. Recorded here with that provenance precisely
+   * because it is the kind of claim this file exists to police: a customer
+   * count is exactly what "do not invent ratings or transaction volumes" is
+   * about, and the only thing separating this one from an invented figure is
+   * that the owner supplied it.
+   *
+   * It was first asked for as "25,000+ in 10 years" and corrected to 25 years
+   * on the way in — the business has been trading since 2000, which every other
+   * figure on the site is measured from, and two different ages for the same
+   * company is the sort of contradiction a regulator reads as carelessness.
+   *
+   * Do not raise this number without asking the owner again.
+   */
+  customersServed: '25,000+',
   regulator: 'Licensed and Regulated by Reserve Bank of India',
   regulatorShort: 'RBI Authorised Money Changer',
 

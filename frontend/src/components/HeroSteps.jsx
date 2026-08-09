@@ -111,9 +111,9 @@ export default function HeroSteps() {
             delay={0.3 + i * 0.16}
             className="fx-hover-lift-panel"
             style={{
-              // Lifted off the ground rather than the translucent glass this
-              // started as: the dotted map runs behind these cards, and through
-              // a 5%-white panel every dot showed through the body copy.
+              // Opaque, not translucent: the dotted map runs behind these
+              // cards, and through a 5%-white panel every dot showed through
+              // the body copy.
               background: c.panel,
               border: `1px solid ${c.navyLine}`,
               borderRadius: 14,

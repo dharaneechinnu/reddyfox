@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { c, fs } from '../tokens';
+import { c, fs, shadowChip } from '../tokens';
 import SitePhoto from './SitePhoto';
 import Reveal from './Reveal';
 
@@ -53,12 +53,12 @@ function StatusChip({ symbol, label, style }) {
       style={{
         position: 'absolute', display: 'inline-flex', alignItems: 'center', gap: 6,
         padding: '6px 12px 6px 8px', borderRadius: 100,
-        background: 'rgba(20,110,64,.92)', boxShadow: '0 8px 18px -8px rgba(0,0,0,.5)',
-        fontSize: fs['2xs'], fontWeight: 600, color: '#fff', whiteSpace: 'nowrap',
+        background: c.chipSuccess, boxShadow: shadowChip,
+        fontSize: fs['2xs'], fontWeight: 600, color: c.surface, whiteSpace: 'nowrap',
         ...style,
       }}
     >
-      <span style={{ width: 15, height: 15, borderRadius: '50%', background: 'rgba(255,255,255,.22)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <span style={{ width: 15, height: 15, borderRadius: '50%', background: c.onInkFill, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <IconCheck />
       </span>
       {symbol} {label}
@@ -71,8 +71,8 @@ function StatusChip({ symbol, label, style }) {
 function TileHeader({ title }) {
   return (
     <>
-      <div aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '46%', background: 'linear-gradient(180deg, rgba(10,12,32,.68) 0%, rgba(10,12,32,.28) 45%, transparent 100%)', pointerEvents: 'none' }} />
-      <h3 style={{ position: 'relative', margin: 0, padding: '20px 50px 0 18px', fontSize: fs.lg, fontWeight: 700, color: '#fff', lineHeight: 1.2, letterSpacing: '-.01em' }}>
+      <div aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '46%', background: c.photoVeil, pointerEvents: 'none' }} />
+      <h3 style={{ position: 'relative', margin: 0, padding: '20px 50px 0 18px', fontSize: fs.lg, fontWeight: 700, color: c.surface, lineHeight: 1.2, letterSpacing: '-.01em' }}>
         {title}
       </h3>
       <span
@@ -80,8 +80,8 @@ function TileHeader({ title }) {
         aria-hidden="true"
         style={{
           position: 'absolute', top: 16, right: 16, width: 32, height: 32, borderRadius: '50%',
-          background: 'rgba(255,255,255,.18)', border: '1px solid rgba(255,255,255,.4)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff',
+          background: c.onInkFill, border: `1px solid ${c.onInkFillStrong}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', color: c.surface,
           transition: 'background .25s ease, transform .25s ease',
         }}
       >

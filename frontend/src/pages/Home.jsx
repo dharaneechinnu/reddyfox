@@ -3,7 +3,7 @@ import { useFx } from '../context/FxContext';
 import { useFeatureFlag } from '../context/FeatureFlagsContext';
 import { STATS, REASONS, fmt } from '../data';
 import { COMPANY } from '../company';
-import { c, fs, fonts, wrap, sectionY, stamp, card, btnOnBrand, btnGhost, shadowCard } from '../tokens';
+import { c, fs, fonts, wrap, sectionY, stamp, card, btnOnBrand, btnGhost, shadowCard, shadowFloat } from '../tokens';
 import FaqAccordion from '../components/FaqAccordion';
 import CallbackBar from '../components/CallbackBar';
 import Seo from '../components/Seo';
@@ -16,6 +16,7 @@ import WorldMapBackdrop from '../components/WorldMapBackdrop';
 import VisitCounter from '../components/VisitCounter';
 import OpenStatus from '../components/OpenStatus';
 import useApi from '../hooks/useApi';
+import useMarqueeHover from '../hooks/useMarqueeHover';
 import { fetchTestimonials, fetchFaqs, fetchCurrencies, toRatesMap } from '../api';
 import { useCompanyInfo } from '../context/CompanyInfoContext';
 
@@ -33,7 +34,7 @@ const loadForexCardRates = () => fetchCurrencies('forex_card').then(toRatesMap);
 
 function RateCcBadge({ cc }) {
   return (
-    <span style={{ width: 34, height: 24, borderRadius: 4, background: c.sandCard2, border: `1px solid ${c.sandBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.mono, fontWeight: 500, fontSize: fs['2xs'], lineHeight: 1.4, color: c.textMuted }}>{cc}</span>
+    <span style={{ width: 34, height: 24, borderRadius: 4, background: c.sandCard2, border: `1px solid ${c.sandBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.mono, fontWeight: 500, fontSize: fs['2xs'], lineHeight: 1.4, color: c.navy }}>{cc}</span>
   );
 }
 
@@ -45,6 +46,7 @@ export default function Home() {
   const { data: testimonials } = useApi(loadTestimonials, []);
   const { data: faqs } = useApi(loadHomepageFaqs, []);
   const { data: forexCardRates } = useApi(loadForexCardRates, {});
+  const ticker = useMarqueeHover({ selector: '.fx-ticker-track' });
 
   const extra = ['CHF', 'MYR', 'THB', 'CNY'].filter((code) => fx.rates[code]);
   const tickerCodes = fx.popular.concat(extra).concat(fx.popular);
@@ -80,7 +82,7 @@ export default function Home() {
             centred behind all three would sit half-hidden under them. */}
         <div style={{ position: 'relative' }}>
           <div aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            <WorldMapBackdrop color="rgba(255,255,255,.92)" opacity={.13} style={{ width: '116%', height: '92%' }} />
+            <WorldMapBackdrop color={c.surface} opacity={.13} style={{ width: '116%', height: '92%' }} />
           </div>
           <div aria-hidden="true" style={{ position: 'absolute', top: -220, right: -180, width: 700, height: 700, borderRadius: '50%', background: `radial-gradient(circle, color-mix(in srgb, ${c.accent} 26%, transparent), transparent 64%)` }} />
 
@@ -90,11 +92,11 @@ export default function Home() {
               to match rather than floating in a half-empty cell. */}
           <div className="fx-hero-grid" style={{ position: 'relative', ...wrap, padding: 'clamp(48px,6vw,88px) clamp(16px,4.5vw,32px) clamp(44px,5vw,72px)', display: 'grid', gridTemplateColumns: '.82fr 1.18fr', gap: 'clamp(28px,3.4vw,48px)', alignItems: 'center' }}>
             <div>
-              <div className="fx-rise" style={{ ...stamp, color: c.accent, marginBottom: 26 }}>
+              <div className="fx-rise" style={{ ...stamp, color: c.pageEyebrow, marginBottom: 26 }}>
                 T. Nagar, Chennai <span aria-hidden="true" style={{ opacity: .5 }}>·</span> One counter, no branches
               </div>
 
-              <h1 className="fx-rise" style={{ '--fx-delay': '.06s', fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.hero, lineHeight: 1.04, letterSpacing: '-.02em', color: c.surface, margin: '0 0 24px' }}>
+              <h1 className="fx-rise" style={{ '--fx-delay': '.06s', fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.hero, lineHeight: 1.04, letterSpacing: '-.02em', color: c.pageHeading, margin: '0 0 24px' }}>
                 Foreign currency,
                 <br />
                 handed over
@@ -102,9 +104,9 @@ export default function Home() {
                 in person.
               </h1>
 
-              <p className="fx-rise" style={{ '--fx-delay': '.12s', fontSize: fs.xl, lineHeight: 1.6, color: c.onNavyText, maxWidth: 520, margin: '0 0 32px' }}>
-                Ask for the rate on the phone. Collect at the counter or take same-day home delivery.
-                Nothing is charged before you agree the number.
+              <p className="fx-rise" style={{ '--fx-delay': '.12s', fontSize: fs.xl, lineHeight: 1.6, color: c.pageText, maxWidth: 520, margin: '0 0 32px' }}>
+                Ask us the rate on the phone. Pick it up at the shop, or we bring it to your home
+                the same day. You pay nothing until you agree the rate.
               </p>
 
               <div className="fx-rise" style={{ '--fx-delay': '.18s', display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 28 }}>
@@ -117,10 +119,10 @@ export default function Home() {
               </div>
 
               {/* The live badge, which the rail above deliberately doesn't carry. */}
-              <div className="fx-rise" style={{ '--fx-delay': '.24s', borderTop: `1px solid ${c.navyLine}`, paddingTop: 20, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                <OpenStatus tone="ink" />
-                <span aria-hidden="true" style={{ width: 1, height: 12, background: c.navyLine }} />
-                <span style={{ fontSize: fs.sm, color: c.navyMuted2 }}>
+              <div className="fx-rise" style={{ '--fx-delay': '.24s', borderTop: `1px solid ${c.pageLine}`, paddingTop: 20, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                <OpenStatus />
+                <span aria-hidden="true" style={{ width: 1, height: 12, background: c.pageLine }} />
+                <span style={{ fontSize: fs.sm, color: c.pageMuted }}>
                   {hours.weekday.labelShort} {hours.weekday.display} · {hours.sunday.labelShort} {hours.sunday.display.toLowerCase()}
                 </span>
               </div>
@@ -132,8 +134,11 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Live figures, moving — the board's own detail, not a decoration. */}
-        <div className="fx-ticker-wrap" style={{ position: 'relative', borderTop: `1px solid ${c.navyLine}`, background: 'rgba(0,0,0,.24)', overflow: 'hidden' }}>
+        {/* Live figures, moving — the board's own detail, not a decoration.
+            The pointer eases it down to a crawl so a rate can be read without
+            chasing it; see hooks/useMarqueeHover.js for why that is done in JS
+            rather than with a CSS :hover rule. */}
+        <div className="fx-ticker-wrap" {...ticker} style={{ position: 'relative', borderTop: `1px solid ${c.navyLine}`, background: c.wash, overflow: 'hidden' }}>
           <div className="fx-ticker-track" style={{ display: 'flex', width: 'max-content' }}>
             {tickerCodes.map((code, i) => {
               const r = fx.rates[code];
@@ -159,11 +164,11 @@ export default function Home() {
           (see docs/team-notifications.md). */}
       <section style={{ background: c.page, ...sectionY }}>
         <div className="fx-facts-grid" style={{ ...wrap, display: 'grid', gridTemplateColumns: '1.15fr .85fr', gap: 'clamp(20px,3vw,32px)', alignItems: 'stretch' }}>
-          <Reveal className="fx-stat-strip" style={{ background: c.surface, border: `1px solid ${c.sandLine}`, borderRadius: 16, display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+          <Reveal className="fx-stat-strip" style={{ background: c.panel, border: `1px solid ${c.navyLine}`, borderRadius: 16, display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
             {STATS.map((s, i) => (
               <div
                 key={s.label}
-                className="fx-hover-lift"
+                className="fx-hover-lift-panel"
                 style={{
                   padding: 'clamp(22px,2.4vw,32px)',
                   display: 'flex',
@@ -173,13 +178,13 @@ export default function Home() {
                   position: 'relative',
                   // Hairlines only between cells, so the box keeps a clean edge:
                   // no rule on the top row, none on the left column.
-                  borderTop: i > 1 ? `1px solid ${c.sandLine3}` : 'none',
-                  borderLeft: i % 2 === 1 ? `1px solid ${c.sandLine3}` : 'none',
+                  borderTop: i > 1 ? `1px solid ${c.navyLine}` : 'none',
+                  borderLeft: i % 2 === 1 ? `1px solid ${c.navyLine}` : 'none',
                 }}
               >
-                <div style={{ fontFamily: fonts.mono, fontSize: fs['3xl'], lineHeight: 1, color: c.navy, marginBottom: 12 }}>{s.value}</div>
-                <div style={{ fontSize: fs.base, fontWeight: 600, color: c.navyMid, marginBottom: 5 }}>{s.label}</div>
-                <div style={{ fontSize: fs.sm, lineHeight: 1.55, color: c.textFaint }}>{s.note}</div>
+                <div style={{ fontFamily: fonts.mono, fontSize: fs['3xl'], lineHeight: 1, color: c.surface, marginBottom: 12 }}>{s.value}</div>
+                <div style={{ fontSize: fs.base, fontWeight: 600, color: c.surface, marginBottom: 5 }}>{s.label}</div>
+                <div style={{ fontSize: fs.sm, lineHeight: 1.55, color: c.onNavyText }}>{s.note}</div>
               </div>
             ))}
           </Reveal>
@@ -193,22 +198,22 @@ export default function Home() {
       </section>
 
       {liveBoardOn && (
-        <section style={{ background: c.page, ...sectionY, borderTop: `1px solid ${c.navyLine}` }}>
+        <section style={{ background: c.page, ...sectionY, borderTop: `1px solid ${c.pageLine}` }}>
           <div style={wrap}>
             <SectionHead
               label="Live board"
-              title="Today’s counter rates"
-              aside={<span onClick={() => navigate('/rates')} style={{ fontSize: fs.md, fontWeight: 600, color: c.navy, borderBottom: `1px solid ${c.orange}`, paddingBottom: 3, cursor: 'pointer' }}>See every currency we hold</span>}
+              title="Today’s rates at the counter"
+              aside={<span onClick={() => navigate('/rates')} style={{ fontSize: fs.md, fontWeight: 600, color: c.navy, borderBottom: `1px solid ${c.orange}`, paddingBottom: 3, cursor: 'pointer' }}>See all our currencies</span>}
             />
             <div style={{ ...card, overflow: 'auto' }}>
               <div style={{ minWidth: 640 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: LIVE_BOARD_GRID, gap: 16, padding: '10px 26px 0', background: c.navy, fontFamily: fonts.mono, fontWeight: 500, fontSize: fs['2xs'], lineHeight: 1.4, letterSpacing: '.1em', color: c.navyMuted2 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: LIVE_BOARD_GRID, gap: 16, padding: '10px 26px 0', background: c.inkSurface, fontFamily: fonts.mono, fontWeight: 500, fontSize: fs['2xs'], lineHeight: 1.4, letterSpacing: '.1em', color: c.navyMuted2 }}>
                   <span />
                   <span style={{ gridColumn: 'span 2', textAlign: 'center', borderBottom: `1px solid ${c.navyLine}`, paddingBottom: 6 }}>WE BUY</span>
                   <span style={{ gridColumn: 'span 2', textAlign: 'center', borderBottom: `1px solid ${c.navyLine}`, paddingBottom: 6 }}>WE SELL</span>
                   <span />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: LIVE_BOARD_GRID, gap: 16, padding: '8px 26px 16px', background: c.navy, fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.14em', color: c.navyMuted2 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: LIVE_BOARD_GRID, gap: 16, padding: '8px 26px 16px', background: c.inkSurface, fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.14em', color: c.navyMuted2 }}>
                   <span>CURRENCY</span>
                   <span style={{ textAlign: 'right' }}>FOREX CARD</span><span style={{ textAlign: 'right' }}>CURRENCY</span>
                   <span style={{ textAlign: 'right' }}>FOREX CARD</span><span style={{ textAlign: 'right' }}>CURRENCY</span>
@@ -255,11 +260,11 @@ export default function Home() {
       {/* A hairline between neighbouring sections of the same colour: with the
           live board switched off, "how it works" and "what we do" would
           otherwise run together into one long field of sand. */}
-      <section style={{ background: c.page, ...sectionY, borderTop: `1px solid ${c.navyLine}` }}>
+      <section style={{ background: c.page, ...sectionY, borderTop: `1px solid ${c.pageLine}` }}>
         <div style={wrap}>
           <SectionHead
             label="What we do"
-            title="Every foreign exchange need, under one licence"
+            title="Everything to do with foreign money, in one shop"
           />
           <WhatWeDoActions />
         </div>
@@ -302,25 +307,25 @@ export default function Home() {
                 so white badges read anywhere on it, plus the original corner
                 gradient deepened, which keeps the bottom-left corner darkest
                 where the largest badge sits. */}
-            <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'rgba(8,10,30,.34)', pointerEvents: 'none' }} />
+            <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: c.photoWash, pointerEvents: 'none' }} />
             <div aria-hidden="true" style={{ position: 'absolute', inset: 0, background: `linear-gradient(200deg, transparent 35%, color-mix(in srgb, ${c.navyDeep} 88%, transparent) 100%)`, pointerEvents: 'none' }} />
 
-            <div className="fx-float" style={{ '--fx-float-delay': '0s', position: 'absolute', left: 18, bottom: 18, background: c.panel, border: `1px solid ${c.navyLine}`, borderRadius: 12, padding: '11px 16px', display: 'flex', alignItems: 'baseline', gap: 9, boxShadow: '0 16px 30px -14px rgba(0,0,0,.6)' }}>
+            <div className="fx-float" style={{ '--fx-float-delay': '0s', position: 'absolute', left: 18, bottom: 18, background: c.panel, border: `1px solid ${c.navyLine}`, borderRadius: 12, padding: '11px 16px', display: 'flex', alignItems: 'baseline', gap: 9, boxShadow: shadowFloat }}>
               <span style={{ fontFamily: fonts.mono, fontSize: fs.xl, color: c.surface }}>{STATS[0].value}</span>
               <span style={{ fontSize: fs.xs, color: c.onNavyText }}>{STATS[0].label}</span>
             </div>
 
-            <div className="fx-float" style={{ '--fx-float-delay': '-1.7s', position: 'absolute', right: 18, top: 18, background: c.panel, border: `1px solid ${c.navyLine}`, borderRadius: 12, padding: '11px 16px', display: 'flex', alignItems: 'baseline', gap: 9, boxShadow: '0 16px 30px -14px rgba(0,0,0,.6)' }}>
+            <div className="fx-float" style={{ '--fx-float-delay': '-1.7s', position: 'absolute', right: 18, top: 18, background: c.panel, border: `1px solid ${c.navyLine}`, borderRadius: 12, padding: '11px 16px', display: 'flex', alignItems: 'baseline', gap: 9, boxShadow: shadowFloat }}>
               <span style={{ fontFamily: fonts.mono, fontSize: fs.xl, color: c.accentOnInk }}>{STATS[1].value}</span>
               <span style={{ fontSize: fs.xs, color: c.onNavyText }}>{STATS[1].label}</span>
             </div>
 
-            <div className="fx-float" style={{ '--fx-float-delay': '-3.3s', position: 'absolute', right: 18, bottom: 18, background: c.panel, border: `1px solid ${c.navyLine}`, borderRadius: 12, padding: '11px 16px', display: 'flex', alignItems: 'baseline', gap: 9, boxShadow: '0 16px 30px -14px rgba(0,0,0,.6)' }}>
+            <div className="fx-float" style={{ '--fx-float-delay': '-3.3s', position: 'absolute', right: 18, bottom: 18, background: c.panel, border: `1px solid ${c.navyLine}`, borderRadius: 12, padding: '11px 16px', display: 'flex', alignItems: 'baseline', gap: 9, boxShadow: shadowFloat }}>
               <span style={{ fontFamily: fonts.mono, fontSize: fs.xl, color: c.surface }}>Since {COMPANY.since}</span>
             </div>
           </Reveal>
           <div>
-            <SectionHead label="Why us" title="The margin you see is the margin you pay" maxWidth={480} />
+            <SectionHead label="Why us" title="The rate we tell you is the rate you pay" maxWidth={480} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {REASONS.map((f, i) => (
                 <Reveal
@@ -342,19 +347,23 @@ export default function Home() {
       </section>
 
       {testimonials.length > 0 && (
-        <section style={{ background: c.page, ...sectionY, borderTop: `1px solid ${c.navyLine}` }}>
+        <section style={{ background: c.page, ...sectionY, borderTop: `1px solid ${c.pageLine}` }}>
           <div style={wrap}>
-            <SectionHead label="Customer voices" title="Trusted by travellers and finance teams" />
+            <SectionHead label="Customer voices" title="What our customers say" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(300px,100%),1fr))', gap: 16 }}>
               {testimonials.map((t, i) => (
-                <Reveal key={t.id} delay={i * 0.08} className="fx-hover-lift" style={{ ...card, padding: 'clamp(24px,2.6vw,30px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                  <p style={{ fontFamily: fonts.serif, fontSize: fs['2xl'], lineHeight: 1.42, color: c.ink, margin: '0 0 24px' }}>“{t.quote}”</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 13, borderTop: `1px solid ${c.sandLine}`, paddingTop: 18 }}>
-                    <span style={{ width: 38, height: 38, borderRadius: '50%', background: c.sandCard2, border: `1px solid ${c.sandBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, color: c.textMuted }}>{t.initials}</span>
-                    <div>
-                      <div style={{ fontSize: fs.base, fontWeight: 600, color: c.navy }}>{t.name}</div>
-                      <div style={{ fontSize: fs.sm, color: c.textFaint }}>{t.role}</div>
-                    </div>
+                <Reveal key={t.id} delay={i * 0.08} className="fx-hover-lift-panel" style={{ background: c.panel, border: `1px solid ${c.navyLine}`, borderRadius: 10, overflow: 'hidden', padding: 'clamp(24px,2.6vw,30px)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    {/* Five filled stars, not a stored rating — Testimonial has no
+                        rating field, and every quote shown here is one staff
+                        chose to publish, so a full row is accurate rather than
+                        an invented number. */}
+                    <div aria-hidden="true" style={{ color: c.gold, fontSize: fs.md, letterSpacing: '2px', marginBottom: 14 }}>★★★★★</div>
+                    <p style={{ fontFamily: fonts.serif, fontSize: fs['2xl'], lineHeight: 1.42, color: c.surface, margin: 0 }}>“{t.quote}”</p>
+                  </div>
+                  <div style={{ borderTop: `1px solid ${c.navyLine}`, paddingTop: 18, marginTop: 24 }}>
+                    <div style={{ fontSize: fs.base, fontWeight: 600, color: c.surface }}>{t.name}</div>
+                    <div style={{ fontSize: fs.sm, color: c.onNavyText }}>{t.role}</div>
                   </div>
                 </Reveal>
               ))}
@@ -366,23 +375,31 @@ export default function Home() {
       {faqs.length > 0 && (
         <section style={{ background: c.page, ...sectionY }}>
           <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 clamp(16px,4.5vw,32px)' }}>
-            <SectionHead label="Questions" title="Before you walk in" align="center" />
+            <SectionHead label="Questions" title="Before you come in" align="center" />
             <FaqAccordion faqs={faqs} />
           </div>
         </section>
       )}
 
       {/* ---- Last word -----------------------------------------------------
-          Indigo, echoing the hero: the page opens on the dark panel and closes
-          on it too, so the call to action carries the same weight the first
-          screen did rather than fading out on a third stretch of cream. */}
-      <section style={{ background: c.navy, padding: 'clamp(52px,6vw,80px) 0' }}>
+          The page opens on the dark panel and closes on one too, so the call to
+          action carries the same weight the first screen did.
+
+          Lifted toward the brand indigo (--fx-band), not filled with the ink.
+          Ink sits within a few points of the page ground now, so this section
+          was a black band on a black page: the closing call to action, the last
+          thing the page says, had no edge at all. */}
+      <section style={{ background: c.band, padding: 'clamp(52px,6vw,80px) 0' }}>
         <div style={{ ...wrap, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'clamp(28px,4vw,48px)', flexWrap: 'wrap' }}>
           <div>
-            <div style={{ ...stamp, color: c.accent, marginBottom: 14 }}>Talk to a dealer</div>
+            {/* accentOnInk, not accent: this band is lifted toward the brand
+                now, and the cream-ground gold on it falls to 3.3:1 — under AA.
+                The lightened gold is what theme.css keeps for exactly this,
+                text on a raised brand panel. */}
+            <div style={{ ...stamp, color: c.accentOnInk, marginBottom: 14 }}>Talk to a dealer</div>
             <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h2, lineHeight: 1.08, letterSpacing: '-.015em', color: c.surface, margin: '0 0 12px' }}>Call us for today’s rate</h2>
             <p style={{ fontSize: fs.xl, lineHeight: 1.6, color: c.onNavyText, margin: 0, maxWidth: 540 }}>
-              Tell us the currency and the amount, and we’ll quote you. Or walk in — Challa Mall, T. Nagar, {contact.addressNote.replace(/[()]/g, '')}.
+              Tell us which currency you need and how much, and we will give you the rate. Or just walk in — Challa Mall, T. Nagar, {contact.addressNote.replace(/[()]/g, '')}.
             </p>
           </div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>

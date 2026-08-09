@@ -47,7 +47,10 @@ function TabLink({ to, label, Icon, end }) {
       style={({ isActive }) => ({
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         gap: 3, flex: 1, padding: '9px 4px 8px', textDecoration: 'none',
-        color: isActive ? c.orange : c.navyMuted2,
+        // textMuted, not the on-ink dim: this bar has a near-white fill (see
+        // .fx-bottomnav in index.css), and the on-ink colours are lightened for
+        // dark grounds — an inactive tab in one was a pale grey on white.
+        color: isActive ? c.orange : c.textMuted,
       })}
     >
       <Icon />
@@ -70,8 +73,13 @@ export default function MobileBottomNav() {
       <TabLink to="/" label="Home" Icon={HomeIcon} end />
       {ratesPageOn && <TabLink to="/rates" label="Rates" Icon={RatesIcon} />}
       <TabLink to="/services" label="Services" Icon={ServicesIcon} />
-      <TabLink to="/quote" label="Quote" Icon={QuoteIcon} />
-      <TabLink to="/contact" label="Contact" Icon={ContactIcon} />
+      {/* Both carry #form, matching the desktop nav and the header CTA: a tab
+          named Quote or Contact that lands on a heading with the form below the
+          fold looks like it did nothing. useFormAnchor deliberately does not
+          steal focus on a touch device, so this scrolls without throwing the
+          keyboard up over the form it just scrolled to. */}
+      <TabLink to="/quote#form" label="Quote" Icon={QuoteIcon} />
+      <TabLink to="/contact#form" label="Contact" Icon={ContactIcon} />
     </nav>
   );
 }

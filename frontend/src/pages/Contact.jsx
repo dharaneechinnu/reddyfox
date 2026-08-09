@@ -1,6 +1,6 @@
 import { Link, useSearchParams } from 'react-router-dom';
 import { COMPANY, CONTACT } from '../company';
-import { c, fs, fonts, wrap } from '../tokens';
+import { c, fs, fonts, wrap, inkCard, shadowCard } from '../tokens';
 import RequestForm from '../components/RequestForm';
 import Seo from '../components/Seo';
 import { useCompanyInfo } from '../context/CompanyInfoContext';
@@ -23,12 +23,14 @@ export default function Contact() {
       />
       <section style={{ background: c.page, padding: '60px 0 72px' }}>
         <div style={wrap}>
-          <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.navyMuted, marginBottom: 22 }}>
-            <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / Contact
+          <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.pageMuted, marginBottom: 22 }}>
+            <Link to="/" style={{ cursor: 'pointer', color: c.pageEyebrow }}>Home</Link> / Contact
           </div>
-          <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h1, lineHeight: 1.05, color: c.surface, margin: '0 0 14px' }}>Get a free quote</h1>
-          <p style={{ fontSize: fs.lg, lineHeight: 1.6, color: c.onNavyText, margin: 0, maxWidth: 560 }}>
-            Call us for today’s rate, or send an enquiry and we will get back to you.
+          {/* Was "Get a free quote", word for word the same heading as /quote —
+              two different pages telling the visitor they were on the same one. */}
+          <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h1, lineHeight: 1.05, color: c.pageHeading, margin: '0 0 14px' }}>Talk to us</h1>
+          <p style={{ fontSize: fs.lg, lineHeight: 1.6, color: c.pageText, margin: 0, maxWidth: 560 }}>
+            Call us for today’s rate, or leave your number below and we will call you back.
           </p>
         </div>
       </section>
@@ -38,18 +40,20 @@ export default function Contact() {
           <RequestForm kind="enquiry" initialService={initialService} />
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ background: c.navy, borderRadius: 16, padding: 32, color: c.surface }}>
-              <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.16em', color: c.accent, margin: '0 0 22px' }}>SHOP INFO</p>
+            {/* Was filled with the ink, which on the indigo ground was a black
+                rectangle on a black field — see --fx-panel-raised in theme.css. */}
+            <div style={inkCard}>
+              <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.16em', color: c.accentOnInk, margin: '0 0 22px' }}>SHOP INFO</p>
               <p style={{ fontSize: fs.lg, lineHeight: 1.7, margin: '0 0 22px', color: c.onNavyText2 }}>
                 {contact.addressLines.map((l) => <span key={l}>{l}<br /></span>)}
-                <span style={{ color: c.navyMuted2 }}>{contact.addressNote}</span>
+                <span style={{ color: c.onNavyText }}>{contact.addressNote}</span>
               </p>
               {/* Opening hours, with today's line marked and a live open/closed
                   badge — the same block as the homepage and the footer, so the
                   hours are never phrased two different ways. */}
               <div style={{ borderTop: `1px solid ${c.navyLine}`, paddingTop: 22, marginBottom: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 10 }}>
-                  <span style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, letterSpacing: '.16em', textTransform: 'uppercase', color: c.accent }}>Opening hours</span>
+                  <span style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, letterSpacing: '.16em', textTransform: 'uppercase', color: c.accentOnInk }}>Opening hours</span>
                   <OpenStatus tone="ink" />
                 </div>
                 <HoursTable tone="ink" />
@@ -59,7 +63,7 @@ export default function Contact() {
                 {/* One block link per number, so each is a row-sized tap target
                     on a phone rather than the height of its own digits. */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start' }}>
-                  <span style={{ color: c.navyMuted2, flex: 'none' }}>Phone</span>
+                  <span style={{ color: c.onNavyText, flex: 'none' }}>Phone</span>
                   <span style={{ fontFamily: fonts.mono, textAlign: 'right', display: 'flex', flexDirection: 'column' }}>
                     {contact.mobiles.map((m) => (
                       <a key={m.tel} href={`tel:${m.tel}`} style={{ padding: '4px 0', color: c.surface }}>{m.display}</a>
@@ -67,20 +71,28 @@ export default function Contact() {
                   </span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start' }}>
-                  <span style={{ color: c.navyMuted2, flex: 'none' }}>Landline</span>
+                  <span style={{ color: c.onNavyText, flex: 'none' }}>Landline</span>
                   <span style={{ fontFamily: fonts.mono, textAlign: 'right', display: 'flex', flexDirection: 'column' }}>
                     {contact.landlines.map((l) => (
                       <a key={l.tel} href={`tel:${l.tel}`} style={{ padding: '4px 0', color: c.surface }}>{l.display}</a>
                     ))}
                   </span>
                 </div>
+                {/* Same shape as the two rows above: label pinned left and not
+                    allowed to shrink, value right-aligned. These two were the
+                    odd ones out — no `flex: none` on the label and no
+                    `textAlign: right` on the value — so on a narrow card the
+                    label gave way before the value did and the four rows
+                    stopped lining up with each other. `break-word` on the
+                    address only: it is the one value long enough to need it,
+                    and it should break rather than overrun the card. */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
-                  <span style={{ color: c.navyMuted2 }}>Email</span>
-                  <a href={`mailto:${contact.email}`} style={{ color: c.surface }}>{contact.email}</a>
+                  <span style={{ color: c.onNavyText, flex: 'none' }}>Email</span>
+                  <a href={`mailto:${contact.email}`} style={{ color: c.surface, textAlign: 'right', wordBreak: 'break-word' }}>{contact.email}</a>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
-                  <span style={{ color: c.navyMuted2 }}>Website</span>
-                  <span>{CONTACT.website}</span>
+                  <span style={{ color: c.onNavyText, flex: 'none' }}>Website</span>
+                  <span style={{ textAlign: 'right' }}>{CONTACT.website}</span>
                 </div>
               </div>
             </div>
@@ -91,9 +103,9 @@ export default function Contact() {
               rel="noreferrer"
               style={{ background: c.mapBg, border: `1px solid ${c.mapBorder}`, borderRadius: 16, minHeight: 280, position: 'relative', overflow: 'hidden', display: 'block', textDecoration: 'none' }}
             >
-              <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(11,27,51,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(11,27,51,.06) 1px,transparent 1px)', backgroundSize: '48px 48px' }} />
+              <div style={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(${c.gridOnLight} 1px,transparent 1px),linear-gradient(90deg,${c.gridOnLight} 1px,transparent 1px)`, backgroundSize: '48px 48px' }} />
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                <span style={{ width: 16, height: 16, borderRadius: '50%', background: c.orange, border: `3px solid ${c.surface}`, boxShadow: '0 4px 10px rgba(11,27,51,.3)' }} />
+                <span style={{ width: 16, height: 16, borderRadius: '50%', background: c.orange, border: `3px solid ${c.surface}`, boxShadow: shadowCard }} />
                 <span style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.xs, lineHeight: 1.7, letterSpacing: '.14em', color: c.mapDot, textAlign: 'center' }}>
                   CHALLA MALL, T. NAGAR<br />Open in Google Maps →
                 </span>

@@ -45,8 +45,8 @@ export default function Faq() {
     borderRadius: 9,
     fontSize: fs.base,
     fontWeight: 500,
-    color: isActive ? c.orange : c.onNavyText,
-    background: isActive ? c.surface : 'transparent',
+    color: isActive ? c.orange : c.pageText,
+    background: isActive ? c.cardBg : 'transparent',
     cursor: 'pointer',
     transition: 'background .18s',
   });
@@ -62,11 +62,11 @@ export default function Faq() {
       />
       <section style={{ background: c.page, padding: '60px 0 72px' }}>
         <div style={wrap}>
-          <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.navyMuted, marginBottom: 22 }}>
-            <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / FAQ
+          <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.pageMuted, marginBottom: 22 }}>
+            <Link to="/" style={{ cursor: 'pointer', color: c.pageEyebrow }}>Home</Link> / FAQ
           </div>
-          <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h1, lineHeight: 1.05, color: c.surface, margin: '0 0 14px' }}>Frequently asked questions</h1>
-          <p style={{ fontSize: fs.lg, lineHeight: 1.6, color: c.onNavyText, margin: 0, maxWidth: 560 }}>Documents, limits, timings and buy-back — answered plainly.</p>
+          <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h1, lineHeight: 1.05, color: c.pageHeading, margin: '0 0 14px' }}>Common questions</h1>
+          <p style={{ fontSize: fs.lg, lineHeight: 1.6, color: c.pageText, margin: 0, maxWidth: 560 }}>Papers, limits, timings and buy-back — answered simply.</p>
         </div>
       </section>
       <section style={{ background: c.page, padding: '64px 0 96px' }}>
@@ -75,7 +75,7 @@ export default function Faq() {
             <span
               onClick={() => setActiveCat(null)}
               style={catStyle(activeCat === null)}
-              onMouseEnter={(e) => { if (activeCat !== null) e.currentTarget.style.background = 'rgba(255,255,255,.08)'; }}
+              onMouseEnter={(e) => { if (activeCat !== null) e.currentTarget.style.background = c.navyLineFaint; }}
               onMouseLeave={(e) => { if (activeCat !== null) e.currentTarget.style.background = 'transparent'; }}
             >
               All questions
@@ -85,7 +85,7 @@ export default function Faq() {
                 key={cat.id}
                 onClick={() => setActiveCat(cat.name)}
                 style={catStyle(activeCat === cat.name)}
-                onMouseEnter={(e) => { if (activeCat !== cat.name) e.currentTarget.style.background = 'rgba(255,255,255,.08)'; }}
+                onMouseEnter={(e) => { if (activeCat !== cat.name) e.currentTarget.style.background = c.navyLineFaint; }}
                 onMouseLeave={(e) => { if (activeCat !== cat.name) e.currentTarget.style.background = 'transparent'; }}
               >
                 {cat.name}
@@ -95,12 +95,12 @@ export default function Faq() {
 
           <div>
             {loading && (
-              <div style={{ background: c.surface, border: `1px solid ${c.sandLine}`, borderRadius: 14, padding: 40, textAlign: 'center', color: c.textMuted }}>
+              <div style={{ background: c.panel, border: `1px solid ${c.navyLine}`, borderRadius: 14, padding: 40, textAlign: 'center', color: c.onNavyText }}>
                 Loading questions…
               </div>
             )}
             {error && (
-              <div style={{ background: c.surface, border: `1px solid ${c.redBorder}`, borderRadius: 14, padding: 40, textAlign: 'center', color: c.redText }}>
+              <div style={{ background: c.panel, border: `1px solid ${c.redLight}`, borderRadius: 14, padding: 40, textAlign: 'center', color: c.redLight }}>
                 Couldn't load the questions: {error}
               </div>
             )}
@@ -113,9 +113,12 @@ export default function Faq() {
                   padding="24px 30px"
                   answerPadding="0 30px 26px"
                 />
-                <div style={{ background: c.cream, border: `1px solid ${c.sandLine}`, borderTop: 'none', borderRadius: '0 0 14px 14px', padding: 30, display: 'flex', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-                  <span style={{ fontSize: fs.md, color: c.text }}>Still unanswered? The branch team replies within an hour.</span>
-                  <span onClick={() => navigate('/contact')} style={{ background: c.orange, color: c.surface, padding: '13px 22px', borderRadius: 9, fontSize: fs.base, fontWeight: 600, cursor: 'pointer' }}>Contact us</span>
+                <div style={{ background: c.panelHover, border: `1px solid ${c.navyLine}`, borderTop: 'none', borderRadius: '0 0 14px 14px', padding: 30, display: 'flex', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+                  {/* Was "the branch team replies within an hour" — a different promise
+                      from the 15 minutes the callback form and the confirmation
+                      dialog both give. One commitment, in one place. */}
+                  <span style={{ fontSize: fs.md, color: c.onNavyText2 }}>Still not sure about something? Ask us and we will get back to you.</span>
+                  <span onClick={() => navigate('/contact#form')} style={{ background: c.surface, color: c.orange, padding: '13px 22px', borderRadius: 9, fontSize: fs.base, fontWeight: 600, cursor: 'pointer' }}>Ask us</span>
                 </div>
               </>
             )}

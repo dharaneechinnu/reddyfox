@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { c, fs, fonts } from '../tokens';
+import { c, fs, fonts, shadowDialog } from '../tokens';
 import useApi from '../hooks/useApi';
 import useOpenStatus from '../hooks/useOpenStatus';
 import { fetchSiteSettings } from '../api';
@@ -79,7 +79,7 @@ export default function LeadSuccess({ heading, children, onReset, resetLabel = '
       onClick={close}
       style={{
         position: 'fixed', inset: 0, zIndex: 200,
-        background: 'rgba(0, 0, 0, .55)', backdropFilter: 'blur(3px)',
+        background: c.scrim, backdropFilter: 'blur(3px)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 20,
       }}
@@ -94,9 +94,9 @@ export default function LeadSuccess({ heading, children, onReset, resetLabel = '
         onClick={(e) => e.stopPropagation()}
         style={{
           position: 'relative', width: '100%', maxWidth: 380,
-          background: c.surface, border: `1px solid ${c.sandLine}`, borderRadius: 14,
+          background: c.cardBg, border: `1px solid ${c.sandLine}`, borderRadius: 14,
           padding: '30px 24px 24px', textAlign: 'center', outline: 'none',
-          boxShadow: '0 30px 60px -24px rgba(7,42,44,.5)',
+          boxShadow: shadowDialog,
           maxHeight: 'calc(100vh - 40px)', overflowY: 'auto',
         }}
       >
@@ -116,8 +116,14 @@ export default function LeadSuccess({ heading, children, onReset, resetLabel = '
 
         {/* The commitment, set apart — this is the line the visitor is deciding
             whether to trust. Neutral, with the time in gold: green here would be
-            a fourth colour doing a job the words already do. */}
-        <div style={{ background: c.page, border: `1px solid ${c.sandLine}`, borderRadius: 9, padding: '13px 14px', marginBottom: 18, textAlign: 'left', display: 'flex', gap: 11, alignItems: 'flex-start' }}>
+            a fourth colour doing a job the words already do.
+
+            Filled with the deeper card tint, NOT --fx-page: this box sits inside
+            a light dialog, and it was filled with the indigo page ground while
+            its text stayed body-dark — a near-black sentence on a near-black
+            block, i.e. the most important line in the dialog was invisible. The
+            page ground belongs behind cards, never inside one. */}
+        <div style={{ background: c.cardBg2, border: `1px solid ${c.sandLine}`, borderRadius: 9, padding: '13px 14px', marginBottom: 18, textAlign: 'left', display: 'flex', gap: 11, alignItems: 'flex-start' }}>
           <span style={{ fontFamily: fonts.mono, fontSize: fs['2xs'], letterSpacing: '.1em', color: c.orange, border: `1px solid ${c.softLine}`, borderRadius: 4, padding: '4px 6px', flex: 'none', whiteSpace: 'nowrap' }}>
             {status.known && !status.open ? 'NEXT' : `${CALLBACK_MINUTES} MIN`}
           </span>

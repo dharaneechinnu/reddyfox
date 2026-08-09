@@ -11,7 +11,7 @@ const GRID = '44px 2fr 1fr 1fr 1fr 1fr 0.8fr 110px';
 
 function RateCcBadge({ cc }) {
   return (
-    <span style={{ width: 34, height: 24, borderRadius: 4, background: c.sandCard2, border: `1px solid ${c.sandBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.mono, fontWeight: 500, fontSize: fs['2xs'], lineHeight: 1.4, color: c.textMuted }}>{cc}</span>
+    <span style={{ width: 34, height: 24, borderRadius: 4, background: c.sandCard2, border: `1px solid ${c.sandBorder}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.mono, fontWeight: 500, fontSize: fs['2xs'], lineHeight: 1.4, color: c.navy }}>{cc}</span>
   );
 }
 
@@ -81,15 +81,15 @@ export default function Rates() {
       />
       <section style={{ background: c.page, padding: '60px 0 44px' }}>
         <div style={wrap}>
-          <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.navyMuted, marginBottom: 22 }}>
-            <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / Exchange rates
+          <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.pageMuted, marginBottom: 22 }}>
+            <Link to="/" style={{ cursor: 'pointer', color: c.pageEyebrow }}>Home</Link> / Exchange rates
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap' }}>
             <div>
-              <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h1, lineHeight: 1.05, color: c.surface, margin: '0 0 14px' }}>Live exchange rates</h1>
-              <p style={{ fontSize: fs.lg, lineHeight: 1.6, color: c.onNavyText, margin: 0, maxWidth: 560 }}>Counter rates at our T. Nagar shop, quoted in INR per unit of foreign currency. Forex Card rates shown alongside where published.</p>
+              <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h1, lineHeight: 1.05, color: c.pageHeading, margin: '0 0 14px' }}>Live exchange rates</h1>
+              <p style={{ fontSize: fs.lg, lineHeight: 1.6, color: c.pageText, margin: 0, maxWidth: 560 }}>The rates at our T. Nagar shop, in rupees for one unit of foreign money. Where we have them, forex card rates are shown next to them.</p>
             </div>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center', border: '1px solid rgba(255,255,255,.16)', borderRadius: 9, padding: '11px 16px' }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center', border: `1px solid ${c.pageLine}`, borderRadius: 9, padding: '11px 16px' }}>
               {/* "Live" dot, matching OpenStatus. Green here read as "rates are
                   up", which is the one thing green means on this page. */}
               <span className="fx-dot-pulse" style={{ width: 6, height: 6, borderRadius: '50%', background: c.accent, display: 'block' }} />
@@ -103,12 +103,12 @@ export default function Rates() {
         <div style={wrap}>
           {fx.favs.length > 0 && (
             <div style={{ marginBottom: 36 }}>
-              <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.accent, margin: '0 0 16px' }}>Favourites</p>
+              <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.pageEyebrow, margin: '0 0 16px' }}>Favourites</p>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(230px,100%),1fr))', gap: 16 }}>
                 {fx.favs.map((code) => {
                   const r = fx.rates[code];
                   return (
-                    <div key={code} className="fx-hover-lift" style={{ background: c.surface, border: `1px solid ${c.sandLine}`, borderRadius: 13, padding: '20px 22px' }}>
+                    <div key={code} className="fx-hover-lift" style={{ background: c.cardBg, border: `1px solid ${c.sandLine}`, borderRadius: 13, padding: '20px 22px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                         <span style={{ fontSize: fs.md, fontWeight: 600, color: c.navy }}>{code}<span style={{ color: c.textFainter, fontWeight: 400 }}> / INR</span></span>
                         <StarButton active onClick={() => fx.toggleFav(code)} />
@@ -137,7 +137,10 @@ export default function Rates() {
                   onClick={() => fx.setFilter(t)}
                   style={{
                     padding: '9px 15px', borderRadius: 100, border: `1px solid ${c.sandBorder3}`, fontSize: fs.base, fontWeight: 500, cursor: 'pointer',
-                    background: fx.filter === t ? c.navy : c.surface, color: fx.filter === t ? c.surface : c.text, transition: 'all .18s',
+                    // Active reads gold-on-ink, not ink-on-indigo: this row sits on the
+                    // indigo page ground, where an ink-filled chip is the ground colour
+                    // and the selected filter was indistinguishable from the rest.
+                    background: fx.filter === t ? c.accent : c.cardBg, color: fx.filter === t ? c.navy : c.text, transition: 'all .18s',
                   }}
                 >{t}</span>
               ))}
@@ -150,15 +153,15 @@ export default function Rates() {
             />
           </div>
 
-          <div style={{ background: c.surface, border: `1px solid ${c.sandLine}`, borderRadius: 16, overflow: 'auto' }}>
+          <div style={{ background: c.cardBg, border: `1px solid ${c.sandLine}`, borderRadius: 16, overflow: 'auto' }}>
             <div style={{ minWidth: 760 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: 14, padding: '10px 26px 0', background: c.navy, fontFamily: fonts.mono, fontWeight: 500, fontSize: fs['2xs'], lineHeight: 1.4, letterSpacing: '.1em', color: c.navyMuted2 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: 14, padding: '10px 26px 0', background: c.inkSurface, fontFamily: fonts.mono, fontWeight: 500, fontSize: fs['2xs'], lineHeight: 1.4, letterSpacing: '.1em', color: c.navyMuted2 }}>
                 <span /><span />
-                <span style={{ gridColumn: 'span 2', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,.16)', paddingBottom: 6 }}>WE BUY</span>
-                <span style={{ gridColumn: 'span 2', textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,.16)', paddingBottom: 6 }}>WE SELL</span>
+                <span style={{ gridColumn: 'span 2', textAlign: 'center', borderBottom: `1px solid ${c.navyLine}`, paddingBottom: 6 }}>WE BUY</span>
+                <span style={{ gridColumn: 'span 2', textAlign: 'center', borderBottom: `1px solid ${c.navyLine}`, paddingBottom: 6 }}>WE SELL</span>
                 <span /><span />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: 14, padding: '8px 26px 15px', background: c.navy, fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.14em', color: c.navyMuted2, alignItems: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: GRID, gap: 14, padding: '8px 26px 15px', background: c.inkSurface, fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.14em', color: c.navyMuted2, alignItems: 'center' }}>
                 <span /><span>CURRENCY</span>
                 <span style={{ textAlign: 'right' }}>FOREX CARD</span><span style={{ textAlign: 'right' }}>CURRENCY</span>
                 <span style={{ textAlign: 'right' }}>FOREX CARD</span><span style={{ textAlign: 'right' }}>CURRENCY</span>
@@ -194,8 +197,8 @@ export default function Rates() {
                 );
               })}
               <div style={{ padding: '18px 26px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, fontSize: fs.sm, color: c.textFainter }}>
-                <span>Showing {rows.length} currencies · rates indicative, confirmed at the counter</span>
-                <span style={{ fontFamily: fonts.mono }}>Board refreshed every 15 minutes</span>
+                <span>Showing {rows.length} currencies · these rates are a guide; we confirm the final rate at the counter</span>
+                <span style={{ fontFamily: fonts.mono }}>Rates updated every 15 minutes</span>
               </div>
             </div>
           </div>

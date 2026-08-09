@@ -10,11 +10,13 @@ import Reveal from './Reveal';
  * `aside` puts supporting copy opposite the heading on wide screens and
  * underneath it on narrow ones.
  */
-// `ink` is the default now that every section ground is indigo. `light` is kept
-// for the one light surface left — the inside of a white card.
+// `ink` is the default, because every section ground is the indigo. `light` is
+// for a heading drawn inside a card — the one light surface on the site.
+// The ink tone reads its colours from the page-ground family, so it follows the
+// ground automatically if that ever changes again.
 const TONES = {
   light: { label: c.orange, rule: c.sandLine, title: c.navy, aside: c.textMuted },
-  ink: { label: c.accent, rule: c.navyLine, title: c.surface, aside: c.onNavyText },
+  ink: { label: c.pageEyebrow, rule: c.pageLine, title: c.pageHeading, aside: c.pageText },
 };
 
 export default function SectionHead({ label, title, aside, align = 'left', maxWidth = 620, tone = 'ink' }) {

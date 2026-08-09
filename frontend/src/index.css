@@ -5,12 +5,18 @@
 
 html {
   scroll-behavior: smooth;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* old Edge/IE */
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, new Edge */
 }
 
 body {
   margin: 0;
-  /* The page ground is indigo — see --fx-page in theme.css. White cards sit on
-     top of it, which is what makes them read as raised. */
+  /* The page ground is indigo — see --fx-page in theme.css. Cards sit on top of
+     it in --fx-card, an off-white, which is what makes them read as raised. */
   background: var(--fx-page);
   color: var(--fx-on-ink-strong);
   font-family: var(--fx-font-sans);
@@ -22,10 +28,10 @@ body {
   box-sizing: border-box;
 }
 
-/* The default is the on-indigo light, because the page ground is indigo now and
-   a link left at --fx-brand there is the ground colour. Links inside a white
-   card (the FAQ rich text below, the cards on the service pages) set the indigo
-   back explicitly — a white card is the only light surface left. */
+/* The on-indigo light, because the page ground is indigo and a link left at
+   --fx-brand there is the ground colour. Links inside a light card (the FAQ
+   rich text below, the cards on the service pages) set the indigo back
+   explicitly — a card is the only light surface. */
 a {
   color: var(--fx-on-ink-link);
   text-decoration: none;
@@ -53,8 +59,8 @@ button {
 .fx-richtext p { margin: 0 0 12px; }
 .fx-richtext ul, .fx-richtext ol { margin: 0 0 12px; padding-left: 22px; }
 .fx-richtext li { margin-bottom: 6px; }
-.fx-richtext b, .fx-richtext strong { font-weight: 600; color: var(--fx-ink); }
-.fx-richtext a { color: var(--fx-brand); text-decoration: underline; }
+.fx-richtext b, .fx-richtext strong { font-weight: 600; color: var(--fx-surface); }
+.fx-richtext a { color: var(--fx-on-ink-link); text-decoration: underline; }
 
 @keyframes fx-up {
   from { opacity: 0; transform: translateY(14px); }
@@ -69,6 +75,50 @@ button {
 @keyframes fx-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: .35; }
+}
+
+/* The submit-button loading indicator (FormBits.jsx's SubmitButton): a small
+   glass disc with a plus mark, snapping through the four right angles rather
+   than spinning smoothly — steps(4, end) over one turn is exactly 90 degrees
+   a step. Sits on top of whatever button colour is underneath, so it is
+   translucent + blurred rather than filled, the same "glass" language as the
+   cards use. */
+@keyframes fx-cross-spin {
+  to { transform: rotate(360deg); }
+}
+
+.fx-loading-cross {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .16);
+  border: 1px solid rgba(255, 255, 255, .4);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: fx-cross-spin .9s steps(4, end) infinite;
+}
+
+.fx-loading-cross-bar {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: rgba(255, 255, 255, .95);
+  border-radius: 1px;
+}
+
+.fx-loading-cross-bar-h {
+  width: 10px;
+  height: 2px;
+  transform: translate(-50%, -50%);
+}
+
+.fx-loading-cross-bar-v {
+  width: 2px;
+  height: 10px;
+  transform: translate(-50%, -50%);
 }
 
 /* The badges floating over the "Why us" photo. A slow, shallow drift — 8px
@@ -128,14 +178,15 @@ button {
   animation: fx-ticker 38s linear infinite;
 }
 
-/* Slows to a third of its speed under the pointer rather than stopping —
-   reading a rate off a marquee that snaps to a dead stop feels like something
-   broke; one that eases into a crawl feels like it noticed you. Changing
-   animation-duration on a running animation rescales its current position
-   rather than jumping, so this doesn't stutter on the way in or out. */
-.fx-ticker-wrap:hover .fx-ticker-track {
-  animation-duration: 110s;
-}
+/* The hover slow-down is NOT here any more, and must not come back as CSS.
+   It used to be `.fx-ticker-wrap:hover .fx-ticker-track { animation-duration:
+   110s }`, on the belief that changing the duration rescales the animation's
+   current position rather than jumping. Rescaling the position IS the jump:
+   position is elapsed/duration, so re-dividing the same elapsed time by a
+   duration three times longer throws the track backwards — visibly, and worse
+   the longer the page has been open. It is done with the Web Animations API
+   instead, where playbackRate leaves currentTime alone. See
+   hooks/useMarqueeHover.js. */
 
 .fx-dot-pulse {
   animation: fx-pulse 2.4s ease-in-out infinite;
@@ -152,6 +203,58 @@ button {
 .fx-rise {
   animation: fx-rise .62s cubic-bezier(.22, .61, .36, 1) both;
   animation-delay: var(--fx-delay, 0s);
+}
+
+/* ---- Arriving at a form ---------------------------------------------------
+   "Get a rate" in the header, "Request a quote" on a service page and every
+   "Contact us" button all exist to put someone in front of a form. They used
+   to land at the top of /quote or /contact, which is a breadcrumb, a heading
+   and a paragraph — the form was below the fold, so what the click actually
+   produced on screen was the navbar. useFormAnchor.js now scrolls the form
+   into view; these two classes are what make that read as an answer to the
+   click rather than as the page having jumped on its own.
+
+   fx-form-panel is the entrance: the card lifts and settles as it arrives.
+   fx-form-target is the arrival itself — a gold ring that swells around the
+   card and fades out, which is the same "look here" gold the eyebrow text and
+   the focus ring already use. It fades rather than latches, so the form is
+   left in its normal resting state a second later and nothing looks stuck.
+
+   Both are removed once they finish (see useFormAnchor), for the same reason
+   Reveal drops .fx-rise: an animation with fill-mode holds the properties it
+   animated, and a form card that keeps holding `transform` can never be moved
+   by anything else again. */
+@keyframes fx-form-in {
+  from { opacity: 0; transform: translateY(22px) scale(.985); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes fx-form-ring {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--fx-accent) 62%, transparent); }
+  55% { box-shadow: 0 0 0 9px color-mix(in srgb, var(--fx-accent) 0%, transparent); }
+  70% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--fx-accent) 52%, transparent); }
+  100% { box-shadow: 0 0 0 12px color-mix(in srgb, var(--fx-accent) 0%, transparent); }
+}
+
+.fx-form-panel {
+  animation: fx-form-in .58s cubic-bezier(.22, .61, .36, 1) both;
+}
+
+.fx-form-target {
+  animation: fx-form-ring 1.5s cubic-bezier(.22, .61, .36, 1) .25s both;
+}
+
+/* The fields themselves stagger in behind the card, so the form assembles
+   rather than appearing whole — the small piece of motion that says the click
+   produced *this*. --fx-field-i is set per row by the form. */
+@keyframes fx-field-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.fx-form-panel .fx-field-row {
+  animation: fx-field-in .46s cubic-bezier(.22, .61, .36, 1) both;
+  animation-delay: calc(.16s + var(--fx-field-i, 0) * .07s);
 }
 
 /* ---- Card hover: lift + zoom ------------------------------------------
@@ -186,12 +289,12 @@ button {
 
 .fx-hover-lift:hover {
   transform: translateY(-7px) scale(1.015);
-  box-shadow: 0 30px 54px -24px rgba(10, 12, 40, .38);
+  box-shadow: var(--fx-shadow-lift);
 }
 
 .fx-hover-lift-panel:hover {
   transform: translateY(-8px) scale(1.03);
-  box-shadow: 0 26px 48px -22px rgba(0, 0, 0, .5);
+  box-shadow: var(--fx-shadow-panel);
 }
 
 /* ---- FAQ row (FaqAccordion.jsx) ---------------------------------------- */
@@ -200,7 +303,7 @@ button {
 }
 
 .fx-faq-row:hover {
-  background: var(--fx-surface-2);
+  background: var(--fx-panel-hover);
 }
 
 /* ---- Photo frame (SitePhoto, the "Why us" badge and the "What we do"
@@ -330,12 +433,17 @@ button {
   transform: scaleX(1);
 }
 
-/* Keyboard users get the same affordances the pointer does. The ring is the
-   gold accent, not the brand indigo: the ground is indigo now, and a focus ring
-   the same colour as what it is drawn on is not a focus ring. */
+/* Keyboard users get the same affordances the pointer does. The gold accent,
+   not the brand indigo: the ground is indigo, and a focus ring the same colour
+   as what it is drawn on is not a focus ring. */
 :where(a, button, input, select, textarea):focus-visible {
   outline: 2px solid var(--fx-accent);
   outline-offset: 2px;
+}
+
+/* Except inside a light card, where the gold is the weaker of the two. */
+:where(form, .fx-richtext) :where(input, select, textarea, button):focus-visible {
+  outline-color: var(--fx-brand);
 }
 
 /* Anyone who has asked their system to calm motion down gets the finished
@@ -350,8 +458,20 @@ button {
   .fx-tick-ripple,
   .fx-rise,
   .fx-ticker-track,
-  .fx-dot-pulse {
+  .fx-dot-pulse,
+  .fx-loading-cross,
+  .fx-form-panel,
+  .fx-form-panel .fx-field-row {
     animation: none !important;
+  }
+
+  /* The arrival ring stays, without the swell: someone who has asked for less
+     motion still needs to be told which thing on the page the click was about,
+     and the alternative is landing them on a form with no signal at all. It
+     holds a static gold ring for a moment instead of pulsing. */
+  .fx-form-target {
+    animation: none !important;
+    box-shadow: var(--fx-shadow-form-focus);
   }
 
   .fx-photo-zoom,
@@ -413,7 +533,7 @@ button {
     backdrop-filter: blur(14px);
     border: 1px solid var(--fx-line);
     border-radius: 20px;
-    box-shadow: 0 18px 40px -18px rgba(11,27,51,.35);
+    box-shadow: var(--fx-shadow-bottomnav);
     padding: 2px 2px;
   }
 

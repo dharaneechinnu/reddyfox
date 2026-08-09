@@ -36,7 +36,14 @@ export default function OpenStatus({ tone = 'light', showDetail = true }) {
   if (!status.known) return null;
 
   return (
-    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, whiteSpace: 'nowrap' }}>
+    /* Wraps as a whole rather than being pinned to one line. `nowrap` on the
+       container forced "CLOSED · opens tomorrow at 9:30 AM" to stay on a
+       single line whatever it was put in, so in a narrow column — the footer's
+       hours cell, the Contact card — it simply ran past its edge. Now the dot
+       and the OPEN/CLOSED badge stay welded together and only the trailing
+       detail drops to the next line, which is the one break that reads
+       deliberately. */
+    <span style={{ display: 'inline-flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
       {/* Only the open state breathes: a pulsing dot means "live right now". */}
       <span
         aria-hidden="true"
@@ -46,11 +53,11 @@ export default function OpenStatus({ tone = 'light', showDetail = true }) {
           background: status.open ? t.openDot : t.closedDot,
         }}
       />
-      <span style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, letterSpacing: '.14em', textTransform: 'uppercase', color: t.text }}>
+      <span style={{ whiteSpace: 'nowrap', fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, letterSpacing: '.14em', textTransform: 'uppercase', color: t.text }}>
         {status.label}
       </span>
       {showDetail && status.detail && (
-        <span style={{ fontSize: fs.sm, color: t.detail }}>{status.detail}</span>
+        <span style={{ fontSize: fs.sm, lineHeight: 1.5, color: t.detail }}>{status.detail}</span>
       )}
     </span>
   );
@@ -63,7 +70,7 @@ export default function OpenStatus({ tone = 'light', showDetail = true }) {
  * sentence: it turns "which line applies to me?" into something the reader
  * doesn't have to work out.
  */
-export function HoursTable({ tone = 'light' }) {
+export function HoursTable({ tone = 'light', compact = false }) {
   const { hours } = useCompanyInfo();
   const isSunday = new Date().getDay() === 0;
   const onInk = tone === 'ink';
@@ -79,18 +86,38 @@ export function HoursTable({ tone = 'light' }) {
         <div
           key={row.label}
           style={{
-            display: 'flex', justifyContent: 'space-between', gap: 20, alignItems: 'baseline',
+            // 12px gap in compact, 20 otherwise: in a narrow column the gap is
+            // competing with the opening time for room, and the time is the
+            // thing people came to read.
+            display: 'flex', justifyContent: 'space-between', gap: compact ? 12 : 20, alignItems: 'baseline',
             padding: '11px 0',
             borderBottom: `1px solid ${onInk ? c.navyLine : c.sandLine3}`,
           }}
         >
-          <span style={{ fontSize: fs.base, fontWeight: row.today ? 600 : 400, color: onInk ? (row.today ? c.surface : c.onNavyText) : (row.today ? c.navy : c.textMuted) }}>
-            {row.label}
+          {/* minWidth:0 lets the day label give way. Without it a flex item
+              refuses to shrink below its content, so "Monday – Saturday" held
+              its full width and pushed the opening time into a second line —
+              which is what "9:30 AM – 7:00" / "PM" was. The label is the part
+              that can afford to wrap; the time is not. */}
+          <span style={{ minWidth: 0, fontSize: fs.base, fontWeight: row.today ? 600 : 400, color: onInk ? (row.today ? c.surface : c.onNavyText) : (row.today ? c.navy : c.textMuted) }}>
+            {compact ? row.labelShort : row.label}
+            {/* The one thing in this table that was never made tone-aware. It
+                was always c.orange — the brand indigo — which reads fine on a
+                light surface and is the ground colour itself on a dark one, so
+                on every ink panel (the footer, the hero, the Contact card) the
+                "TODAY" marker was indigo on indigo: present in the DOM,
+                invisible on screen. That mattered more than most, because
+                marking today's row is the entire reason this is a table rather
+                than a sentence. */}
             {row.today && (
-              <span style={{ fontFamily: fonts.mono, fontSize: fs['2xs'], letterSpacing: '.14em', color: c.orange, marginLeft: 9 }}>TODAY</span>
+              <span style={{ fontFamily: fonts.mono, fontSize: fs['2xs'], letterSpacing: '.14em', color: onInk ? c.surface : c.orange, marginLeft: 9 }}>TODAY</span>
             )}
           </span>
-          <span style={{ fontFamily: fonts.mono, fontSize: fs.base, color: row.closed ? (onInk ? c.navyMuted2 : c.textFainter) : (onInk ? c.surface : c.navy) }}>
+          {/* NEVER wraps. "9:30 AM – 7:00 PM" is one value, and breaking it
+              across two lines leaves a stray "PM" under the row and knocks the
+              two rows out of alignment with each other. flex:none stops it
+              being squeezed, nowrap stops it being broken. */}
+          <span style={{ flex: 'none', whiteSpace: 'nowrap', fontFamily: fonts.mono, fontSize: fs.base, color: row.closed ? (onInk ? c.navyMuted2 : c.textFainter) : (onInk ? c.surface : c.navy) }}>
             {row.closed ? 'Closed' : `${clockLabel(row.opens)} – ${clockLabel(row.closes)}`}
           </span>
         </div>

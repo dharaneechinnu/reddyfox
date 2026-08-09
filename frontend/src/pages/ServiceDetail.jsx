@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { SERVICES } from '../data';
-import { c, fs, fonts, wrap, btnOnBrand } from '../tokens';
+import { c, fs, fonts, wrap, btnOnBrand, headerOffset } from '../tokens';
 import useApi from '../hooks/useApi';
 import { fetchFaqs } from '../api';
 import FaqAccordion from '../components/FaqAccordion';
@@ -28,20 +28,18 @@ export default function ServiceDetail() {
       />
       <section style={{ background: c.page, padding: '60px 0 76px' }}>
         <div style={wrap}>
-          <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.navyMuted, marginBottom: 22 }}>
-            <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / <Link to="/services" style={{ cursor: 'pointer', color: c.onNavyText }}>Services</Link> / {active.title}
+          <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.pageMuted, marginBottom: 22 }}>
+            <Link to="/" style={{ cursor: 'pointer', color: c.pageEyebrow }}>Home</Link> / <Link to="/services" style={{ cursor: 'pointer', color: c.pageEyebrow }}>Services</Link> / {active.title}
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(340px,100%),1fr))', gap: 56, alignItems: 'center' }}>
             <div>
-              <span style={{ display: 'inline-block', fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.16em', color: c.accent, marginBottom: 18 }}>SERVICE {active.tag}</span>
-              <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h1, lineHeight: 1.06, color: c.surface, margin: '0 0 18px' }}>{active.title}</h1>
-              <p style={{ fontSize: fs.xl, lineHeight: 1.6, color: c.onNavyText, margin: '0 0 32px', maxWidth: 520 }}>{active.hero}</p>
+              <span style={{ display: 'inline-block', fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.16em', color: c.pageEyebrow, marginBottom: 18 }}>SERVICE {active.tag}</span>
+              <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h1, lineHeight: 1.06, color: c.pageHeading, margin: '0 0 18px' }}>{active.title}</h1>
+              <p style={{ fontSize: fs.xl, lineHeight: 1.6, color: c.pageText, margin: '0 0 32px', maxWidth: 520 }}>{active.hero}</p>
               <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-                {/* White fill, indigo label: an indigo button on the indigo
-                    panel is not a button — it was invisible here. */}
-                <span onClick={() => navigate(`/contact?service=${encodeURIComponent(active.title)}`)} style={{ ...btnOnBrand, borderRadius: 9 }}>Request a quote</span>
+                <span onClick={() => navigate(`/contact?service=${encodeURIComponent(active.title)}#form`)} style={{ ...btnOnBrand, borderRadius: 9 }}>Ask for a price</span>
                 {active.id === 'forex-card' && (
-                  <span onClick={() => navigate(`/quote?service=${encodeURIComponent(active.title)}`)} style={{ border: '1px solid rgba(255,255,255,.26)', color: c.surface, padding: '15px 26px', borderRadius: 9, fontSize: fs.md, fontWeight: 600, cursor: 'pointer' }}>Get best price</span>
+                  <span onClick={() => navigate(`/quote?service=${encodeURIComponent(active.title)}#form`)} style={{ border: `1px solid ${c.navyLineStrong}`, color: c.surface, padding: '15px 26px', borderRadius: 9, fontSize: fs.md, fontWeight: 600, cursor: 'pointer' }}>Ask for the best price</span>
                 )}
               </div>
             </div>
@@ -50,8 +48,8 @@ export default function ServiceDetail() {
               placeholderLabel={<>PHOTOGRAPHY<br />{active.title}</>}
               style={{
                 minHeight: 300,
-                background: 'repeating-linear-gradient(135deg,rgba(255,255,255,.07) 0 10px,rgba(255,255,255,.03) 10px 20px)',
-                border: '1px solid rgba(255,255,255,.14)',
+                background: `repeating-linear-gradient(135deg,${c.navyLineFaint} 0 10px,${c.navyLine} 10px 20px)`,
+                border: `1px solid ${c.navyLine}`,
               }}
             />
           </div>
@@ -60,7 +58,7 @@ export default function ServiceDetail() {
 
       <nav
         aria-label="Services"
-        style={{ background: c.surface, borderBottom: `1px solid ${c.sandLine2}`, position: 'sticky', top: 73, zIndex: 40 }}
+        style={{ background: c.cardBg, borderBottom: `1px solid ${c.sandLine2}`, position: 'sticky', top: headerOffset, zIndex: 40 }}
       >
         <div
           className="fx-service-nav-row"
@@ -92,11 +90,11 @@ export default function ServiceDetail() {
           only their hairline to separate them from the page. */}
       <section style={{ background: c.page, padding: '88px 0' }}>
         <div style={wrap}>
-          <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.accent, margin: '0 0 14px' }}>Benefits</p>
-          <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h2, lineHeight: 1.1, color: c.surface, margin: '0 0 40px' }}>What you get</h2>
+          <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.pageEyebrow, margin: '0 0 14px' }}>Benefits</p>
+          <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h2, lineHeight: 1.1, color: c.pageHeading, margin: '0 0 40px' }}>What you get</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(280px,100%),1fr))', gap: 20 }}>
             {active.benefits.map(([title, body, logoSlot], i) => (
-              <Reveal key={title} delay={i * 0.07} className="fx-hover-lift" style={{ background: c.surface, border: `1px solid ${c.sandLine}`, borderRadius: 14, overflow: 'hidden', padding: logoSlot ? 0 : 28 }}>
+              <Reveal key={title} delay={i * 0.07} className="fx-hover-lift" style={{ background: c.cardBg, border: `1px solid ${c.sandLine}`, borderRadius: 14, overflow: 'hidden', padding: logoSlot ? 0 : 28 }}>
                 {logoSlot && (
                   <SitePhoto
                     slot={logoSlot}
@@ -116,14 +114,14 @@ export default function ServiceDetail() {
 
       <section style={{ background: c.page, padding: '88px 0' }}>
         <div style={wrap}>
-          <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.accent, margin: '0 0 14px' }}>How it works</p>
-          <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h2, lineHeight: 1.1, color: c.surface, margin: '0 0 44px' }}>Three steps, one visit</h2>
+          <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.pageEyebrow, margin: '0 0 14px' }}>How it works</p>
+          <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h2, lineHeight: 1.1, color: c.pageHeading, margin: '0 0 44px' }}>Three steps, one visit</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(260px,100%),1fr))', gap: 24 }}>
             {active.process.map(([title, body], i) => (
-              <Reveal key={title} delay={i * 0.08} style={{ borderTop: `2px solid ${c.accent}`, paddingTop: 22 }}>
-                <span style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.14em', color: c.accent }}>{'0' + (i + 1)}</span>
-                <h3 style={{ fontSize: fs['2xl'], fontWeight: 600, color: c.surface, margin: '14px 0 9px' }}>{title}</h3>
-                <p style={{ fontSize: fs.base, lineHeight: 1.62, color: c.onNavyText, margin: 0 }}>{body}</p>
+              <Reveal key={title} delay={i * 0.08} style={{ borderTop: `2px solid ${c.pageEyebrow}`, paddingTop: 22 }}>
+                <span style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.14em', color: c.pageEyebrow }}>{'0' + (i + 1)}</span>
+                <h3 style={{ fontSize: fs['2xl'], fontWeight: 600, color: c.pageHeading, margin: '14px 0 9px' }}>{title}</h3>
+                <p style={{ fontSize: fs.base, lineHeight: 1.62, color: c.pageText, margin: 0 }}>{body}</p>
               </Reveal>
             ))}
           </div>
@@ -133,7 +131,7 @@ export default function ServiceDetail() {
       {faqs.length > 0 && (
         <section style={{ background: c.page, padding: '88px 0' }}>
           <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 32px' }}>
-            <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h2, lineHeight: 1.1, color: c.surface, margin: '0 0 36px', textAlign: 'center' }}>Common questions</h2>
+            <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h2, lineHeight: 1.1, color: c.pageHeading, margin: '0 0 36px', textAlign: 'center' }}>Common questions</h2>
             <FaqAccordion faqs={faqs} />
           </div>
         </section>
@@ -141,8 +139,8 @@ export default function ServiceDetail() {
 
       <section style={{ background: c.page, padding: '72px 0' }}>
         <div style={{ ...wrap, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 32, flexWrap: 'wrap' }}>
-          <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h3, lineHeight: 1.12, color: c.surface, margin: 0, maxWidth: 620 }}>Speak to a dealer about {active.title}</h2>
-          <span onClick={() => navigate('/contact')} style={{ ...btnOnBrand, padding: '16px 28px', borderRadius: 9 }}>Start an enquiry</span>
+          <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h3, lineHeight: 1.12, color: c.pageHeading, margin: 0, maxWidth: 620 }}>Have a question about {active.title}?</h2>
+          <span onClick={() => navigate('/contact#form')} style={{ ...btnOnBrand, padding: '16px 28px', borderRadius: 9 }}>Ask us now</span>
         </div>
       </section>
     </div>

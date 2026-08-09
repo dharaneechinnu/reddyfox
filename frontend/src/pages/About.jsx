@@ -18,16 +18,16 @@ export default function About() {
       />
       <section style={{ background: c.page, padding: '60px 0 88px' }}>
         <div style={wrap}>
-          <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.navyMuted, marginBottom: 22 }}>
-            <Link to="/" style={{ cursor: 'pointer', color: c.onNavyText }}>Home</Link> / About
+          <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.pageMuted, marginBottom: 22 }}>
+            <Link to="/" style={{ cursor: 'pointer', color: c.pageEyebrow }}>Home</Link> / About
           </div>
-          <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h1, lineHeight: 1.04, color: c.surface, margin: '0 0 18px', maxWidth: 820 }}>
-            {COMPANY.yearsExperience} years as an authorised money changer in Chennai
+          <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h1, lineHeight: 1.04, color: c.pageHeading, margin: '0 0 18px', maxWidth: 820 }}>
+            {COMPANY.yearsExperience} years changing money in Chennai, approved by the RBI
           </h1>
-          <p style={{ fontSize: fs.xl, lineHeight: 1.62, color: c.onNavyText, margin: 0, maxWidth: 620 }}>
-            Providing a wide range of foreign currency exchange and related services for both private
-            and corporate clients since {COMPANY.since}, {COMPANY.shortName} has established itself as a
-            successful and respected currency exchange company.
+          <p style={{ fontSize: fs.xl, lineHeight: 1.62, color: c.pageText, margin: 0, maxWidth: 620 }}>
+            We have been changing foreign money — and doing everything that goes with it — for people
+            and companies since {COMPANY.since}. In that time {COMPANY.shortName} has become a name
+            people in Chennai trust.
           </p>
         </div>
       </section>
@@ -40,34 +40,33 @@ export default function About() {
             style={{ minHeight: 420 }}
           />
           <div>
-            <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.accent, margin: '0 0 14px' }}>Welcome to {COMPANY.shortName}</p>
-            <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h3, lineHeight: 1.1, color: c.surface, margin: '0 0 20px' }}>
+            <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.pageEyebrow, margin: '0 0 14px' }}>Welcome to {COMPANY.shortName}</p>
+            <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h3, lineHeight: 1.1, color: c.pageHeading, margin: '0 0 20px' }}>
               Best money exchangers in Chennai
             </h2>
-            <p style={{ fontSize: fs.lg, lineHeight: 1.7, color: c.onNavyText, margin: '0 0 16px' }}>
-              {COMPANY.shortName} is one of the most reputed foreign currency exchanges in Chennai, because
-              we specialise in offering the whole gamut of foreign currency exchange services — money
-              exchange, money transfer services and money remittance services.
+            <p style={{ fontSize: fs.lg, lineHeight: 1.7, color: c.pageText, margin: '0 0 16px' }}>
+              {COMPANY.shortName} is one of the best known money exchangers in Chennai. That is because we
+              do the whole job under one roof — changing money, sending money, and moving money
+              abroad.
             </p>
-            <p style={{ fontSize: fs.lg, lineHeight: 1.7, color: c.onNavyText, margin: '0 0 16px' }}>
-              We offer a broad spectrum of services to the public, corporates and travel agents that
-              include buy/sell foreign exchange, encashing travellers' cheques, travel currency cards,
-              Western Union money transfer, and foreign remittances for overseas education, family
-              maintenance, immigration, medical treatment and attending conferences, seminars and
-              trade fairs.
+            <p style={{ fontSize: fs.lg, lineHeight: 1.7, color: c.pageText, margin: '0 0 16px' }}>
+              We look after the public, companies and travel agents. We buy and sell foreign money, cash
+              travellers' cheques, do travel cards and Western Union money transfers, and send money
+              abroad for studies, for family, for moving abroad, for medical treatment, and for
+              conferences, seminars and trade fairs.
             </p>
-            <p style={{ fontSize: fs.lg, lineHeight: 1.7, color: c.onNavyText, margin: '0 0 32px' }}>
-              We undertake to buy and sell foreign currencies and en-cash travellers cheques as per RBI
-              guidelines, offering an array of value added customer service at best competitive rates.
+            <p style={{ fontSize: fs.lg, lineHeight: 1.7, color: c.pageText, margin: '0 0 32px' }}>
+              We buy and sell foreign money and cash travellers cheques following RBI rules, and we give
+              you extra help and service on top of a good rate.
             </p>
-            <div className="fx-stack-480" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 22, borderTop: `1px solid ${c.navyLine}`, paddingTop: 26 }}>
+            <div className="fx-stack-480" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 22, borderTop: `1px solid ${c.pageLine}`, paddingTop: 26 }}>
               <div>
-                <h3 style={{ fontSize: fs.md, fontWeight: 600, color: c.surface, margin: '0 0 8px' }}>Mission</h3>
-                <p style={{ fontSize: fs.base, lineHeight: 1.62, color: c.onNavyText, margin: 0 }}>{COMPANY.mission}</p>
+                <h3 style={{ fontSize: fs.md, fontWeight: 600, color: c.pageHeading, margin: '0 0 8px' }}>Mission</h3>
+                <p style={{ fontSize: fs.base, lineHeight: 1.62, color: c.pageText, margin: 0 }}>{COMPANY.mission}</p>
               </div>
               <div>
-                <h3 style={{ fontSize: fs.md, fontWeight: 600, color: c.surface, margin: '0 0 8px' }}>Vision</h3>
-                <p style={{ fontSize: fs.base, lineHeight: 1.62, color: c.onNavyText, margin: 0 }}>{COMPANY.vision}</p>
+                <h3 style={{ fontSize: fs.md, fontWeight: 600, color: c.pageHeading, margin: '0 0 8px' }}>Vision</h3>
+                <p style={{ fontSize: fs.base, lineHeight: 1.62, color: c.pageText, margin: 0 }}>{COMPANY.vision}</p>
               </div>
             </div>
           </div>
@@ -76,13 +75,13 @@ export default function About() {
 
       <section style={{ background: c.page, padding: '88px 0' }}>
         <div style={wrap}>
-          <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.accent, margin: '0 0 14px' }}>Why us?</p>
-          <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h3, lineHeight: 1.1, color: c.surface, margin: '0 0 16px' }}>
-            A solution provider for your foreign exchange needs
+          <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.pageEyebrow, margin: '0 0 14px' }}>Why us?</p>
+          <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h3, lineHeight: 1.1, color: c.pageHeading, margin: '0 0 16px' }}>
+            We sort out whatever you need with foreign money
           </h2>
-          <p style={{ fontSize: fs.lg, lineHeight: 1.7, color: c.onNavyText, margin: '0 0 44px', maxWidth: 700 }}>
-            We are a solution provider for your foreign exchange needs on your upcoming travel. We will
-            always commit and provide 100% satisfaction in terms of price and service.
+          <p style={{ fontSize: fs.lg, lineHeight: 1.7, color: c.pageText, margin: '0 0 44px', maxWidth: 700 }}>
+            Whatever you need for your next trip abroad, we will sort it out. We promise to get both the
+            price and the service right for you, every time.
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(260px,100%),1fr))', gap: 24 }}>
             {REASONS.map((r, i) => (
@@ -111,19 +110,18 @@ export default function About() {
       <section style={{ background: c.page, padding: '88px 0' }}>
         <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 56, alignItems: 'center' }}>
           <div>
-            <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.accent, margin: '0 0 14px' }}>Our team</p>
-            <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h3, lineHeight: 1.1, color: c.surface, margin: '0 0 20px' }}>
-              Trained, experienced and multilingual
+            <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.pageEyebrow, margin: '0 0 14px' }}>Our team</p>
+            <h2 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h3, lineHeight: 1.1, color: c.pageHeading, margin: '0 0 20px' }}>
+              Trained, experienced, and we speak your language
             </h2>
-            <p style={{ fontSize: fs.lg, lineHeight: 1.7, color: c.onNavyText, margin: '0 0 16px' }}>
-              Our company is represented by committed, qualified, highly trained, experienced and
-              multilingual front office staff to address the specific needs of the customers in a highly
-              professional manner. In fact our rates are considered to be the most competitive in the market.
+            <p style={{ fontSize: fs.lg, lineHeight: 1.7, color: c.pageText, margin: '0 0 16px' }}>
+              The people at our counter are qualified, well trained and experienced, and they speak
+              several languages. They take your problem seriously and sort it out properly. Our rates are
+              considered to be among the most competitive in the market.
             </p>
-            <p style={{ fontSize: fs.lg, lineHeight: 1.7, color: c.onNavyText, margin: 0 }}>
-              Our company was approved by the RBI to carry out foreign exchange transactions. We value our
-              clients as business partners and are dedicated to providing the highest quality of service
-              to them.
+            <p style={{ fontSize: fs.lg, lineHeight: 1.7, color: c.pageText, margin: 0 }}>
+              The RBI has approved us to deal in foreign money. We treat our customers as partners, and we
+              work hard to give them the best service we can.
             </p>
           </div>
           <SitePhoto
@@ -134,27 +132,27 @@ export default function About() {
         </div>
       </section>
 
-      <section style={{ background: c.page, borderTop: `1px solid ${c.navyLine}`, padding: '80px 0' }}>
+      <section style={{ background: c.page, borderTop: `1px solid ${c.pageLine}`, padding: '80px 0' }}>
         <div style={wrap}>
-          <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.accent, margin: '0 0 32px' }}>Compliance</p>
+          <p style={{ fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.18em', textTransform: 'uppercase', color: c.pageEyebrow, margin: '0 0 32px' }}>Compliance</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(260px,100%),1fr))', gap: 18 }}>
             {CERTS.map((cert) => (
-              <div key={cert.title} className="fx-hover-lift-panel" style={{ border: '1px solid rgba(255,255,255,.14)', borderRadius: 12, padding: 24 }}>
+              <div key={cert.title} className="fx-hover-lift-panel" style={{ background: c.panel, border: `1px solid ${c.navyLine}`, borderRadius: 12, padding: 24 }}>
                 <div style={{ fontSize: fs.md, fontWeight: 600, color: c.surface, marginBottom: 8 }}>{cert.title}</div>
                 <div style={{ fontSize: fs.base, lineHeight: 1.6, color: c.navyMuted2 }}>{cert.body}</div>
               </div>
             ))}
           </div>
-          <div style={{ marginTop: 40, borderTop: '1px solid rgba(255,255,255,.12)', paddingTop: 28, display: 'flex', gap: 40, flexWrap: 'wrap' }}>
+          <div style={{ marginTop: 40, borderTop: `1px solid ${c.pageLine}`, paddingTop: 28, display: 'flex', gap: 40, flexWrap: 'wrap' }}>
             <div>
-              <div style={{ fontSize: fs.sm, color: c.navyMuted2, marginBottom: 6 }}>Visit us</div>
-              <div style={{ fontSize: fs.md, color: c.surface, lineHeight: 1.6 }}>
+              <div style={{ fontSize: fs.sm, color: c.pageMuted, marginBottom: 6 }}>Visit us</div>
+              <div style={{ fontSize: fs.md, color: c.pageHeading, lineHeight: 1.6 }}>
                 {contact.addressLines.join(' ')} {contact.addressNote}
               </div>
             </div>
             <div>
-              <div style={{ fontSize: fs.sm, color: c.navyMuted2, marginBottom: 6 }}>Call us</div>
-              <div style={{ fontFamily: fonts.mono, fontSize: fs.md, color: c.surface }}>
+              <div style={{ fontSize: fs.sm, color: c.pageMuted, marginBottom: 6 }}>Call us</div>
+              <div style={{ fontFamily: fonts.mono, fontSize: fs.md, color: c.pageHeading }}>
                 {contact.mobiles.map((m) => m.display).join(' · ')}
               </div>
             </div>
