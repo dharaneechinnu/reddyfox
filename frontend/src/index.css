@@ -65,6 +65,54 @@ button {
   50% { opacity: .35; }
 }
 
+/* ---- 404 page: flip-board digits, a drifting banknote plane, floating
+   currency coins ------------------------------------------------------- */
+@keyframes fx-flip-in {
+  from { transform: rotateX(85deg); opacity: 0; }
+  to { transform: rotateX(0deg); opacity: 1; }
+}
+
+@keyframes fx-float {
+  0%, 100% { transform: translateY(0) rotate(var(--fx-float-rot, 0deg)); }
+  50% { transform: translateY(-14px) rotate(var(--fx-float-rot, 0deg)); }
+}
+
+@keyframes fx-drift {
+  0% { transform: translate(-16px, 6px) rotate(-6deg); }
+  50% { transform: translate(16px, -14px) rotate(4deg); }
+  100% { transform: translate(-16px, 6px) rotate(-6deg); }
+}
+
+.fx-404-tile {
+  animation: fx-flip-in .65s cubic-bezier(.22,.85,.28,1) both;
+}
+.fx-404-coin {
+  animation: fx-float 4.6s ease-in-out infinite;
+}
+.fx-404-plane {
+  animation: fx-drift 7.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-404-tile, .fx-404-coin, .fx-404-plane {
+    animation: none !important;
+  }
+}
+
+/* The fixed bottom tab bar sits over the initial mobile viewport regardless
+   of document length (it's viewport-fixed, not document-bottom), so a short
+   page like this one needs its own clearance — the page-shell's
+   padding-bottom only protects the very end of a scrolled document, not
+   above-the-fold content on a page this short. */
+@media (max-width: 780px) {
+  .fx-404-hero {
+    padding: 64px 0 96px !important;
+  }
+  .fx-404-illustration {
+    margin-bottom: 22px !important;
+  }
+}
+
 /* ---- Mobile navigation ---------------------------------------------- */
 /* Below this width the desktop header row (logo + horizontal nav links +
    mega menu) gives way to a fixed bottom tab bar (MobileBottomNav.jsx) —
