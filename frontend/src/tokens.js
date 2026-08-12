@@ -217,8 +217,6 @@ export const radius = v('radius');
  * name the same shadow rather than each carry its own hand-tuned blur.
  */
 export const shadowCard = v('shadow-card');
-export const shadowLift = v('shadow-lift');
-export const shadowPanel = v('shadow-panel');
 export const shadowFloat = v('shadow-float');
 export const shadowChip = v('shadow-chip');
 export const shadowDialog = v('shadow-dialog');
@@ -233,18 +231,6 @@ export const headerOffset = v('header-h');
 export const scrollBelowHeader = { scrollMarginTop: `calc(${v('header-h')} + 24px)` };
 
 export const wrap = { maxWidth: 1280, margin: '0 auto', padding: '0 clamp(16px,4.5vw,32px)' };
-export const wrapNarrow = { maxWidth: 1000, margin: '0 auto', padding: '0 clamp(16px,4.5vw,32px)' };
-
-export const eyebrow = {
-  fontFamily: fonts.mono,
-  fontWeight: 500,
-  fontSize: fs.xs,
-  lineHeight: 1.4,
-  letterSpacing: '.18em',
-  textTransform: 'uppercase',
-  color: c.pageEyebrow,
-  margin: '0 0 14px',
-};
 
 export const h2Style = {
   fontFamily: fonts.serif,
@@ -253,40 +239,6 @@ export const h2Style = {
   lineHeight: 1.08,
   color: c.pageHeading,
   margin: 0,
-};
-
-/**
- * The shared shape of a page heading block: the mono eyebrow, then the serif
- * heading, then the lead paragraph. Every page's hero band repeated these three
- * by hand, which is how the Contact page ended up with the Quote page's
- * heading colour logic and how all of them had to be revisited one at a time
- * when the ground changed colour.
- */
-export const pageH1 = {
-  fontFamily: fonts.serif,
-  fontWeight: 400,
-  fontSize: fs.h1,
-  lineHeight: 1.05,
-  color: c.pageHeading,
-  margin: '0 0 14px',
-};
-
-export const pageLead = {
-  fontSize: fs.lg,
-  lineHeight: 1.6,
-  color: c.pageText,
-  margin: 0,
-  maxWidth: 560,
-};
-
-/** The "Home / Services" trail above a page heading. */
-export const crumb = {
-  fontFamily: fonts.mono,
-  fontWeight: 400,
-  fontSize: fs.sm,
-  lineHeight: 1.4,
-  color: c.pageMuted,
-  marginBottom: 22,
 };
 
 /**
@@ -375,7 +327,6 @@ export const btnPrimary = {
 export const btnPrimaryHover = c.brandPale;
 
 export const btnOnBrand = btnPrimary;
-export const btnOnBrandHover = btnPrimaryHover;
 
 /**
  * The quiet second action.

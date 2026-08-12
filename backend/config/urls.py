@@ -15,6 +15,9 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.static import serve
 
+admin.site.site_header = settings.ADMIN_SITE_HEADER
+admin.site.site_title = settings.ADMIN_SITE_HEADER
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('rates.urls')),

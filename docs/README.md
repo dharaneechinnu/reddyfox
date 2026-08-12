@@ -6,6 +6,9 @@ Add new docs to this folder and link them below.
 
 ## Contents
 
+- [Production checklist](./production-checklist.md) — what to verify before
+  every deploy (env vars, security settings, migrations, tests), one-time
+  setup steps, and a running record of dead-code sweeps.
 - [Reaching the desk](./team-notifications.md) — how the team hears about a
   new lead, why minutes matter commercially, what's built today, and a costed
   comparison of the remaining options. **Start here** for anything about

@@ -99,9 +99,6 @@
      height follows the admin-editable type scale. This value is what CSS uses,
      where no measurement is possible. */
   --fx-header-h: 86px;
-  /* Header + the status rail above it: what a scroll target needs to clear when
-     the rail is still on screen, i.e. near the top of the page. */
-  --fx-header-stack: 108px;
 
   /* == Derived: mixed from the core above, never set independently ========= */
 
@@ -419,8 +416,6 @@
      hand-tuned rgba blurs is eight chances for two cards at the same elevation
      to disagree about how high they are. */
   --fx-shadow-card: 0 24px 40px -28px rgba(0, 0, 0, .35);   /* a card at rest */
-  --fx-shadow-lift: 0 30px 54px -24px rgba(10, 12, 40, .38); /* a light card, hovered */
-  --fx-shadow-panel: 0 26px 48px -22px rgba(0, 0, 0, .5);    /* a dark panel, hovered */
   --fx-shadow-float: 0 16px 30px -14px rgba(0, 0, 0, .6);    /* the badges over the "why us" photo */
   --fx-shadow-chip: 0 8px 18px -8px rgba(0, 0, 0, .5);       /* a small pill sitting on a photo */
   --fx-shadow-dialog: 0 30px 60px -24px rgba(7, 42, 44, .5); /* the confirmation dialog */
