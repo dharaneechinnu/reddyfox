@@ -1,5 +1,4 @@
 from django.contrib import admin, messages
-from django.utils import timezone
 from django.utils.html import format_html
 
 from .models import TelegramDelivery, TelegramInvite, TelegramSubscriber

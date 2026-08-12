@@ -43,7 +43,6 @@ def _body(lead):
             f'Service  : {lead.service or "(not specified)"}',
             f'Currency : {lead.from_currency or "(not specified)"}',
             f'Amount   : {_fmt(lead.amount)}',
-            f'Needed by: {lead.needed_by or "(not specified)"}',
         ]
     elif lead.kind == 'callback':
         lines += [

@@ -1,7 +1,6 @@
 asgiref==3.12.1
 Django==6.0.7
 django-cors-headers==4.9.0
-django-stubs-ext==6.0.7
 djangorestframework==3.17.1
 Pillow==12.3.0
 psycopg2-binary==2.9.12

@@ -50,11 +50,10 @@ def format_message(lead):
     if lead.kind == Lead.Kind.QUOTE:
         # Mirrors content/notifications.py's "What to price" block — a quote request's
         # currency/amount is already covered by the "Converting:" line below, but the service
-        # and deadline aren't shown anywhere else in this shorter message.
+        # isn't shown anywhere else in this shorter message.
         lines += [
             '',
             f'Service  : {lead.service or "(not specified)"}',
-            f'Needed by: {lead.needed_by or "(not specified)"}',
         ]
     if lead.from_currency or lead.to_currency or lead.amount:
         pair = f'{lead.from_currency or "?"} → {lead.to_currency or "?"}'

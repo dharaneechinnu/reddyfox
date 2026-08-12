@@ -167,13 +167,6 @@ export const NAV = [
 // FAQs and testimonials come from the backend (Wagtail Snippets -> see
 // src/api.js). Edit them at /cms/, not here.
 
-// Only claims the business actually publishes.
-export const HERO_TRUST = [
-  { value: COMPANY.customersServed, label: 'Customers served' },
-  { value: `${COMPANY.yearsExperience} yrs`, label: 'Of experience' },
-  { value: 'RBI', label: 'Authorised money changer' },
-];
-
 // Six, in a two-column grid, so it reads as three rows rather than an odd cell
 // left over. Every one is a figure the business publishes: the customer count
 // and the founding year come from company.js (see the provenance note on

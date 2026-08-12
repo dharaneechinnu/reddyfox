@@ -107,6 +107,3 @@ export const SOCIALS = [
     url: 'https://www.youtube.com/channel/UCrFuWjK4Yfma9A6RMbywE5g',
   },
 ];
-
-// The primary number to surface in the header / CTAs.
-export const PRIMARY_PHONE = CONTACT.mobiles[0];

@@ -233,10 +233,10 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        # Shared by all three website forms (enquiry, quote, rate lock) so a
+        # Shared by all three website forms (enquiry, quote, callback) so a
         # bot cannot triple its allowance by rotating between them. Set high
-        # enough that a genuine customer who asks for a quote, locks a rate and
-        # then sends an enquiry is never blocked.
+        # enough that a genuine customer who asks for a quote, requests a
+        # callback and then sends an enquiry is never blocked.
         'enquiry': config('ENQUIRY_THROTTLE_RATE', default='10/hour'),
     },
 }

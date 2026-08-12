@@ -202,9 +202,6 @@ class Lead(models.Model):
     to_currency = models.CharField(max_length=3, blank=True)
     amount = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
 
-    # --- quote + enquiry ---
-    needed_by = models.DateField(null=True, blank=True, help_text='When the customer needs the currency.')
-
     # --- workflow (the only fields staff edit) ---
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.NEW, db_index=True)
     is_resolved = models.BooleanField(
