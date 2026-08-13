@@ -5,9 +5,12 @@ from urllib.parse import quote
 from rest_framework import serializers
 
 from .models import (
-    CallbackRequest, Enquiry, Faq, FaqCategory, Lead, QuoteRequest, SiteImage, SiteSetting, Testimonial,
+    CallbackRequest, Enquiry, Faq, FaqCategory, Lead, QuoteRequest, ServiceRequest, SiteImage, SiteSetting,
+    Testimonial,
 )
-from .validators import looks_like_spam, normalize_phone, validate_amount, validate_currency_code
+from .validators import (
+    looks_like_spam, normalize_phone, validate_amount, validate_currency_code, validate_details,
+)
 
 
 def text_to_paragraphs(text):
@@ -145,13 +148,79 @@ class RequestLeadSerializer(BaseLeadSerializer):
         return attrs
 
 
-class EnquiryCreateSerializer(RequestLeadSerializer):
-    """Contact form. Same field set and rules as "get a quote"."""
+class EnquiryCreateSerializer(BaseLeadSerializer):
+    """The contact form, and nothing else.
+
+    Deliberately three fields: who you are, how to reach you, what you want to
+    ask. It used to share `RequestLeadSerializer` with "get a quote" and so
+    demanded a service, a currency and an amount from someone whose question
+    might be "do you take pre-2013 dollar notes?" — a form that cannot express
+    the enquiry it exists to collect. Anyone who knows the currency and the
+    amount is using a service pop-up (`ServiceRequestCreateSerializer`), which
+    is the form built for that.
+    """
 
     kind = Lead.Kind.ENQUIRY
 
-    class Meta(RequestLeadSerializer.Meta):
+    class Meta(BaseLeadSerializer.Meta):
         model = Enquiry
+        fields = BaseLeadSerializer.Meta.fields + ['message']
+        extra_kwargs = {'message': {'required': True, 'allow_blank': False}}
+
+    def validate_message(self, value):
+        value = super().validate_message(value)
+        if len(value) < 5:
+            raise serializers.ValidationError('Please tell us a little more about what you need.')
+        return value
+
+
+class ServiceRequestCreateSerializer(BaseLeadSerializer):
+    """Any of the six service pop-ups.
+
+    One serializer for all six: the customer fields and the spam rules are
+    identical, and what differs — the questions that form asked — arrives in
+    `details` as {question: answer}. `service` names which pop-up it was.
+    Currency and amount stay real columns (not details keys) because the desk
+    filters and sorts on them across all six.
+    """
+
+    kind = Lead.Kind.SERVICE
+
+    class Meta(BaseLeadSerializer.Meta):
+        model = ServiceRequest
+        fields = BaseLeadSerializer.Meta.fields + [
+            'service', 'from_currency', 'amount', 'needed_by', 'details', 'message',
+        ]
+        extra_kwargs = {
+            'service': {'required': True, 'allow_blank': False},
+            # Not every service form asks for a currency and an amount, and the
+            # ones that do are asking so the dealer has context for the call
+            # back — not so anything is priced here. Optional on purpose.
+            'from_currency': {'required': False, 'allow_blank': True},
+            'amount': {'required': False, 'allow_null': True},
+            'needed_by': {'required': False, 'allow_null': True},
+        }
+
+    def validate_from_currency(self, value):
+        return validate_currency_code(value) if value else ''
+
+    def validate_amount(self, value):
+        return validate_amount(value) if value is not None else value
+
+    def validate_details(self, value):
+        return validate_details(value)
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        # The spam rules in BaseLeadSerializer only see `message`, which is
+        # optional here — without this, a link-spammer just types into any
+        # free-text answer instead and walks straight past the check.
+        answers = ' '.join(str(v) for v in (attrs.get('details') or {}).values())
+        if looks_like_spam(answers, attrs.get('name', '')):
+            raise serializers.ValidationError(
+                {'detail': 'This request looks like spam. Please remove links and try again, or call us instead.'}
+            )
+        return attrs
 
 
 class QuoteRequestCreateSerializer(RequestLeadSerializer):

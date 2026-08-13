@@ -33,6 +33,11 @@ export default function Services() {
               key={s.id}
               delay={i * 0.07}
               className="fx-hover-lift-panel"
+              // The card opens the service's page, not its form. A card is a
+              // summary — the reader has had three lines about a regulated
+              // financial service and is not yet in a position to fill
+              // anything in. The form is one click further, from the page
+              // itself, where the rules and the paperwork are set out.
               onClick={() => navigate(`/services/${s.id}`)}
               // Solid, not the glass the hero's step cards use: this section has
               // no dotted-map texture behind it (that backdrop is scoped to the

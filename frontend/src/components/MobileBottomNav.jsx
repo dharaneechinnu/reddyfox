@@ -24,13 +24,6 @@ function ServicesIcon() {
     </svg>
   );
 }
-function QuoteIcon() {
-  return (
-    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
-  );
-}
 function ContactIcon() {
   return (
     <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -73,12 +66,15 @@ export default function MobileBottomNav() {
       <TabLink to="/" label="Home" Icon={HomeIcon} end />
       {ratesPageOn && <TabLink to="/rates" label="Rates" Icon={RatesIcon} />}
       <TabLink to="/services" label="Services" Icon={ServicesIcon} />
-      {/* Both carry #form, matching the desktop nav and the header CTA: a tab
-          named Quote or Contact that lands on a heading with the form below the
-          fold looks like it did nothing. useFormAnchor deliberately does not
-          steal focus on a touch device, so this scrolls without throwing the
-          keyboard up over the form it just scrolled to. */}
-      <TabLink to="/quote#form" label="Quote" Icon={QuoteIcon} />
+      {/* #form, matching the desktop nav: a tab named Contact that lands on a
+          heading with the form below the fold looks like it did nothing.
+          useFormAnchor deliberately does not steal focus on a touch device, so
+          this scrolls without throwing the keyboard up over the form it just
+          scrolled to.
+
+          There is no Quote tab any more — /quote is gone, and the five tabs it
+          would have made are one too many for a phone bar anyway. The service
+          forms are reached from the Services tab. */}
       <TabLink to="/contact#form" label="Contact" Icon={ContactIcon} />
     </nav>
   );

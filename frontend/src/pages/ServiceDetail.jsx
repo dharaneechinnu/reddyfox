@@ -4,6 +4,9 @@ import { SERVICES } from '../data';
 import { c, fs, fonts, wrap, btnOnBrand, headerOffset } from '../tokens';
 import useApi from '../hooks/useApi';
 import { fetchFaqs } from '../api';
+import { useCompanyInfo } from '../context/CompanyInfoContext';
+import { useServiceRequest } from '../context/ServiceRequestContext';
+import { formForService } from '../serviceForms';
 import FaqAccordion from '../components/FaqAccordion';
 import Seo from '../components/Seo';
 import Reveal from '../components/Reveal';
@@ -15,6 +18,8 @@ export default function ServiceDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: faqs } = useApi(loadFaqs, []);
+  const { primaryPhone } = useCompanyInfo();
+  const { open } = useServiceRequest();
   const active = SERVICES.find((s) => s.id === id) || SERVICES[0];
 
   useEffect(() => { window.scrollTo({ top: 0 }); }, [id]);
@@ -36,11 +41,20 @@ export default function ServiceDetail() {
               <span style={{ display: 'inline-block', fontFamily: fonts.mono, fontWeight: 500, fontSize: fs.xs, lineHeight: 1.4, letterSpacing: '.16em', color: c.pageEyebrow, marginBottom: 18 }}>SERVICE {active.tag}</span>
               <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h1, lineHeight: 1.06, color: c.pageHeading, margin: '0 0 18px' }}>{active.title}</h1>
               <p style={{ fontSize: fs.xl, lineHeight: 1.6, color: c.pageText, margin: '0 0 32px', maxWidth: 520 }}>{active.hero}</p>
+              {/* Opens this service's own form over the page. It used to send
+                  people to /contact with the service in the query string, so
+                  someone reading about student fees landed on a generic form
+                  asking for a currency and an amount — a trip away from the
+                  page and a worse question at the end of it.
+
+                  The label comes from the service's own form config, so it
+                  names what it does ("Get a travel card") rather than reading
+                  "Ask for a price" on all six. */}
               <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-                <span onClick={() => navigate(`/contact?service=${encodeURIComponent(active.title)}#form`)} style={{ ...btnOnBrand, borderRadius: 9 }}>Ask for a price</span>
-                {active.id === 'forex-card' && (
-                  <span onClick={() => navigate(`/quote?service=${encodeURIComponent(active.title)}#form`)} style={{ border: `1px solid ${c.navyLineStrong}`, color: c.surface, padding: '15px 26px', borderRadius: 9, fontSize: fs.md, fontWeight: 600, cursor: 'pointer' }}>Ask for the best price</span>
-                )}
+                <span onClick={() => { if (!open(active.id)) navigate('/contact#form'); }} style={{ ...btnOnBrand, borderRadius: 9 }}>
+                  {formForService(active.id)?.cta || 'Ask for a price'}
+                </span>
+                <a href={`tel:${primaryPhone.tel}`} style={{ border: `1px solid ${c.navyLineStrong}`, color: c.surface, padding: '15px 26px', borderRadius: 9, fontSize: fs.md, fontWeight: 600, cursor: 'pointer' }}>Call {primaryPhone.display}</a>
               </div>
             </div>
             <SitePhoto

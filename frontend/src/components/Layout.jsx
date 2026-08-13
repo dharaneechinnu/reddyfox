@@ -139,12 +139,12 @@ function Header() {
           >
             {primaryPhone.display}
           </a>
-          {/* #form, not bare /quote: this button's entire job is to put
-              someone in front of the form, and /quote on its own landed them on
-              the heading with the form below the fold — so what the click
-              visibly produced was the header. See hooks/useFormAnchor.js. */}
+          {/* Goes to /services, not a form: there is no one form to send
+              someone to any more — each of the six services has its own, opened
+              from its card. This button's job is now to get them to the choice.
+              (It pointed at /quote#form, which no longer exists.) */}
           <Link
-            to="/quote#form"
+            to="/services"
             className="fx-header-cta"
             style={btnOnBrand}
             onMouseEnter={(e) => { e.currentTarget.style.background = c.brandPale; }}

@@ -14,7 +14,7 @@ from rest_framework.test import APIClient
 
 from rates.models import Currency
 from .management.commands.seed_site_images import NO_PLACEHOLDER
-from .models import CallbackRequest, Enquiry, Lead, QuoteRequest, SiteImage, SiteSetting
+from .models import CallbackRequest, Enquiry, Lead, QuoteRequest, ServiceRequest, SiteImage, SiteSetting
 from .validators import landline_tel, validate_image_upload, validate_landline
 
 SEEDED_SLOT_COUNT = len(SiteImage.Slot.choices) - len(NO_PLACEHOLDER)
@@ -295,6 +295,118 @@ class LeadSubmissionStillWorksTests(TestCase):
         self.assertEqual(lead.recipient_name, 'John Doe')
         self.assertEqual(lead.relationship, 'Brother')
         self.assertEqual(lead.from_currency, 'USD')
+
+
+class EnquiryFormTests(TestCase):
+    """The contact form: a name, a phone number and the question itself.
+
+    It deliberately no longer asks for a service, a currency or an amount —
+    anyone who knows those is in a service pop-up instead (see
+    ServiceRequestTests). These check the form cannot quietly drift back into
+    demanding them, and cannot accept a lead with nothing to act on.
+    """
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.client = APIClient()
+
+    def test_name_phone_and_query_are_enough(self):
+        res = self.client.post(reverse('enquiry-create'), {
+            'name': 'Priya Raghavan', 'phone': '9876543210',
+            'message': 'Do you take old US dollar notes from before 2013?',
+        })
+        self.assertEqual(res.status_code, 201, res.data)
+        lead = Enquiry.objects.get()
+        self.assertEqual(lead.kind, Lead.Kind.ENQUIRY)
+        self.assertEqual(lead.phone, '9876543210')
+        self.assertEqual(lead.from_currency, '')
+
+    def test_the_query_is_required(self):
+        res = self.client.post(reverse('enquiry-create'), {
+            'name': 'Priya Raghavan', 'phone': '9876543210',
+        })
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('message', res.data)
+
+    def test_a_one_word_query_is_rejected(self):
+        res = self.client.post(reverse('enquiry-create'), {
+            'name': 'Priya Raghavan', 'phone': '9876543210', 'message': 'hi',
+        })
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('message', res.data)
+
+
+class ServiceRequestTests(TestCase):
+    """The six service pop-ups, all of which post to the one endpoint."""
+
+    def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
+        self.client = APIClient()
+        _make_usd()
+
+    def _post(self, **overrides):
+        payload = {
+            'name': 'Lakshmi Narayanan', 'phone': '9876543210',
+            'service': 'Money Transfer',
+            'from_currency': 'USD', 'amount': '1200',
+            'details': {'Which do you need?': 'Send money abroad', 'Receiver’s name': 'Karthik'},
+        }
+        payload.update(overrides)
+        return self.client.post(reverse('service-request-create'), payload, format='json')
+
+    def test_lands_as_a_service_lead_with_its_answers(self):
+        res = self._post()
+        self.assertEqual(res.status_code, 201, res.data)
+        lead = ServiceRequest.objects.get()
+        self.assertEqual(lead.kind, Lead.Kind.SERVICE)
+        self.assertEqual(lead.service, 'Money Transfer')
+        self.assertEqual(lead.details['Receiver’s name'], 'Karthik')
+
+    def test_service_is_required(self):
+        res = self._post(service='')
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('service', res.data)
+
+    def test_currency_and_amount_are_optional(self):
+        # Not every form asks for them, and the ones that do are collecting
+        # context for the call back — nothing is priced here.
+        res = self._post(from_currency='', amount=None)
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertIsNone(ServiceRequest.objects.get().amount)
+
+    def test_details_are_normalised_to_strings_and_blanks_dropped(self):
+        res = self._post(details={'Amount of children': 2, 'Empty': '   ', 'Nothing': None})
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertEqual(ServiceRequest.objects.get().details, {'Amount of children': '2'})
+
+    def test_an_oversized_details_payload_is_rejected(self):
+        # `details` is free-form JSON on a public endpoint — without a cap it is
+        # unlimited free storage for anyone with curl.
+        res = self._post(details={f'Question {i}': 'yes' for i in range(30)})
+        self.assertEqual(res.status_code, 400)
+        self.assertIn('details', res.data)
+
+    def test_a_long_answer_is_truncated_rather_than_rejected(self):
+        # Trimmed, not 400'd: someone who writes an essay into "anything else"
+        # is a customer, and losing their lead over it would be absurd. Real
+        # words, not a 900-character run of one letter — that trips the
+        # unbroken-token spam rule instead, which is its job.
+        res = self._post(details={'Anything else': 'please call after six ' * 60})
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertEqual(len(ServiceRequest.objects.get().details['Anything else']), 500)
+
+    def test_spam_in_an_answer_is_caught_even_with_no_message(self):
+        # The base spam check only reads `message`, which this form may not
+        # send at all — a spammer would otherwise just type into any answer.
+        res = self._post(details={'Which country?': 'visit https://x.example and www.y.example now'})
+        self.assertEqual(res.status_code, 400)
+
+    def test_priority_cannot_be_set_from_the_public_api(self):
+        res = self._post(priority=1)
+        self.assertEqual(res.status_code, 201, res.data)
+        self.assertEqual(ServiceRequest.objects.get().priority, Lead.Priority.NORMAL)
 
 
 class CallbackRequestTests(TestCase):

@@ -1,8 +1,11 @@
 from django.contrib import admin, messages
 from django.utils import timezone
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 
-from .models import CallbackRequest, Enquiry, Faq, FaqCategory, Lead, QuoteRequest, SiteImage, SiteSetting, Testimonial
+from .models import (
+    CallbackRequest, Enquiry, Faq, FaqCategory, Lead, QuoteRequest, ServiceRequest, SiteImage, SiteSetting,
+    Testimonial,
+)
 
 
 @admin.register(Testimonial)
@@ -248,10 +251,12 @@ class BaseLeadAdmin(admin.ModelAdmin):
 
 
 class QuoteLikeLeadAdmin(BaseLeadAdmin):
-    """Shared shape for Enquiry and QuoteRequest: since "get a quote" and the contact form
-    now collect the same information: for Money Transfer, who's sending, who's receiving and
-    their relationship; for every other service, currency and amount. List/detail views are
-    identical bar the resolved-queue behaviour.
+    """The old "get a free quote" inbox. Historical only.
+
+    Nothing on the site posts a quote request any more — the six service pop-ups
+    replaced the /quote page. This stays registered so the quote requests
+    already in the database remain readable and workable; it is not the shape to
+    copy for a new lead type (see ServiceRequestAdmin).
 
     Resolved rows drop out of the default list — this is the working queue, not a full
     archive. Nothing is hidden permanently: clicking the "Resolved" (or "All") option under the
@@ -282,8 +287,89 @@ class QuoteLikeLeadAdmin(BaseLeadAdmin):
 
 
 @admin.register(Enquiry)
-class EnquiryAdmin(QuoteLikeLeadAdmin):
-    """Front office inbox — general contact-form enquiries."""
+class EnquiryAdmin(BaseLeadAdmin):
+    """Front office inbox — the contact form.
+
+    The contact form now collects only a name, a phone number and the question
+    itself, so the currency/amount/service columns this list used to carry are
+    blank on everything new. They are kept in a collapsed section on the detail
+    page rather than dropped, because enquiries submitted before the form was
+    simplified still hold real answers in them.
+    """
+
+    list_display = ('priority_badge', 'status_badge', 'resolved_badge', 'received', 'name', 'phone_links', 'query', 'priority', 'assigned_to')
+    list_filter = ('is_resolved', 'priority', 'status', 'assigned_to', 'created_at')
+    actions = BaseLeadAdmin.actions + ('mark_resolved', 'mark_unresolved')
+    customer_fields = ('name', 'phone', 'message', 'service', 'from_currency', 'amount', 'recipient_name', 'relationship')
+    fieldsets = (
+        ('Customer', {'fields': ('name', 'phone', 'reply_links')}),
+        ('Their question', {'fields': ('message',)}),
+        ('Handling', {'fields': ('priority', 'status', 'is_resolved', 'assigned_to', 'internal_note')}),
+        ('Answers from the older contact form', {
+            'classes': ('collapse',),
+            'description': 'Only filled in on enquiries received before the contact form was simplified.',
+            'fields': ('service', 'from_currency', 'amount', 'recipient_name', 'relationship'),
+        }),
+        ('Audit', {'classes': ('collapse',),
+                   'fields': ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
+    )
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if 'is_resolved__exact' not in request.GET:
+            qs = qs.filter(is_resolved=False)
+        return qs
+
+    @admin.display(description='What they asked')
+    def query(self, obj):
+        if not obj.message:
+            return '—'
+        return obj.message[:70] + ('…' if len(obj.message) > 70 else '')
+
+
+@admin.register(ServiceRequest)
+class ServiceRequestAdmin(BaseLeadAdmin):
+    """The desk's main queue — every request raised from a service pop-up.
+
+    One list for all six services, filterable by `service`, because the desk's
+    job is the same whichever one it was: ring the number back. The questions
+    that particular form asked are rendered from `details` into a plain table
+    on the detail page, so staff never read raw JSON.
+    """
+
+    list_display = ('priority_badge', 'status_badge', 'resolved_badge', 'received', 'name', 'phone_links', 'service', 'wants', 'priority', 'assigned_to')
+    list_filter = ('is_resolved', 'service', 'priority', 'status', 'from_currency', 'assigned_to', 'created_at')
+    actions = BaseLeadAdmin.actions + ('mark_resolved', 'mark_unresolved')
+    search_fields = ('name', 'phone', 'message', 'service')
+    customer_fields = ('name', 'phone', 'service', 'from_currency', 'amount', 'needed_by', 'message')
+    fieldsets = (
+        ('Customer', {'fields': ('name', 'phone', 'reply_links')}),
+        ('What they asked for', {'fields': ('service', 'from_currency', 'amount', 'needed_by', 'answers', 'message')}),
+        ('Handling', {'fields': ('priority', 'status', 'is_resolved', 'assigned_to', 'internal_note')}),
+        ('Audit', {'classes': ('collapse',),
+                   'fields': ('created_at', 'contacted_at', 'notified_at', 'updated_at', 'source_ip')}),
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        return super().get_readonly_fields(request, obj) + ('answers',)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if 'is_resolved__exact' not in request.GET:
+            qs = qs.filter(is_resolved=False)
+        return qs
+
+    @admin.display(description='Their answers')
+    def answers(self, obj):
+        pairs = obj.detail_pairs
+        if not pairs:
+            return '—'
+        rows = format_html_join(
+            '', '<tr><th style="text-align:left;padding:4px 16px 4px 0;font-weight:600;'
+                'white-space:nowrap;vertical-align:top">{}</th><td style="padding:4px 0">{}</td></tr>',
+            pairs,
+        )
+        return format_html('<table style="border-collapse:collapse">{}</table>', rows)
 
 
 @admin.register(QuoteRequest)

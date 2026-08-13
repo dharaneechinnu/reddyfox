@@ -148,6 +148,7 @@ class Lead(models.Model):
         ENQUIRY = 'enquiry', 'Enquiry'
         QUOTE = 'quote', 'Quote request'
         CALLBACK = 'callback', 'Callback request'
+        SERVICE = 'service', 'Service request'
 
     class Status(models.TextChoices):
         NEW = 'new', 'New'
@@ -204,6 +205,16 @@ class Lead(models.Model):
 
     # --- quote + enquiry ---
     needed_by = models.DateField(null=True, blank=True, help_text='When the customer needs the currency.')
+
+    # --- service requests only ---
+    details = models.JSONField(
+        default=dict, blank=True,
+        help_text='The answers specific to one service\'s form — e.g. "Which country?" for a money '
+                  'transfer, "University or institution" for student services. Every service asks '
+                  'something different, and none of it is worth its own column when only one of the '
+                  'six forms ever fills it in. Keys/labels come from SERVICE_FORMS in '
+                  'frontend/src/serviceForms.js; the pair is validated in content/validators.py.',
+    )
 
     # --- workflow (the only fields staff edit) ---
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.NEW, db_index=True)
@@ -285,6 +296,7 @@ class Lead(models.Model):
         first = self.name.split()[0] if self.name.split() else 'there'
         subject = {
             self.Kind.QUOTE: f'your quote request for {self.service or "forex"}',
+            self.Kind.SERVICE: f'your {self.service or "service"} request',
         }.get(self.kind, f'your enquiry about {self.service or "our services"}')
         return f'https://wa.me/91{d}?text={quote(f"Hello {first}, thank you for {subject} with Reddy Forex.")}'
 
@@ -292,6 +304,22 @@ class Lead(models.Model):
     def tel_url(self):
         d = self._digits
         return f'tel:+91{d}' if len(d) == 10 else None
+
+    @property
+    def detail_pairs(self):
+        """`details` as an ordered list of (label, value) for display.
+
+        Every consumer — the admin detail panel, the alert email, the Telegram
+        message — wants the same thing: the customer's answers in the order the
+        form asked them, with the empty ones dropped. JSON objects preserve
+        insertion order through both `json` and Postgres `jsonb`... except
+        `jsonb`, which sorts keys, so the order here is whatever the DB gives
+        back. That is fine: each label is self-describing, so a reordered list
+        is still readable. Do not rely on it matching the form's order.
+        """
+        if not isinstance(self.details, dict):
+            return []
+        return [(k, v) for k, v in self.details.items() if str(v).strip()]
 
 
 class KindManager(models.Manager):
@@ -349,6 +377,29 @@ class CallbackRequest(Lead):
 
     def save(self, *args, **kwargs):
         self.kind = Lead.Kind.CALLBACK
+        super().save(*args, **kwargs)
+
+
+class ServiceRequest(Lead):
+    """Proxy: a request raised from one of the six service pop-ups.
+
+    All six land here rather than as six separate kinds. What differs between
+    them is only *which questions were asked* — the customer, the workflow and
+    the audit trail are identical, and six proxies would mean six admin lists,
+    six permission sets and six Telegram toggles for what the desk reads as one
+    queue of "someone wants a service, call them". `service` says which of the
+    six it was; `details` carries that form's own answers (see Lead.details).
+    """
+
+    objects = KindManager(Lead.Kind.SERVICE)
+
+    class Meta:
+        proxy = True
+        verbose_name = 'service request'
+        verbose_name_plural = 'service requests'
+
+    def save(self, *args, **kwargs):
+        self.kind = Lead.Kind.SERVICE
         super().save(*args, **kwargs)
 
 

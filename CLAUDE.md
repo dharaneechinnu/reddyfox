@@ -83,7 +83,7 @@ There is no frontend test runner configured (no Jest/Vitest) — `npm run lint` 
 - **`notifications`** — Chrome push alerts to *customers* about currency rate changes, via Firebase Cloud Messaging. Independent of `content`'s email alerts.
 - **`feature_flags`** — a standalone on/off switch registry (see below), deliberately not more booleans bolted onto `SiteSetting`.
 - **`theming`** — `ThemeSetting`, a singleton row holding the site's design tokens: twelve semantic colours (`brand`, `ink`, `surface`, `line`, `body_text`, …), three font stacks plus the webfont URL that loads them, a base font size and heading multiplier, and a corner radius. `GET /api/theme/` returns them as a flat `{--fx-name: value}` map, cached and invalidated on save. See "The design system" below — that section, not this one, is what to read before touching any styling.
-- **`alert_routing`** — `LeadAlertRule`, one row per `content.Lead.Kind`, each with a `telegram_enabled` checkbox: the config rule deciding whether that kind of lead pages the desk on Telegram. Seeded by a data migration (Enquiry off by default, everything else on), toggle-only in `/admin/` — add/delete are disabled since the three rows are the fixed set of lead kinds. `telegram_alerts.services.notify_team_telegram()` calls `alert_routing.services.is_telegram_enabled_for(lead.kind)` first and skips the send entirely (never touching `TelegramDelivery`) if the kind is switched off; the email alert and admin lead inbox are unaffected either way. Fails open: a kind with no seeded row, or a DB error resolving the rule, defaults to `True` rather than silently going dark. Kept as its own app — separate from `telegram_alerts` (owns *how* to send) and `content` (owns *what a lead is*) — so it stays free of any Telegram-specific knowledge and could gate a future channel the same way. See `docs/telegram-bot.md`.
+- **`alert_routing`** — `LeadAlertRule`, one row per `content.Lead.Kind`, each with a `telegram_enabled` checkbox: the config rule deciding whether that kind of lead pages the desk on Telegram. Seeded by a data migration (Enquiry off by default, everything else on — including Service request, which is the queue the desk exists to answer), toggle-only in `/admin/` — add/delete are disabled since the rows are the fixed set of lead kinds. `telegram_alerts.services.notify_team_telegram()` calls `alert_routing.services.is_telegram_enabled_for(lead.kind)` first and skips the send entirely (never touching `TelegramDelivery`) if the kind is switched off; the email alert and admin lead inbox are unaffected either way. Fails open: a kind with no seeded row, or a DB error resolving the rule, defaults to `True` rather than silently going dark. Kept as its own app — separate from `telegram_alerts` (owns *how* to send) and `content` (owns *what a lead is*) — so it stays free of any Telegram-specific knowledge and could gate a future channel the same way. See `docs/telegram-bot.md`.
 
 ### Who leads are *for* — the thing to keep in mind
 
@@ -91,15 +91,31 @@ Every lead form on the site (enquiry, quote, callback) exists to put a customer'
 
 That reframes what "done" means for anything in this area: the measure is **how few minutes pass between submission and callback**, not how good the success screen looks. See `docs/team-notifications.md` for the reasoning, what's built, and the costed options for getting louder.
 
-### The `Lead` model: one table, three admin-facing identities
+### The six service forms: one pop-up per service
 
-`content.models.Lead` backs the contact form, "get a quote", and the homepage converter's quick "get your best price" callback capture — three different customer requests that share ~80% of their fields (who the customer is, workflow state, audit trail). Rather than duplicating that, there's one concrete table and three **proxy models** (`Enquiry`, `QuoteRequest`, `CallbackRequest`), each:
+Every service on the site has its **own form**, opened as a pop-up over its service page. The route in is deliberate and one-way: a **card or homepage tile opens the service's detail page**, and the **CTA button on that page opens the form**. Cards don't open forms — a card is three lines about a regulated financial service, and nobody is ready to fill anything in off the back of it. Nobody is sent to a shared form on another page to re-state which service they wanted either.
+
+That button's label is **per service** (`cta` in `serviceForms.js`) — "Get a travel card", "Send or collect money" — not one generic "Ask for a price" across all six. A button that names what it does tells the reader what happens next.
+
+- **`frontend/src/serviceForms.js`** — the six field sets, as data. This is the only file to edit to add, remove or reword a question. Field types: `choice` (radio pills), `select`, `currency`, `amount`, `text`, `date`, `textarea`. `requiredWhen` makes a field required only in one branch of an earlier answer (Money Transfer's receiver name, when sending rather than collecting).
+- **`components/ServiceRequestModal.jsx`** — the renderer. Knows nothing about any individual service.
+- **`context/ServiceRequestContext.jsx`** — one modal mounted at the app root; `useServiceRequest().open(serviceId)` from anywhere. Returns `false` if that service has no form, so callers fall back to its detail page.
+
+All six post to `POST /api/service-requests/` and land as `Lead.Kind.SERVICE` — **one kind, not six**. What differs between them is only which questions were asked, and the desk's job is the same for all of them (ring the number back), so six proxies would mean six admin lists and six Telegram toggles for one queue. A field with `column` set writes to a real column (`from_currency`, `amount`, `needed_by`, `message` — the ones the desk filters and sorts on); everything else goes to the `details` JSON field keyed by the label the customer read, size-capped in `content/validators.py`.
+
+**The contact form is separate and deliberately minimal**: name, phone, query. No email, no service, no currency, no amount — anyone who knows those is in a service pop-up. It still lands as an `Enquiry`.
+
+There is **no `/quote` route** — the six pop-ups replaced it. The backend endpoint and admin list survive so existing quote requests stay workable; don't wire anything new to them.
+
+### The `Lead` model: one table, four admin-facing identities
+
+`content.models.Lead` backs the service pop-ups, the contact form, the homepage converter's quick "get your best price" callback capture, and (historically) "get a quote" — different customer requests that share ~80% of their fields (who the customer is, workflow state, audit trail). Rather than duplicating that, there's one concrete table and four **proxy models** (`ServiceRequest`, `Enquiry`, `QuoteRequest`, `CallbackRequest`), each:
 
 - filtered to its own `Lead.Kind` via a `KindManager`,
 - forced to that kind in an overridden `save()`,
 - registered separately in `content/admin.py` so each shows its own admin list, its own columns, and (via `setup_teams`) its own permissions.
 
-**If you add a fourth lead type**, add a `Lead.Kind` choice, a proxy model + `KindManager`, a serializer/view pair (mirroring `EnquiryCreateSerializer`/`EnquiryCreateView`), and an admin registration — don't create a new top-level model for it.
+**If you add a new lead type**, add a `Lead.Kind` choice, a proxy model + `KindManager`, a serializer/view pair (mirroring `ServiceRequestCreateSerializer`/`ServiceRequestCreateView`), an admin registration, a `setup_teams` entry and a seeded `alert_routing` rule — don't create a new top-level model for it. But first check it isn't just another *service*: a seventh service is an entry in `serviceForms.js` and nothing else.
 
 Signals in other apps that need to react to *one specific* lead kind (not all `Lead` saves) must connect on the proxy class, not `Lead` itself — Django sends `post_save` with `sender` set to whichever proxy class actually called `.save()`.
 
@@ -137,7 +153,7 @@ When something currently hardcoded in `frontend/src/data.js` needs to become sta
 
 ### Lead-capture forms share one state machine
 
-`frontend/src/hooks/useLeadForm.js` is the shared form logic behind all three lead forms (`EnquiryForm`, `QuoteForm`, `CallbackForm` in `components/`) — validate on blur, clear an error as soon as the field becomes valid while typing, focus the first invalid field on a failed submit, and map server-side field errors back onto the right input (the API re-validates independently and can catch things the client can't, e.g. an unknown currency code). A new lead-type form should reuse this hook rather than reimplementing form state.
+`frontend/src/hooks/useLeadForm.js` is the shared form logic behind every lead form — the six service pop-ups (`ServiceRequestModal`, which builds its validator map from `serviceForms.js`), `EnquiryForm` and `CallbackForm` in `components/` — validate on blur, clear an error as soon as the field becomes valid while typing, focus the first invalid field on a failed submit, and map server-side field errors back onto the right input (the API re-validates independently and can catch things the client can't, e.g. an unknown currency code). A new lead-type form should reuse this hook rather than reimplementing form state.
 
 Order of operations on every lead submission is deliberate: **save to the database first, then notify** (`content/notifications.py`'s `notify_team`, `telegram_alerts.services.notify_team_telegram`, and separately `notifications.services.send_notification` for the FCM path). A failure in any one notification path is caught and logged — it must never lose or block the underlying lead, and must never stop the others from being attempted.
 

@@ -120,7 +120,7 @@ export default function Home() {
 
               {/* The live badge, which the rail above deliberately doesn't carry. */}
               <div className="fx-rise" style={{ '--fx-delay': '.24s', borderTop: `1px solid ${c.pageLine}`, paddingTop: 20, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                <OpenStatus />
+                <OpenStatus tone="ink" />
                 <span aria-hidden="true" style={{ width: 1, height: 12, background: c.pageLine }} />
                 <span style={{ fontSize: fs.sm, color: c.pageMuted }}>
                   {hours.weekday.labelShort} {hours.weekday.display} · {hours.sunday.labelShort} {hours.sunday.display.toLowerCase()}
