@@ -13,18 +13,80 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        # Django 6.0 (see backend/requirements.txt) supports 3.12+, so the
+        # 3.7/3.8/3.9 matrix this replaced could never have run the project.
+        # It never got that far in practice: GitHub's runners stopped shipping
+        # 3.7 entirely, so every job died at "Set up Python" before installing
+        # anything, and the workflow reported failure on every pull request
+        # regardless of the code in it.
+        python-version: ["3.12", "3.13"]
+
+    # The project runs on PostgreSQL and the test runner creates a real test
+    # database — there is no SQLite fallback in config/settings.py. Defaults
+    # here match that file's DB_* defaults, so no env vars are needed below.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: foxexchange
+        ports:
+          - 5432:5432
+        # Without this the steps can start before Postgres is accepting
+        # connections, which fails as a confusing "connection refused".
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    # Everything lives in backend/; the previous version ran pip and
+    # manage.py from the repo root, where neither file exists.
+    defaults:
+      run:
+        working-directory: backend
 
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install Dependencies
+        cache: pip
+        cache-dependency-path: backend/requirements.txt
+    - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    - name: Run Tests
-      run: |
-        python manage.py test
+    - name: Check for missing migrations
+      # A model change committed without its migration breaks deploys, not
+      # tests — so it needs its own check to be caught here.
+      run: python manage.py makemigrations --check --dry-run
+    - name: Run tests
+      run: python manage.py test
+      env:
+        SECRET_KEY: ci-secret-key-not-used-outside-tests
+        DEBUG: "False"
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: "22"
+        cache: npm
+        cache-dependency-path: frontend/package-lock.json
+    - name: Install dependencies
+      run: npm ci
+    # There is no frontend test runner in this project (see CLAUDE.md) — lint
+    # and build are the only automated checks it has, so they are the ones CI
+    # can enforce.
+    - name: Lint
+      run: npm run lint
+    - name: Build
+      run: npm run build
