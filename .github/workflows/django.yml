@@ -67,7 +67,11 @@ jobs:
       run: python manage.py test
       env:
         SECRET_KEY: ci-secret-key-not-used-outside-tests
-        DEBUG: "False"
+        # DEBUG is deliberately left at its default (True), which is how the
+        # suite runs locally. Setting it False here narrows ALLOWED_HOSTS to
+        # localhost, and Django's test client sends Host: testserver — so every
+        # request-based test across every app failed with a 400 rather than
+        # anything to do with the code under test.
 
   frontend:
     runs-on: ubuntu-latest
@@ -81,8 +85,13 @@ jobs:
         node-version: "22"
         cache: npm
         cache-dependency-path: frontend/package-lock.json
+    # `npm install`, not `npm ci`. package-lock.json is generated on Windows,
+    # where npm cannot resolve the Linux-only optional dependencies the
+    # runner needs (@emnapi/*), so `npm ci` fails the sync check on a lockfile
+    # that is correct for the machine it was written on. Regenerating it here
+    # would only invert the problem for whoever installs next on Windows.
     - name: Install dependencies
-      run: npm ci
+      run: npm install --no-audit --no-fund
     # There is no frontend test runner in this project (see CLAUDE.md) — lint
     # and build are the only automated checks it has, so they are the ones CI
     # can enforce.
