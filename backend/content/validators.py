@@ -132,6 +132,43 @@ def validate_currency_code(value):
     return code
 
 
+# --- service-request details (content.models.Lead.details) -----------------
+#
+# `details` is free-form JSON, which means the API accepts whatever the client
+# posts. Bound here so a hostile caller cannot use it as unlimited free storage
+# or push a payload big enough to break the admin page and the alert email that
+# render it. Mirrors the field list in frontend/src/serviceForms.js: no service
+# form asks more than ten questions, so anything past that is not our form.
+MAX_DETAIL_FIELDS = 12
+MAX_DETAIL_LABEL_CHARS = 80
+MAX_DETAIL_VALUE_CHARS = 500
+
+
+def validate_details(value):
+    """Normalise a service form's answers to a flat {label: text} dict.
+
+    Non-string values are coerced rather than rejected — a date input posts a
+    string, a number input may post a number, and neither is worth a 400 to the
+    customer when `str()` gives the desk exactly what it needs to read.
+    """
+    from rest_framework import serializers
+
+    if value in (None, ''):
+        return {}
+    if not isinstance(value, dict):
+        raise serializers.ValidationError('Expected an object of question/answer pairs.')
+    if len(value) > MAX_DETAIL_FIELDS:
+        raise serializers.ValidationError(f'Too many fields — no form asks more than {MAX_DETAIL_FIELDS}.')
+
+    cleaned = {}
+    for label, answer in value.items():
+        label = str(label).strip()[:MAX_DETAIL_LABEL_CHARS]
+        answer = str('' if answer is None else answer).strip()[:MAX_DETAIL_VALUE_CHARS]
+        if label and answer:
+            cleaned[label] = answer
+    return cleaned
+
+
 def validate_amount(value):
     """Reject nonsense amounts before they reach the desk."""
     from rest_framework import serializers

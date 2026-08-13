@@ -642,3 +642,101 @@ button {
 .fx-service-tab:hover {
   color: var(--fx-ink) !important; /* a lighter touch than jumping straight to the active state */
 }
+
+/* ---------------------------------------------------------------------------
+   The service request pop-up (components/ServiceRequestModal.jsx)
+
+   A real two-column grid rather than the auto-fit the rest of the site's forms
+   use. auto-fit decides the column count from the available width, which on a
+   dialog that changes width with the viewport meant a row of two could silently
+   become a row of one at sizes where both still fitted — the form's shape
+   depended on arithmetic nobody could predict from reading it. Here the pairing
+   is declared: two columns, one column below the breakpoint, full stop.
+
+   The breakpoint is on the viewport rather than a container query because the
+   dialog's own width is a function of the viewport anyway (min of 640px and the
+   screen), so the two agree, and container queries would add a containment
+   context for no gain.
+   --------------------------------------------------------------------------- */
+.fx-svc-row {
+  display: grid;
+  /* --cols is set per row by the modal: as many columns as that row has
+     fields, up to three. A fixed count rather than auto-fit, so the row's
+     shape is decided by what is in it, not by arithmetic on the container. */
+  grid-template-columns: repeat(var(--cols, 2), 1fr);
+  gap: 14px;
+  margin-bottom: 14px;
+  /* Bottom-aligned, so a label that wraps to two lines pushes its own input
+     down without dragging its neighbours' inputs out of line with it. */
+  align-items: end;
+}
+
+/* The panel still scrolls when a form is taller than the window — it just does
+   it without drawing a bar. A visible track down the inside edge of a dialog
+   reads as a second, nested page rather than as one card, and the dialog is
+   sized to need it only on short windows anyway. Scrolling itself is untouched:
+   wheel, trackpad, touch, and keyboard all still work, which is what makes
+   hiding the bar safe rather than a trap. Same treatment as
+   .fx-service-nav-row below. */
+.fx-svc-panel {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* old Edge */
+}
+.fx-svc-panel::-webkit-scrollbar {
+  display: none; /* WebKit/Blink */
+}
+
+/* A field that owns its whole line: the branching radio groups, and any
+   textarea. Both are unreadable squeezed into a third of a dialog. */
+.fx-svc-row-wide {
+  grid-template-columns: 1fr;
+}
+
+/* Between the phone layout and the full three-across: two columns, with a
+   third field wrapping onto the next line rather than being crushed. Below
+   ~860px a third of the dialog is under 240px, which is narrower than most of
+   these placeholders. */
+@media (max-width: 900px) {
+  .fx-svc-row {
+    grid-template-columns: repeat(min(var(--cols, 2), 2), 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  /* One column. At this width a half-dialog column is under ~130px, which is
+     narrower than the placeholder text in most of these fields. */
+  .fx-svc-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  /* Stacked, every field is full width and bottom-alignment has nothing left
+     to align — but it would still stretch a short field to a tall neighbour's
+     height inside an implicit row, so it goes back to the default. */
+  .fx-svc-row {
+    align-items: stretch;
+  }
+  /* The dialog goes edge to edge and square-cornered — a rounded card floating
+     on a 12px margin wastes width the form needs, and there is nothing behind
+     it worth showing at this size. */
+  .fx-svc-scrim {
+    padding: 0 !important;
+  }
+  .fx-svc-panel {
+    max-width: 100% !important;
+    /* A full-height sheet rather than a card: with the scrim padding gone
+       there is nothing to see around it, and the extra rows are worth more
+       than the gap. Height, not min-height, so the panel's own scroll still
+       has a bound to work against. */
+    height: 100dvh;
+    max-height: 100dvh !important;
+    border-radius: 0 !important;
+    border: none !important;
+  }
+  /* Full-width radio pills: side by side they wrapped to two ragged lines, and
+     a stacked list is a bigger tap target besides. */
+  .fx-svc-choice {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

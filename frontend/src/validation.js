@@ -42,6 +42,21 @@ export function validateRequired(value, label) {
   return String(value || '').trim() ? null : `Please enter your ${label}.`;
 }
 
+/**
+ * Mirrors validate_amount in backend/content/validators.py — keep the two in
+ * step. The ceiling is not arbitrary: past it we want the customer on the phone
+ * with a dealer, not filling in a web form.
+ */
+export function validateAmount(value, { required = true } = {}) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return required ? 'Please enter how much you need.' : null;
+  const n = Number(raw.replace(/,/g, ''));
+  if (Number.isNaN(n)) return 'Enter the amount in numbers only.';
+  if (n <= 0) return 'Amount must be greater than zero.';
+  if (n > 100000000) return 'That amount is too large for an online request — please call us.';
+  return null;
+}
+
 /** Runs a {field: validatorFn} map over values; returns {field: message} for failures only. */
 export function runValidators(values, validators) {
   const errors = {};

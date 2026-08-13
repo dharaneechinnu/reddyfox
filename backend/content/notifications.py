@@ -21,6 +21,7 @@ SUBJECT_PREFIX = {
     'enquiry': 'Enquiry',
     'quote': 'Quote request',
     'callback': 'Callback request',
+    'service': 'Service request',
 }
 
 
@@ -45,6 +46,22 @@ def _body(lead):
             f'Amount   : {_fmt(lead.amount)}',
             f'Needed by: {lead.needed_by or "(not specified)"}',
         ]
+    elif lead.kind == 'service':
+        lines += [
+            '',
+            f'--- {lead.service or "Service"} ---',
+        ]
+        if lead.from_currency or lead.amount is not None:
+            lines.append(f'Currency : {lead.from_currency or "(not specified)"}')
+            lines.append(f'Amount   : {_fmt(lead.amount)}')
+        if lead.needed_by:
+            lines.append(f'Needed by: {lead.needed_by}')
+        # The questions this particular service's form asked. Padded to the
+        # widest label so the answers line up in a plain-text mail client.
+        pairs = lead.detail_pairs
+        if pairs:
+            width = max(len(label) for label, _ in pairs)
+            lines += [f'{label.ljust(width)} : {value}' for label, value in pairs]
     elif lead.kind == 'callback':
         lines += [
             '',
@@ -70,7 +87,7 @@ def _body(lead):
     # Quote requests have no admin page (deliberately unregistered — see
     # content/admin.py), so there is nowhere to link for that kind. Reply
     # via the WhatsApp/call lines above instead.
-    proxy = {'enquiry': 'enquiry', 'callback': 'callbackrequest'}.get(lead.kind)
+    proxy = {'enquiry': 'enquiry', 'callback': 'callbackrequest', 'service': 'servicerequest'}.get(lead.kind)
     if base and proxy:
         lines += ['', f'Open in admin: {base}/admin/content/{proxy}/{lead.pk}/change/']
     return '\n'.join(lines)
@@ -80,6 +97,11 @@ def _subject(lead):
     label = SUBJECT_PREFIX.get(lead.kind, 'Lead')
     if lead.kind in ('quote', 'callback'):
         detail = f'{lead.from_currency or "?"} {_fmt(lead.amount)}'
+    elif lead.kind == 'service':
+        # The service is what tells the desk who picks this up, so it leads.
+        detail = lead.service or 'service'
+        if lead.from_currency and lead.amount is not None:
+            detail += f' — {lead.from_currency} {_fmt(lead.amount)}'
     else:
         detail = lead.service or 'general'
     return f'[{label}] {lead.name} — {detail}'

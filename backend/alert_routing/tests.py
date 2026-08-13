@@ -1,5 +1,7 @@
 from django.test import TestCase
 
+from content.models import Lead
+
 from .models import LeadAlertRule
 from .services import is_telegram_enabled_for
 
@@ -12,12 +14,16 @@ class LeadAlertRuleSeedTests(TestCase):
         self.assertFalse(LeadAlertRule.objects.get(kind='enquiry').telegram_enabled)
 
     def test_every_other_kind_defaults_on(self):
-        for kind in ('quote', 'callback'):
+        for kind in ('quote', 'callback', 'service'):
             self.assertTrue(LeadAlertRule.objects.get(kind=kind).telegram_enabled, kind)
 
-    def test_all_three_lead_kinds_are_seeded(self):
+    def test_every_lead_kind_is_seeded(self):
+        # Derived from Lead.Kind rather than a hardcoded set, so adding a kind
+        # without seeding its rule fails here — which is the whole point of the
+        # check. The self-healing read in services.py covers the gap at runtime,
+        # but a kind should arrive with its rule already decided, not defaulted.
         seeded = set(LeadAlertRule.objects.values_list('kind', flat=True))
-        self.assertEqual(seeded, {'enquiry', 'quote', 'callback'})
+        self.assertEqual(seeded, set(Lead.Kind.values))
 
 
 class IsTelegramEnabledForTests(TestCase):

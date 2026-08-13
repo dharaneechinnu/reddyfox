@@ -8,7 +8,8 @@ from .models import Faq, FaqCategory, SiteImage, SiteSetting, Testimonial
 from .notifications import notify_team
 from .serializers import (
     CallbackRequestCreateSerializer, EnquiryCreateSerializer, FaqCategorySerializer, FaqSerializer,
-    QuoteRequestCreateSerializer, SiteImageSerializer, SiteSettingSerializer, TestimonialSerializer,
+    QuoteRequestCreateSerializer, ServiceRequestCreateSerializer, SiteImageSerializer, SiteSettingSerializer,
+    TestimonialSerializer,
 )
 
 
@@ -98,6 +99,12 @@ class QuoteRequestCreateView(BaseLeadCreateView):
     """"Get a free quote"."""
     serializer_class = QuoteRequestCreateSerializer
     success_message = 'Thank you — your quote request has reached our dealers. We will come back with a price shortly.'
+
+
+class ServiceRequestCreateView(BaseLeadCreateView):
+    """All six service pop-ups post here — `service` in the body says which one."""
+    serializer_class = ServiceRequestCreateSerializer
+    success_message = 'Thank you — your request has reached the counter. A dealer will call you back shortly.'
 
 
 class CallbackRequestCreateView(BaseLeadCreateView):

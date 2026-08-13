@@ -96,8 +96,13 @@ async function postLead(path, payload) {
 }
 
 export const submitEnquiry = (payload) => postLead('enquiries', payload);
-export const submitQuoteRequest = (payload) => postLead('quotes', payload);
 export const submitCallbackRequest = (payload) => postLead('callbacks', payload);
+/**
+ * All six service pop-ups post here. `service` names which one; the answers to
+ * that form's own questions go in `details` as {label: answer}. See
+ * serviceForms.js for where the shape comes from.
+ */
+export const submitServiceRequest = (payload) => postLead('service-requests', payload);
 
 export async function fetchTestimonials() {
   const res = await fetch(`${API_BASE}/testimonials/`);

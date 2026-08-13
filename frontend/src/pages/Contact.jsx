@@ -1,15 +1,13 @@
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { COMPANY, CONTACT } from '../company';
 import { c, fs, fonts, wrap, inkCard, shadowCard } from '../tokens';
-import RequestForm from '../components/RequestForm';
+import EnquiryForm from '../components/EnquiryForm';
 import Seo from '../components/Seo';
 import { useCompanyInfo } from '../context/CompanyInfoContext';
 import OpenStatus, { HoursTable } from '../components/OpenStatus';
 
 export default function Contact() {
   const { contact } = useCompanyInfo();
-  const [searchParams] = useSearchParams();
-  const initialService = searchParams.get('service') || undefined;
   // Built here, not at module scope like the old static CONTACT import
   // allowed, because contact.addressOneLine now depends on the async/
   // fail-open backend value — see CompanyInfoContext.jsx.
@@ -26,18 +24,21 @@ export default function Contact() {
           <div style={{ fontFamily: fonts.mono, fontWeight: 400, fontSize: fs.sm, lineHeight: 1.4, color: c.pageMuted, marginBottom: 22 }}>
             <Link to="/" style={{ cursor: 'pointer', color: c.pageEyebrow }}>Home</Link> / Contact
           </div>
-          {/* Was "Get a free quote", word for word the same heading as /quote —
-              two different pages telling the visitor they were on the same one. */}
           <h1 style={{ fontFamily: fonts.serif, fontWeight: 400, fontSize: fs.h1, lineHeight: 1.05, color: c.pageHeading, margin: '0 0 14px' }}>Talk to us</h1>
+          {/* This page is for the question that doesn't fit a service form.
+              Anyone who knows which service they want gets that service's own
+              pop-up from its card or its page, so the link out matters. */}
           <p style={{ fontSize: fs.lg, lineHeight: 1.6, color: c.pageText, margin: 0, maxWidth: 560 }}>
-            Call us for today’s rate, or leave your number below and we will call you back.
+            Ask us anything and we will call you back. Know what you need already?{' '}
+            <Link to="/services" style={{ color: c.pageEyebrow, textDecoration: 'underline' }}>Pick a service</Link>{' '}
+            and tell us the details straight away.
           </p>
         </div>
       </section>
 
       <section style={{ background: c.page, padding: '64px 0 96px' }}>
         <div style={{ ...wrap, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(320px,100%),1fr))', gap: 24, alignItems: 'start' }}>
-          <RequestForm kind="enquiry" initialService={initialService} />
+          <EnquiryForm />
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* Was filled with the ink, which on the indigo ground was a black

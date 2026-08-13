@@ -18,7 +18,9 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.management.base import BaseCommand
 
-from content.models import CallbackRequest, Enquiry, Faq, FaqCategory, QuoteRequest, SiteSetting, Testimonial
+from content.models import (
+    CallbackRequest, Enquiry, Faq, FaqCategory, QuoteRequest, ServiceRequest, SiteSetting, Testimonial,
+)
 from rates.models import Currency
 
 # What each group may do. 'view'/'change' only — leads are created by the
@@ -31,21 +33,24 @@ MANAGE = ('view', 'add', 'change', 'delete')
 # it. If it comes back, restore the "Rates desk" team entry that used to live
 # here alongside its model.
 #
-# Quote requests share a desk with Enquiries: the two forms now collect the
-# same information (currency, amount, recipient, service), so whoever works
-# the enquiry inbox works the quote inbox too.
+# Service requests are the main queue — every one of the six service pop-ups
+# lands there. Quote requests are historical (nothing on the site posts one any
+# more, see content/urls.py) but stay granted so the rows already in the inbox
+# remain workable.
 TEAMS = {
     'Front office': {
-        'description': 'Sees Enquiries, Quote requests and quick Callback requests.',
+        'description': 'Sees Service requests, Enquiries, Quote requests and quick Callback requests.',
         'models': {
+            ServiceRequest: WORK_ON_LEADS,
             Enquiry: WORK_ON_LEADS,
             QuoteRequest: WORK_ON_LEADS,
             CallbackRequest: WORK_ON_LEADS,
         },
     },
     'Manager': {
-        'description': 'Sees Enquiries, Quote requests and Callback requests, plus rates and site content.',
+        'description': 'Sees every lead inbox, plus rates and site content.',
         'models': {
+            ServiceRequest: WORK_ON_LEADS,
             Enquiry: WORK_ON_LEADS,
             QuoteRequest: WORK_ON_LEADS,
             CallbackRequest: WORK_ON_LEADS,

@@ -94,6 +94,11 @@ function TileHeader({ title }) {
 export default function WhatWeDoActions() {
   const navigate = useNavigate();
 
+  // A tile opens the service's page, where its own "ask for a price" button
+  // opens the form. The tile is a teaser with a photo and four words on it —
+  // not enough for anyone to be ready to fill in a request.
+  const activate = (serviceId) => navigate(`/services/${serviceId}`);
+
   return (
     <div className="fx-action-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 14 }}>
       {ACTIONS.map((a, i) => (
@@ -101,8 +106,8 @@ export default function WhatWeDoActions() {
           key={a.title}
           delay={i * 0.06}
           className="fx-action-card fx-hover-lift"
-          onClick={() => navigate(`/services/${a.serviceId}`)}
-          onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/services/${a.serviceId}`); }}
+          onClick={() => activate(a.serviceId)}
+          onKeyDown={(e) => { if (e.key === 'Enter') activate(a.serviceId); }}
           role="link"
           tabIndex={0}
           style={{
