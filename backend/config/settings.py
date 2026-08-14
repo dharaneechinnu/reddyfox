@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'alert_routing',
     'telegram_alerts',
     'theming',
+    'mcp_server',
 
     # Third party
     'rest_framework',
@@ -314,3 +315,23 @@ TELEGRAM_INVITE_EXPIRY_HOURS = config('TELEGRAM_INVITE_EXPIRY_HOURS', default=24
 # both right. The default is an obvious placeholder, same pattern as SECRET_KEY above: a
 # production deploy that forgot to set it is caught in review, not silently insecure.
 TELEGRAM_WEBHOOK_SECRET = config('TELEGRAM_WEBHOOK_SECRET', default='changeme-set-a-real-webhook-secret')
+
+
+# mcp_server — the Model Context Protocol endpoint at /mcp/, which lets Claude or ChatGPT read
+# and edit site content on a staff member's behalf. Access is per-token (Django admin -> MCP
+# tokens), not per-user, and there is no way in without one. See docs/mcp-server.md.
+
+# Largest photo that may be uploaded through an MCP tool, in MB. Matches the admin's own upload
+# limit (content.validators.MAX_IMAGE_UPLOAD_MB) so a photo that works in one works in the other.
+MCP_MAX_IMAGE_MB = config('MCP_MAX_IMAGE_MB', default=8, cast=int)
+
+# Calls allowed per token per window. A ceiling on a runaway assistant, not a quota anyone should
+# reach by hand: listing content and uploading a few photos is a handful of calls.
+MCP_RATE_LIMIT_CALLS = config('MCP_RATE_LIMIT_CALLS', default=120, cast=int)
+MCP_RATE_LIMIT_WINDOW_SECONDS = config('MCP_RATE_LIMIT_WINDOW_SECONDS', default=60, cast=int)
+
+# An image arrives as base64 inside a JSON body, which inflates it by a third, and Django rejects
+# a body over this limit before any view sees it. Derived from the image limit rather than set to
+# a round number so raising MCP_MAX_IMAGE_MB can't silently start failing at the parser with a
+# confusing error. The 1 MB of headroom covers the JSON envelope around the payload.
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(MCP_MAX_IMAGE_MB * 1024 * 1024 * 4 / 3) + 1024 * 1024

@@ -9,6 +9,11 @@ URL configuration for config project.
             see the MEDIA_ROOT/MEDIA_URL comment in settings.py for why
             that's a deliberate choice, not an oversight, and what it
             requires from the Render deploy (a persistent disk).
+  /mcp/     Model Context Protocol endpoint — the one place outside /admin/
+            that can write content, so it is bearer-token authenticated and
+            audited. Not part of /api/ on purpose: /api/ is the public,
+            read-only surface the website itself uses, and this is neither.
+            See docs/mcp-server.md.
 """
 from django.conf import settings
 from django.contrib import admin
@@ -22,6 +27,7 @@ urlpatterns = [
     path('api/', include('feature_flags.urls')),
     path('api/', include('telegram_alerts.urls')),
     path('api/', include('theming.urls')),
+    path('', include('mcp_server.urls')),
     path(
         f"{settings.MEDIA_URL.lstrip('/')}<path:path>",
         serve,

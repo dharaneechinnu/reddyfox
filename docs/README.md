@@ -13,6 +13,10 @@ Add new docs to this folder and link them below.
 - [Telegram staff alerts](./telegram-bot.md) — setup (bot creation, staff
   onboarding), the admin-approval model, message format, and failure handling
   for the Telegram channel added alongside the email alert.
+- [MCP server](./mcp-server.md) — connecting Claude or ChatGPT to `/mcp/` so
+  staff can upload photos and draft testimonials/FAQs from a chat. Covers
+  issuing and scoping tokens, the audit log, and why AI-written text lands
+  unpublished while photos go live.
 - [Product reference](./product-reference.md) — researched, dated reference
   points from comparable real-world businesses (competitors, industry
   findings, channel costs), plus ideas consciously parked and why. Research
